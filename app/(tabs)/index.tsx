@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import { StyleSheet, View, Platform, Alert, ScrollView, Linking, StatusBar } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
+import * as Calendar from 'expo-calendar';
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { Card, Text, Searchbar, Button, Surface, Chip, IconButton, Avatar, Divider, Dialog, Portal } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -287,6 +288,66 @@ export default function MapScreen() {
     });
   };
 
+  // Fonction pour ajouter un événement au calendrier
+  const addToCalendar = useCallback(async (event: EventWithDistance) => {
+    try {
+      // Demander les permissions
+      const { status } = await Calendar.requestCalendarPermissionsAsync();
+
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permission refusée',
+          'Vous devez autoriser l\'accès au calendrier pour ajouter cet événement.'
+        );
+        return;
+      }
+
+      // Obtenir les calendriers disponibles
+      const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
+
+      // Trouver le calendrier par défaut ou le premier disponible
+      const defaultCalendar = calendars.find(cal => cal.isPrimary) || calendars[0];
+
+      if (!defaultCalendar) {
+        Alert.alert('Erreur', 'Aucun calendrier disponible');
+        return;
+      }
+
+      // Créer les dates de début et de fin
+      const eventDate = new Date(event.date);
+      const [startHour, startMinute] = event.startTime.split(':').map(Number);
+      const [endHour, endMinute] = event.endTime.split(':').map(Number);
+
+      const startDate = new Date(eventDate);
+      startDate.setHours(startHour, startMinute, 0, 0);
+
+      const endDate = new Date(eventDate);
+      endDate.setHours(endHour, endMinute, 0, 0);
+
+      // Créer l'événement dans le calendrier
+      const eventId = await Calendar.createEventAsync(defaultCalendar.id, {
+        title: event.title,
+        startDate: startDate,
+        endDate: endDate,
+        location: `${event.address}, ${event.city}`,
+        notes: `${event.description}\n\nÉglise organisatrice: ${event.churchName}\nOrganisateur: ${event.organizer}\n\nContact:\nTél: ${event.phone}\nEmail: ${event.email}\nWhatsApp: ${event.whatsapp}`,
+        timeZone: 'Europe/Paris',
+        alarms: [{ relativeOffset: -60 }], // Rappel 1h avant
+      });
+
+      Alert.alert(
+        'Événement ajouté',
+        'L\'événement a été ajouté à votre calendrier avec succès.'
+      );
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout au calendrier:', error);
+      Alert.alert(
+        'Erreur',
+        'Impossible d\'ajouter l\'événement au calendrier. Veuillez réessayer.'
+      );
+    }
+  }, []);
+
   return (
     <View style={styles.container}>
       {/* Map */}
@@ -338,7 +399,7 @@ export default function MapScreen() {
       {/* Barre de recherche toujours visible */}
       <Surface style={styles.searchSection} elevation={5}>
         <Searchbar
-          placeholder="Rechercher une église, un événement ou une ville..."
+          placeholder="Rechercher une ville..."
           onChangeText={setSearchQuery}
           value={searchQuery}
           style={styles.searchBar}
@@ -567,7 +628,7 @@ export default function MapScreen() {
                   <Button
                     mode="contained"
                     icon="phone"
-                    style={styles.quickActionButton}
+                    style={[styles.quickActionButton, { backgroundColor: '#3B82F6' }]}
                     labelStyle={styles.quickActionLabel}
                     onPress={() => Linking.openURL(`tel:${selectedItem.phone}`)}
                   >
@@ -585,7 +646,7 @@ export default function MapScreen() {
                   <Button
                     mode="contained"
                     icon="directions"
-                    style={[styles.quickActionButton, styles.quickActionButtonPrimary]}
+                    style={[styles.quickActionButton, { backgroundColor: '#6366F1' }]}
                     labelStyle={styles.quickActionLabel}
                     onPress={() => handleDirections(selectedItem)}
                   >
@@ -674,6 +735,16 @@ export default function MapScreen() {
                     </View>
                   </Card.Content>
                 </Card>
+
+                <Button
+                  mode="contained"
+                  icon="calendar-plus"
+                  onPress={() => addToCalendar(selectedItem)}
+                  style={styles.addToCalendarButton}
+                  labelStyle={styles.addToCalendarLabel}
+                >
+                  Ajouter au calendrier
+                </Button>
               </View>
             )
           ) : (
@@ -696,11 +767,12 @@ export default function MapScreen() {
                   <View style={styles.cardCompactContent}>
                     <View style={styles.cardCompactMain}>
                       <Avatar.Icon
-                        icon={item.itemType === 'church' ? "church" : "calendar-star"}
+                        icon={item.itemType === 'church' ? "cross" : "calendar-star"}
                         size={48}
                         style={[
                           styles.cardCompactAvatar,
-                          item.itemType === 'event' && { backgroundColor: eventTypeConfig[item.type]?.color || '#10B981' },
+                          item.itemType === 'church' && { backgroundColor: '#EF4444' },
+                          item.itemType === 'event' && { backgroundColor: '#10B981' },
                           focusedItemIndex === index && styles.cardCompactAvatarFocused,
                         ]}
                       />
@@ -858,8 +930,8 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(241, 245, 249, 0.3)',
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    borderBottomColor: '#E2E8F0',
+    backgroundColor: 'white',
   },
   headerTop: {
     flexDirection: 'row',
@@ -997,8 +1069,8 @@ const styles = StyleSheet.create({
   },
   detailBackButton: {
     position: 'absolute',
-    top: 12,
-    left: 12,
+    top: 16,
+    left: 16,
     zIndex: 10,
     backgroundColor: 'rgba(255, 255, 255, 0.3)',
   },
@@ -1029,13 +1101,15 @@ const styles = StyleSheet.create({
   },
   quickActionButton: {
     flex: 1,
-    backgroundColor: '#F1F5F9',
+    borderRadius: 12,
   },
   quickActionButtonPrimary: {
     backgroundColor: '#6366F1',
   },
   quickActionLabel: {
     fontSize: 12,
+    fontWeight: '600',
+    color: 'white',
   },
   detailCard: {
     marginBottom: 12,
@@ -1236,5 +1310,15 @@ const styles = StyleSheet.create({
   },
   appName: {
     fontWeight: '500',
+  },
+  addToCalendarButton: {
+    marginTop: 4,
+    marginBottom: 20,
+    backgroundColor: '#10B981',
+    borderRadius: 12,
+  },
+  addToCalendarLabel: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
