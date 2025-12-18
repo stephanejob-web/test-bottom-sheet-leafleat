@@ -62,6 +62,7 @@ export default function MapScreen() {
   const [itemForDirections, setItemForDirections] = useState<ListItem | null>(null);
   const [searchCenter, setSearchCenter] = useState<{ latitude: number; longitude: number } | null>(null);
   const [searchRadius, setSearchRadius] = useState<number>(20); // Rayon en km (défaut: 20km)
+  const [showRadiusDialog, setShowRadiusDialog] = useState(false);
 
   const mapRef = useRef<MapView>(null);
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -480,6 +481,19 @@ export default function MapScreen() {
         />
       </Surface>
 
+      {/* Chip flottant pour le rayon de recherche */}
+      <Surface style={styles.radiusFloatingChip} elevation={3}>
+        <Chip
+          icon="radar"
+          compact
+          style={styles.radiusChip}
+          textStyle={styles.radiusChipText}
+          onPress={() => setShowRadiusDialog(true)}
+        >
+          {searchRadius} km
+        </Chip>
+      </Surface>
+
       {/* Bottom Sheet */}
       <BottomSheet
         ref={bottomSheetRef}
@@ -561,35 +575,6 @@ export default function MapScreen() {
                 onPress={() => bottomSheetRef.current?.snapToIndex(0)}
                 style={styles.minimizeButton}
               />
-            </View>
-
-            {/* Slider pour le rayon de recherche */}
-            <View style={styles.radiusSliderContainer}>
-              <View style={styles.radiusSliderHeader}>
-                <MaterialCommunityIcons name="radar" size={16} color="#6366F1" />
-                <Text variant="labelMedium" style={styles.radiusSliderLabel}>
-                  Rayon : {searchRadius} km
-                </Text>
-              </View>
-              <Slider
-                style={styles.radiusSlider}
-                minimumValue={5}
-                maximumValue={100}
-                step={5}
-                value={searchRadius}
-                onValueChange={setSearchRadius}
-                minimumTrackTintColor="#6366F1"
-                maximumTrackTintColor="#E2E8F0"
-                thumbTintColor="#6366F1"
-              />
-              <View style={styles.radiusSliderLabels}>
-                <Text variant="labelSmall" style={styles.radiusSliderLabelText}>
-                  5 km
-                </Text>
-                <Text variant="labelSmall" style={styles.radiusSliderLabelText}>
-                  100 km
-                </Text>
-              </View>
             </View>
           </View>
         )}
@@ -920,8 +905,36 @@ export default function MapScreen() {
         </BottomSheetScrollView>
       </BottomSheet>
 
-      {/* Dialog navigation */}
+      {/* Dialog minimaliste pour ajuster le rayon */}
       <Portal>
+        <Dialog visible={showRadiusDialog} onDismiss={() => setShowRadiusDialog(false)} style={styles.radiusDialogMinimal}>
+          <Dialog.Content style={styles.radiusDialogContentMinimal}>
+            <Text variant="displaySmall" style={styles.radiusValueDisplayMinimal}>
+              {searchRadius} km
+            </Text>
+            <Slider
+              style={styles.radiusDialogSlider}
+              minimumValue={5}
+              maximumValue={50}
+              step={5}
+              value={searchRadius}
+              onValueChange={setSearchRadius}
+              minimumTrackTintColor="#6366F1"
+              maximumTrackTintColor="#E2E8F0"
+              thumbTintColor="#6366F1"
+            />
+            <View style={styles.radiusDialogLabelsMinimal}>
+              <Text variant="labelSmall" style={styles.radiusDialogLabelText}>
+                5 km
+              </Text>
+              <Text variant="labelSmall" style={styles.radiusDialogLabelText}>
+                50 km
+              </Text>
+            </View>
+          </Dialog.Content>
+        </Dialog>
+
+        {/* Dialog navigation */}
         <Dialog visible={showMapDialog} onDismiss={() => setShowMapDialog(false)} style={styles.navigationDialog}>
           <Dialog.Title style={styles.dialogTitle}>
             <Avatar.Icon icon="navigation" size={40} style={styles.dialogIcon} />
@@ -1426,5 +1439,54 @@ const styles = StyleSheet.create({
   },
   radiusSliderLabelText: {
     color: '#94A3B8',
+  },
+  radiusFloatingChip: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 140 : (StatusBar.currentHeight || 0) + 90,
+    left: 16,
+    zIndex: 10,
+    borderRadius: 20,
+    backgroundColor: 'white',
+  },
+  radiusChip: {
+    backgroundColor: 'transparent',
+    marginHorizontal: 0,
+    marginVertical: 0,
+  },
+  radiusChipText: {
+    color: '#6366F1',
+    fontWeight: '600',
+    fontSize: 12,
+  },
+  radiusDialogMinimal: {
+    maxWidth: 280,
+    alignSelf: 'center',
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+  },
+  radiusDialogContentMinimal: {
+    alignItems: 'center',
+    paddingVertical: 24,
+    paddingHorizontal: 20,
+  },
+  radiusValueDisplayMinimal: {
+    color: '#6366F1',
+    fontWeight: 'bold',
+    marginBottom: 20,
+    fontSize: 40,
+  },
+  radiusDialogSlider: {
+    width: '100%',
+    height: 40,
+  },
+  radiusDialogLabelsMinimal: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: 4,
+  },
+  radiusDialogLabelText: {
+    color: '#94A3B8',
+    fontSize: 11,
   },
 });

@@ -9,6 +9,9 @@ const allEvents: Event[] = mockEventsData.data.events as Event[];
 
 
 
+
+
+
 export default function EventsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
