@@ -10,7 +10,6 @@ import mockEventsData from '../../mockEventsData.json';
 import { Church, ChurchWithDistance, Event, EventWithDistance } from '../../types';
 import { calculateDistance } from '../../utils/geo';
 import { cityCoordinates } from '../../constants/cities';
-import { eventTypeConfig } from '../../constants/eventTypes';
 
 // Chargement des données depuis le mock API
 const allChurches: Church[] = mockApiResponse.data.churches as Church[];
@@ -165,33 +164,33 @@ export default function MapScreen() {
     [filteredItemsWithDistance]
   );
 
-  const handleItemPress = useCallback((item: ListItem) => {
-    setSelectedItem(item);
+  const handleMarkerPress = useCallback((church: Church) => {
+    setSelectedChurch(church);
     bottomSheetRef.current?.snapToIndex(2);
   }, []);
 
-  const handleDirections = useCallback((item: ListItem) => {
-    setItemForDirections(item);
+  const handleDirections = useCallback((church: Church) => {
+    setChurchForDirections(church);
     setShowMapDialog(true);
   }, []);
 
-  const openInGoogleMaps = useCallback((item: ListItem) => {
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${item.latitude},${item.longitude}`;
+  const openInGoogleMaps = useCallback((church: Church) => {
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${church.latitude},${church.longitude}`;
     Linking.openURL(url).catch(() => Alert.alert('Erreur', 'Impossible d\'ouvrir Google Maps'));
     setShowMapDialog(false);
   }, []);
 
-  const openInAppleMaps = useCallback((item: ListItem) => {
-    const url = `http://maps.apple.com/?daddr=${item.latitude},${item.longitude}`;
+  const openInAppleMaps = useCallback((church: Church) => {
+    const url = `http://maps.apple.com/?daddr=${church.latitude},${church.longitude}`;
     Linking.openURL(url).catch(() => Alert.alert('Erreur', 'Impossible d\'ouvrir Plans'));
     setShowMapDialog(false);
   }, []);
 
-  const openInWaze = useCallback((item: ListItem) => {
-    const url = `https://waze.com/ul?ll=${item.latitude},${item.longitude}&navigate=yes`;
+  const openInWaze = useCallback((church: Church) => {
+    const url = `https://waze.com/ul?ll=${church.latitude},${church.longitude}&navigate=yes`;
     Linking.canOpenURL('waze://').then(supported => {
       if (supported) {
-        Linking.openURL(`waze://?ll=${item.latitude},${item.longitude}&navigate=yes`);
+        Linking.openURL(`waze://?ll=${church.latitude},${church.longitude}&navigate=yes`);
       } else {
         Linking.openURL(url);
       }
@@ -199,10 +198,10 @@ export default function MapScreen() {
     setShowMapDialog(false);
   }, []);
 
-  const animateToItem = useCallback((item: ListItem) => {
+  const animateToChurch = useCallback((church: Church) => {
     mapRef.current?.animateToRegion({
-      latitude: item.latitude,
-      longitude: item.longitude,
+      latitude: church.latitude,
+      longitude: church.longitude,
       latitudeDelta: 0.02,
       longitudeDelta: 0.02,
     }, 1000);
@@ -212,15 +211,17 @@ export default function MapScreen() {
   const recenterOnUser = useCallback(async () => {
     try {
       if (location) {
+        // Si on a déjà la position, on l'utilise
         mapRef.current?.animateToRegion({
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
           latitudeDelta: 0.05,
           longitudeDelta: 0.05,
         }, 1000);
-        setSearchCenter(null);
-        setSearchQuery('');
+        setSearchCenter(null); // Réinitialise la recherche de ville
+        setSearchQuery(''); // Efface la recherche
       } else {
+        // Sinon, on récupère la position actuelle
         const currentLocation = await Location.getCurrentPositionAsync({
           accuracy: Location.Accuracy.Balanced,
         });
@@ -239,6 +240,17 @@ export default function MapScreen() {
     }
   }, [location]);
 
+  const handleScroll = useCallback((event: any) => {
+    const scrollPosition = event.nativeEvent.contentOffset.x;
+    const cardWidth = 320 + 16;
+    const index = Math.round(scrollPosition / cardWidth);
+
+    if (index >= 0 && index < filteredChurchesWithDistance.length && index !== focusedChurchIndex) {
+      setFocusedChurchIndex(index);
+      animateToChurch(filteredChurchesWithDistance[index]);
+    }
+  }, [focusedChurchIndex, animateToChurch, filteredChurchesWithDistance]);
+
   // Géolocalisation
   useEffect(() => {
     (async () => {
@@ -247,7 +259,7 @@ export default function MapScreen() {
         if (status !== 'granted') {
           Alert.alert(
             'Géolocalisation désactivée',
-            'Les églises et événements seront affichés autour de Paris.'
+            'Les églises seront affichées autour de Paris.'
           );
           return;
         }
@@ -270,22 +282,11 @@ export default function MapScreen() {
       } catch (error) {
         Alert.alert(
           'Erreur de géolocalisation',
-          'Les églises et événements seront affichés autour de Paris.'
+          'Les églises seront affichées autour de Paris.'
         );
       }
     })();
   }, []);
-
-  // Helper pour formatter la date
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', {
-      weekday: 'short',
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
-  };
 
   return (
     <View style={styles.container}>
@@ -315,22 +316,32 @@ export default function MapScreen() {
           </Marker>
         )}
 
-        {filteredItemsWithDistance.map((item, index) => (
+        {filteredChurchesWithDistance.map((church, index) => (
           <Marker
-            key={`${item.itemType}-${item.id}`}
+            key={church.id}
             coordinate={{
-              latitude: item.latitude,
-              longitude: item.longitude,
+              latitude: church.latitude,
+              longitude: church.longitude,
             }}
-            title={item.itemType === 'church' ? item.name : item.title}
-            description={item.itemType === 'church' ? item.address : item.city}
-            onPress={() => handleItemPress(item)}
+            title={church.name}
+            description={church.address}
+            onPress={() => handleMarkerPress(church)}
           >
-            {item.itemType === 'church' ? (
-              <ChurchMarkerIcon focused={focusedItemIndex === index} />
-            ) : (
-              <EventMarkerIcon focused={focusedItemIndex === index} />
-            )}
+            <ChurchMarkerIcon focused={focusedChurchIndex === index} />
+          </Marker>
+        ))}
+
+        {allEvents.map((event) => (
+          <Marker
+            key={`event-${event.id}`}
+            coordinate={{
+              latitude: event.latitude,
+              longitude: event.longitude,
+            }}
+            title={event.title}
+            description={event.city}
+          >
+            <EventMarkerIcon focused={false} />
           </Marker>
         ))}
       </MapView>
@@ -338,7 +349,7 @@ export default function MapScreen() {
       {/* Barre de recherche toujours visible */}
       <Surface style={styles.searchSection} elevation={5}>
         <Searchbar
-          placeholder="Rechercher une église, un événement ou une ville..."
+          placeholder="Rechercher une église ou une ville..."
           onChangeText={setSearchQuery}
           value={searchQuery}
           style={styles.searchBar}
@@ -374,333 +385,190 @@ export default function MapScreen() {
         <View style={styles.bottomSheetHeader}>
           <View style={styles.headerTop}>
             <Avatar.Icon
-              icon={selectedItem ? (selectedItem.itemType === 'church' ? "church" : "calendar-star") : "map-marker-multiple"}
+              icon={selectedChurch ? "church" : "map-marker-multiple"}
               size={40}
               style={styles.headerAvatar}
             />
             <View style={styles.headerTextContainer}>
               <Text variant="headlineSmall" style={styles.bottomSheetTitle}>
-                {selectedItem ?
-                  (selectedItem.itemType === 'church' ? selectedItem.name : selectedItem.title) :
-                  'Églises et événements à proximité'}
+                {selectedChurch ? selectedChurch.name : 'Églises à proximité'}
               </Text>
-              {!selectedItem && (
+              {!selectedChurch && (
                 <Text variant="bodySmall" style={styles.headerSubtitle}>
-                  {churchCount} église(s) • {eventCount} événement(s)
+                  {filteredChurchesWithDistance.length} église(s) trouvée(s)
                 </Text>
               )}
             </View>
-            {!selectedItem && (
-              <IconButton
-                icon="chevron-down"
-                size={24}
-                iconColor="#64748B"
-                onPress={() => bottomSheetRef.current?.snapToIndex(0)}
-                style={styles.minimizeButton}
-              />
-            )}
           </View>
         </View>
 
         {/* Contenu */}
         <BottomSheetScrollView style={styles.bottomSheetContent}>
-          {selectedItem ? (
-            selectedItem.itemType === 'church' ? (
-              // Vue détaillée église
-              <View style={styles.detailsContainerModern}>
-                <View style={styles.detailHeaderModern}>
-                  <IconButton
-                    icon="arrow-left"
-                    size={24}
-                    iconColor="white"
-                    onPress={() => setSelectedItem(null)}
-                    style={styles.detailBackButton}
-                  />
-                  <View style={styles.detailHeaderContent}>
-                    <Text variant="headlineMedium" style={styles.detailChurchName}>
-                      {selectedItem.name}
-                    </Text>
-                    {isUsingCurrentLocation && (
-                      <View style={styles.detailDistanceBadge}>
-                        <Text style={styles.detailDistanceText}>
-                          {selectedItem.distance.toFixed(1)} km
-                        </Text>
-                      </View>
-                    )}
-                  </View>
+          {selectedChurch ? (
+            // Vue détaillée moderne
+            <View style={styles.detailsContainerModern}>
+              {/* Header avec gradient et nom */}
+              <View style={styles.detailHeaderModern}>
+                <IconButton
+                  icon="arrow-left"
+                  size={24}
+                  iconColor="white"
+                  onPress={() => setSelectedChurch(null)}
+                  style={styles.detailBackButton}
+                />
+                <View style={styles.detailHeaderContent}>
+                  <Text variant="headlineMedium" style={styles.detailChurchName}>
+                    {selectedChurch.name}
+                  </Text>
+                  {isUsingCurrentLocation && (
+                    <View style={styles.detailDistanceBadge}>
+                      <Text style={styles.detailDistanceText}>
+                        {filteredChurchesWithDistance.find(c => c.id === selectedChurch.id)?.distance.toFixed(1) || '0.0'} km
+                      </Text>
+                    </View>
+                  )}
                 </View>
-
-                <View style={styles.quickActionsContainer}>
-                  <Button
-                    mode="contained"
-                    icon="phone"
-                    style={styles.quickActionButton}
-                    labelStyle={styles.quickActionLabel}
-                    onPress={() => Linking.openURL(`tel:${selectedItem.phone}`)}
-                  >
-                    Appeler
-                  </Button>
-                  <Button
-                    mode="contained"
-                    icon="email"
-                    style={styles.quickActionButton}
-                    labelStyle={styles.quickActionLabel}
-                    onPress={() => Linking.openURL(`mailto:${selectedItem.email}`)}
-                  >
-                    Email
-                  </Button>
-                  <Button
-                    mode="contained"
-                    icon="directions"
-                    style={[styles.quickActionButton, styles.quickActionButtonPrimary]}
-                    labelStyle={styles.quickActionLabel}
-                    onPress={() => handleDirections(selectedItem)}
-                  >
-                    Itinéraire
-                  </Button>
-                </View>
-
-                <Card mode="outlined" style={styles.detailCard}>
-                  <Card.Content>
-                    <View style={styles.detailCardHeader}>
-                      <Avatar.Icon icon="information" size={32} style={styles.detailCardIcon} />
-                      <Text variant="titleMedium" style={styles.detailCardTitle}>À propos</Text>
-                    </View>
-                    <Text variant="bodyMedium" style={styles.detailCardText}>
-                      {selectedItem.description}
-                    </Text>
-                  </Card.Content>
-                </Card>
-
-                <Card mode="outlined" style={styles.detailCard}>
-                  <Card.Content>
-                    <View style={styles.detailCardHeader}>
-                      <Avatar.Icon icon="map-marker" size={32} style={styles.detailCardIcon} />
-                      <Text variant="titleMedium" style={styles.detailCardTitle}>Adresse</Text>
-                    </View>
-                    <Text variant="bodyMedium" style={styles.detailCardText}>
-                      {selectedItem.address}
-                    </Text>
-                  </Card.Content>
-                </Card>
-
-                <Card mode="outlined" style={styles.detailCard}>
-                  <Card.Content>
-                    <View style={styles.detailCardHeader}>
-                      <Avatar.Icon icon="account-tie" size={32} style={styles.detailCardIcon} />
-                      <View style={styles.detailCardHeaderText}>
-                        <Text variant="labelSmall" style={styles.detailCardLabel}>Pasteur</Text>
-                        <Text variant="titleMedium" style={styles.detailCardTitle}>{selectedItem.pastor}</Text>
-                      </View>
-                    </View>
-                  </Card.Content>
-                </Card>
-
-                <Card mode="outlined" style={styles.detailCard}>
-                  <Card.Content>
-                    <View style={styles.detailCardHeader}>
-                      <Avatar.Icon icon="phone" size={32} style={styles.detailCardIcon} />
-                      <Text variant="titleMedium" style={styles.detailCardTitle}>Contact</Text>
-                    </View>
-                    <View style={styles.contactInfoContainer}>
-                      <View style={styles.contactInfoRow}>
-                        <Text variant="bodyMedium" style={styles.contactInfoLabel}>Téléphone :</Text>
-                        <Text variant="bodyMedium" style={styles.contactInfoValue}>{selectedItem.phone}</Text>
-                      </View>
-                      <View style={styles.contactInfoRow}>
-                        <Text variant="bodyMedium" style={styles.contactInfoLabel}>Email :</Text>
-                        <Text variant="bodyMedium" style={styles.contactInfoValue}>{selectedItem.email}</Text>
-                      </View>
-                    </View>
-                  </Card.Content>
-                </Card>
-
-                <Card mode="outlined" style={styles.detailCard}>
-                  <Card.Content>
-                    <View style={styles.detailCardHeader}>
-                      <Avatar.Icon icon="calendar-clock" size={32} style={styles.detailCardIcon} />
-                      <Text variant="titleMedium" style={styles.detailCardTitle}>Horaires des cultes</Text>
-                    </View>
-                    <View style={styles.servicesContainer}>
-                      {selectedItem.services.map((service, index) => (
-                        <Chip
-                          key={index}
-                          icon="clock-outline"
-                          mode="flat"
-                          style={styles.serviceChipModern}
-                          textStyle={styles.serviceChipText}
-                        >
-                          {service}
-                        </Chip>
-                      ))}
-                    </View>
-                  </Card.Content>
-                </Card>
               </View>
-            ) : (
-              // Vue détaillée événement
-              <View style={styles.detailsContainerModern}>
-                <View style={[styles.detailHeaderModern, { backgroundColor: eventTypeConfig[selectedItem.type]?.color || '#10B981' }]}>
-                  <IconButton
-                    icon="arrow-left"
-                    size={24}
-                    iconColor="white"
-                    onPress={() => setSelectedItem(null)}
-                    style={styles.detailBackButton}
-                  />
-                  <View style={styles.detailHeaderContent}>
-                    <Text variant="headlineMedium" style={styles.detailChurchName}>
-                      {selectedItem.title}
-                    </Text>
-                    {isUsingCurrentLocation && (
-                      <View style={styles.detailDistanceBadge}>
-                        <Text style={styles.detailDistanceText}>
-                          {selectedItem.distance.toFixed(1)} km
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                </View>
 
-                <View style={styles.quickActionsContainer}>
-                  <Button
-                    mode="contained"
-                    icon="phone"
-                    style={styles.quickActionButton}
-                    labelStyle={styles.quickActionLabel}
-                    onPress={() => Linking.openURL(`tel:${selectedItem.phone}`)}
-                  >
-                    Appeler
-                  </Button>
-                  <Button
-                    mode="contained"
-                    icon="whatsapp"
-                    style={[styles.quickActionButton, { backgroundColor: '#25D366' }]}
-                    labelStyle={styles.quickActionLabel}
-                    onPress={() => Linking.openURL(selectedItem.whatsapp)}
-                  >
-                    WhatsApp
-                  </Button>
-                  <Button
-                    mode="contained"
-                    icon="directions"
-                    style={[styles.quickActionButton, styles.quickActionButtonPrimary]}
-                    labelStyle={styles.quickActionLabel}
-                    onPress={() => handleDirections(selectedItem)}
-                  >
-                    Itinéraire
-                  </Button>
-                </View>
-
-                <Card mode="outlined" style={styles.detailCard}>
-                  <Card.Content>
-                    <View style={styles.detailCardHeader}>
-                      <Avatar.Icon icon="calendar" size={32} style={styles.detailCardIcon} />
-                      <Text variant="titleMedium" style={styles.detailCardTitle}>Date et heure</Text>
-                    </View>
-                    <Text variant="bodyMedium" style={styles.detailCardText}>
-                      {formatDate(selectedItem.date)} • {selectedItem.startTime} - {selectedItem.endTime}
-                    </Text>
-                  </Card.Content>
-                </Card>
-
-                <Card mode="outlined" style={styles.detailCard}>
-                  <Card.Content>
-                    <View style={styles.detailCardHeader}>
-                      <Avatar.Icon icon="information" size={32} style={styles.detailCardIcon} />
-                      <Text variant="titleMedium" style={styles.detailCardTitle}>Description</Text>
-                    </View>
-                    <Text variant="bodyMedium" style={styles.detailCardText}>
-                      {selectedItem.description}
-                    </Text>
-                  </Card.Content>
-                </Card>
-
-                <Card mode="outlined" style={styles.detailCard}>
-                  <Card.Content>
-                    <View style={styles.detailCardHeader}>
-                      <Avatar.Icon icon="church" size={32} style={styles.detailCardIcon} />
-                      <Text variant="titleMedium" style={styles.detailCardTitle}>Église organisatrice</Text>
-                    </View>
-                    <Text variant="bodyMedium" style={styles.detailCardText}>
-                      {selectedItem.churchName}
-                    </Text>
-                  </Card.Content>
-                </Card>
-
-                <Card mode="outlined" style={styles.detailCard}>
-                  <Card.Content>
-                    <View style={styles.detailCardHeader}>
-                      <Avatar.Icon icon="map-marker" size={32} style={styles.detailCardIcon} />
-                      <Text variant="titleMedium" style={styles.detailCardTitle}>Lieu</Text>
-                    </View>
-                    <Text variant="bodyMedium" style={styles.detailCardText}>
-                      {selectedItem.address}
-                    </Text>
-                    <Text variant="bodySmall" style={[styles.detailCardText, { marginTop: 4 }]}>
-                      {selectedItem.city}, {selectedItem.country}
-                    </Text>
-                  </Card.Content>
-                </Card>
-
-                <Card mode="outlined" style={styles.detailCard}>
-                  <Card.Content>
-                    <View style={styles.detailCardHeader}>
-                      <Avatar.Icon icon="account" size={32} style={styles.detailCardIcon} />
-                      <Text variant="titleMedium" style={styles.detailCardTitle}>Organisateur</Text>
-                    </View>
-                    <Text variant="bodyMedium" style={styles.detailCardText}>
-                      {selectedItem.organizer}
-                    </Text>
-                  </Card.Content>
-                </Card>
-
-                <Card mode="outlined" style={styles.detailCard}>
-                  <Card.Content>
-                    <View style={styles.detailCardHeader}>
-                      <Avatar.Icon icon="email" size={32} style={styles.detailCardIcon} />
-                      <Text variant="titleMedium" style={styles.detailCardTitle}>Contact</Text>
-                    </View>
-                    <View style={styles.contactInfoContainer}>
-                      <View style={styles.contactInfoRow}>
-                        <Text variant="bodyMedium" style={styles.contactInfoLabel}>Email :</Text>
-                        <Text variant="bodyMedium" style={styles.contactInfoValue}>{selectedItem.email}</Text>
-                      </View>
-                      <View style={styles.contactInfoRow}>
-                        <Text variant="bodyMedium" style={styles.contactInfoLabel}>Téléphone :</Text>
-                        <Text variant="bodyMedium" style={styles.contactInfoValue}>{selectedItem.phone}</Text>
-                      </View>
-                    </View>
-                  </Card.Content>
-                </Card>
+              {/* Actions rapides */}
+              <View style={styles.quickActionsContainer}>
+                <Button
+                  mode="contained"
+                  icon="phone"
+                  style={styles.quickActionButton}
+                  labelStyle={styles.quickActionLabel}
+                  onPress={() => Linking.openURL(`tel:${selectedChurch.phone}`)}
+                >
+                  Appeler
+                </Button>
+                <Button
+                  mode="contained"
+                  icon="email"
+                  style={styles.quickActionButton}
+                  labelStyle={styles.quickActionLabel}
+                  onPress={() => Linking.openURL(`mailto:${selectedChurch.email}`)}
+                >
+                  Email
+                </Button>
+                <Button
+                  mode="contained"
+                  icon="directions"
+                  style={[styles.quickActionButton, styles.quickActionButtonPrimary]}
+                  labelStyle={styles.quickActionLabel}
+                  onPress={() => handleDirections(selectedChurch)}
+                >
+                  Itinéraire
+                </Button>
               </View>
-            )
+
+              {/* Description */}
+              <Card mode="outlined" style={styles.detailCard}>
+                <Card.Content>
+                  <View style={styles.detailCardHeader}>
+                    <Avatar.Icon icon="information" size={32} style={styles.detailCardIcon} />
+                    <Text variant="titleMedium" style={styles.detailCardTitle}>À propos</Text>
+                  </View>
+                  <Text variant="bodyMedium" style={styles.detailCardText}>
+                    {selectedChurch.description}
+                  </Text>
+                </Card.Content>
+              </Card>
+
+              {/* Adresse */}
+              <Card mode="outlined" style={styles.detailCard}>
+                <Card.Content>
+                  <View style={styles.detailCardHeader}>
+                    <Avatar.Icon icon="map-marker" size={32} style={styles.detailCardIcon} />
+                    <Text variant="titleMedium" style={styles.detailCardTitle}>Adresse</Text>
+                  </View>
+                  <Text variant="bodyMedium" style={styles.detailCardText}>
+                    {selectedChurch.address}
+                  </Text>
+                </Card.Content>
+              </Card>
+
+              {/* Responsable */}
+              <Card mode="outlined" style={styles.detailCard}>
+                <Card.Content>
+                  <View style={styles.detailCardHeader}>
+                    <Avatar.Icon icon="account-tie" size={32} style={styles.detailCardIcon} />
+                    <View style={styles.detailCardHeaderText}>
+                      <Text variant="labelSmall" style={styles.detailCardLabel}>Pasteur</Text>
+                      <Text variant="titleMedium" style={styles.detailCardTitle}>{selectedChurch.pastor}</Text>
+                    </View>
+                  </View>
+                </Card.Content>
+              </Card>
+
+              {/* Contact */}
+              <Card mode="outlined" style={styles.detailCard}>
+                <Card.Content>
+                  <View style={styles.detailCardHeader}>
+                    <Avatar.Icon icon="phone" size={32} style={styles.detailCardIcon} />
+                    <Text variant="titleMedium" style={styles.detailCardTitle}>Contact</Text>
+                  </View>
+                  <View style={styles.contactInfoContainer}>
+                    <View style={styles.contactInfoRow}>
+                      <Text variant="bodyMedium" style={styles.contactInfoLabel}>Téléphone :</Text>
+                      <Text variant="bodyMedium" style={styles.contactInfoValue}>{selectedChurch.phone}</Text>
+                    </View>
+                    <View style={styles.contactInfoRow}>
+                      <Text variant="bodyMedium" style={styles.contactInfoLabel}>Email :</Text>
+                      <Text variant="bodyMedium" style={styles.contactInfoValue}>{selectedChurch.email}</Text>
+                    </View>
+                  </View>
+                </Card.Content>
+              </Card>
+
+              {/* Horaires */}
+              <Card mode="outlined" style={styles.detailCard}>
+                <Card.Content>
+                  <View style={styles.detailCardHeader}>
+                    <Avatar.Icon icon="calendar-clock" size={32} style={styles.detailCardIcon} />
+                    <Text variant="titleMedium" style={styles.detailCardTitle}>Horaires des cultes</Text>
+                  </View>
+                  <View style={styles.servicesContainer}>
+                    {selectedChurch.services.map((service, index) => (
+                      <Chip
+                        key={index}
+                        icon="clock-outline"
+                        mode="flat"
+                        style={styles.serviceChipModern}
+                        textStyle={styles.serviceChipText}
+                      >
+                        {service}
+                      </Chip>
+                    ))}
+                  </View>
+                </Card.Content>
+              </Card>
+            </View>
           ) : (
             // Liste verticale style Google Maps
             <View style={styles.churchListVertical}>
-              {filteredItemsWithDistance.map((item, index) => (
+              {filteredChurchesWithDistance.map((church, index) => (
                 <Card
-                  key={`${item.itemType}-${item.id}`}
+                  key={church.id}
                   style={[
                     styles.churchCardCompact,
-                    focusedItemIndex === index && styles.churchCardCompactFocused,
+                    focusedChurchIndex === index && styles.churchCardCompactFocused,
                   ]}
                   onPress={() => {
-                    setFocusedItemIndex(index);
-                    animateToItem(item);
+                    setFocusedChurchIndex(index);
+                    animateToChurch(church);
                   }}
                   mode="elevated"
-                  elevation={focusedItemIndex === index ? 4 : 1}
+                  elevation={focusedChurchIndex === index ? 4 : 1}
                 >
                   <View style={styles.cardCompactContent}>
+                    {/* Icône et infos principales */}
                     <View style={styles.cardCompactMain}>
                       <Avatar.Icon
-                        icon={item.itemType === 'church' ? "church" : "calendar-star"}
+                        icon="church"
                         size={48}
                         style={[
                           styles.cardCompactAvatar,
-                          item.itemType === 'event' && { backgroundColor: eventTypeConfig[item.type]?.color || '#10B981' },
-                          focusedItemIndex === index && styles.cardCompactAvatarFocused,
+                          focusedChurchIndex === index && styles.cardCompactAvatarFocused,
                         ]}
                       />
 
@@ -710,25 +578,14 @@ export default function MapScreen() {
                           style={styles.cardCompactTitle}
                           numberOfLines={1}
                         >
-                          {item.itemType === 'church' ? item.name : item.title}
+                          {church.name}
                         </Text>
-
-                        {item.itemType === 'event' && (
-                          <Chip
-                            icon={eventTypeConfig[item.type]?.icon}
-                            style={[styles.eventTypeChip, { backgroundColor: eventTypeConfig[item.type]?.color || '#10B981' }]}
-                            textStyle={styles.eventTypeChipText}
-                            compact
-                          >
-                            {eventTypeConfig[item.type]?.label || 'Événement'}
-                          </Chip>
-                        )}
 
                         {isUsingCurrentLocation && (
                           <View style={styles.cardCompactMeta}>
                             <View style={styles.distanceBadge}>
                               <Text style={styles.distanceBadgeText}>
-                                {item.distance.toFixed(1)} km
+                                {church.distance.toFixed(1)} km
                               </Text>
                             </View>
                           </View>
@@ -739,25 +596,26 @@ export default function MapScreen() {
                           style={styles.cardCompactAddress}
                           numberOfLines={2}
                         >
-                          {item.itemType === 'church' ? item.address : `${item.city} • ${formatDate(item.date)}`}
+                          {church.address}
                         </Text>
                       </View>
                     </View>
 
+                    {/* Actions rapides */}
                     <View style={styles.cardCompactActions}>
                       <IconButton
                         icon="information-outline"
                         size={20}
                         iconColor="#6366F1"
                         containerColor="#EEF2FF"
-                        onPress={() => handleItemPress(item)}
+                        onPress={() => handleMarkerPress(church)}
                         style={styles.cardCompactActionButton}
                       />
                       <Button
                         mode="contained"
                         icon="directions"
                         compact
-                        onPress={() => handleDirections(item)}
+                        onPress={() => handleDirections(church)}
                         style={styles.cardCompactDirectionsButton}
                         labelStyle={styles.cardCompactDirectionsLabel}
                       >
@@ -781,15 +639,13 @@ export default function MapScreen() {
           </Dialog.Title>
           <Dialog.Content style={styles.dialogContent}>
             <Text variant="bodyMedium" style={styles.dialogDescription}>
-              Vers <Text style={styles.churchName}>
-                {itemForDirections?.itemType === 'church' ? itemForDirections.name : itemForDirections?.title}
-              </Text>
+              Vers <Text style={styles.churchName}>{churchForDirections?.name}</Text>
             </Text>
             <Divider style={styles.dialogDivider} />
             <Text variant="labelSmall" style={styles.dialogLabel}>CHOISISSEZ VOTRE APPLICATION :</Text>
 
             <View style={styles.navigationApps}>
-              <Card mode="outlined" style={styles.appCard} onPress={() => itemForDirections && openInGoogleMaps(itemForDirections)}>
+              <Card mode="outlined" style={styles.appCard} onPress={() => churchForDirections && openInGoogleMaps(churchForDirections)}>
                 <Card.Content style={styles.appCardContent}>
                   <Avatar.Icon icon="google-maps" size={48} style={styles.googleMapsIcon} />
                   <Text variant="titleMedium" style={styles.appName}>Google Maps</Text>
@@ -797,7 +653,7 @@ export default function MapScreen() {
               </Card>
 
               {Platform.OS === 'ios' && (
-                <Card mode="outlined" style={styles.appCard} onPress={() => itemForDirections && openInAppleMaps(itemForDirections)}>
+                <Card mode="outlined" style={styles.appCard} onPress={() => churchForDirections && openInAppleMaps(churchForDirections)}>
                   <Card.Content style={styles.appCardContent}>
                     <Avatar.Icon icon="map" size={48} style={styles.appleMapsIcon} />
                     <Text variant="titleMedium" style={styles.appName}>Plans</Text>
@@ -805,7 +661,7 @@ export default function MapScreen() {
                 </Card>
               )}
 
-              <Card mode="outlined" style={styles.appCard} onPress={() => itemForDirections && openInWaze(itemForDirections)}>
+              <Card mode="outlined" style={styles.appCard} onPress={() => churchForDirections && openInWaze(churchForDirections)}>
                 <Card.Content style={styles.appCardContent}>
                   <Avatar.Icon icon="waze" size={48} style={styles.wazeIcon} />
                   <Text variant="titleMedium" style={styles.appName}>Waze</Text>
@@ -830,6 +686,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  // Section de recherche améliorée
   searchSection: {
     position: 'absolute',
     top: Platform.OS === 'ios' ? 60 : (StatusBar.currentHeight || 0) + 10,
@@ -848,8 +705,24 @@ const styles = StyleSheet.create({
   searchInput: {
     fontSize: 15,
   },
+  suggestionsScroll: {
+    marginTop: 12,
+  },
+  suggestionsContainer: {
+    gap: 8,
+    paddingHorizontal: 4,
+  },
+  suggestionChip: {
+    backgroundColor: '#EEF2FF',
+    borderColor: '#6366F1',
+  },
+  suggestionChipText: {
+    color: '#6366F1',
+    fontWeight: '600',
+  },
+  // Bottom Sheet amélioré avec très forte transparence
   bottomSheetBackground: {
-    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+    backgroundColor: 'rgba(255, 255, 255, 0.6)', // 60% opacité - effet glass très prononcé
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     shadowColor: '#000',
@@ -869,7 +742,7 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(241, 245, 249, 0.3)',
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    backgroundColor: 'rgba(255, 255, 255, 0.5)', // 50% opacité - header semi-transparent
   },
   headerTop: {
     flexDirection: 'row',
@@ -891,301 +764,136 @@ const styles = StyleSheet.create({
     color: '#64748B',
     marginTop: 2,
   },
-  minimizeButton: {
-    margin: 0,
-  },
   bottomSheetContent: {
     paddingTop: 16,
     paddingBottom: 20,
   },
-  churchListVertical: {
-    gap: 12,
-    paddingHorizontal: 16,
+  // Liste des églises améliorée
+  churchList: {
+    marginTop: 8,
   },
-  churchCardCompact: {
-    marginBottom: 12,
-    borderRadius: 12,
+  churchListContent: {
+    paddingLeft: 20,
+    paddingRight: 100,
+  },
+  churchCard: {
+    width: 320,
+    marginRight: 16,
+    borderRadius: 16,
     backgroundColor: 'white',
   },
-  churchCardCompactFocused: {
+  churchCardFocused: {
     borderWidth: 2,
     borderColor: '#6366F1',
-    backgroundColor: '#F8FAFC',
+    transform: [{ scale: 1.02 }],
   },
-  cardCompactContent: {
-    padding: 12,
+  cardAvatar: {
+    backgroundColor: '#6366F1',
   },
-  cardCompactMain: {
-    flexDirection: 'row',
+  distanceChip: {
+    backgroundColor: '#FEF3C7',
+    marginRight: 8,
+  },
+  cardBody: {
+    paddingTop: 12,
     gap: 12,
-    marginBottom: 12,
   },
-  cardCompactAvatar: {
-    backgroundColor: '#F1F5F9',
-  },
-  cardCompactAvatarFocused: {
-    backgroundColor: '#6366F1',
-  },
-  cardCompactInfo: {
-    flex: 1,
-    gap: 6,
-  },
-  cardCompactTitle: {
-    fontWeight: '600',
-    color: '#1E293B',
-  },
-  cardCompactMeta: {
+  infoRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  cardCompactAddress: {
-    color: '#64748B',
-    lineHeight: 18,
-  },
-  cardCompactActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    gap: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
-  },
-  cardCompactActionButton: {
-    margin: 0,
-  },
-  cardCompactDirectionsButton: {
-    backgroundColor: '#6366F1',
-  },
-  cardCompactDirectionsLabel: {
-    fontSize: 13,
-  },
-  distanceBadge: {
-    backgroundColor: '#64748B',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    alignSelf: 'flex-start',
-  },
-  distanceBadgeText: {
-    color: 'white',
-    fontSize: 11,
-    fontWeight: '600',
-    letterSpacing: 0.3,
-  },
-  recenterButton: {
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? 140 : (StatusBar.currentHeight || 0) + 90,
-    right: 16,
-    zIndex: 10,
-    borderRadius: 28,
-    backgroundColor: 'white',
-    width: 56,
-    height: 56,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  recenterIconButton: {
-    margin: 0,
-  },
-  detailsContainerModern: {
+    alignItems: 'flex-start',
     gap: 12,
-    paddingHorizontal: 16,
-    paddingBottom: 20,
   },
-  detailHeaderModern: {
-    backgroundColor: '#6366F1',
-    marginHorizontal: -16,
-    marginTop: -16,
-    paddingHorizontal: 20,
-    paddingTop: 50,
-    paddingBottom: 24,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-    marginBottom: 16,
-  },
-  detailBackButton: {
-    position: 'absolute',
-    top: 12,
-    left: 12,
-    zIndex: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  detailHeaderContent: {
-    marginTop: 8,
-  },
-  detailChurchName: {
-    color: 'white',
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  detailDistanceBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    alignSelf: 'flex-start',
-  },
-  detailDistanceText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  quickActionsContainer: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 8,
-  },
-  quickActionButton: {
-    flex: 1,
-    backgroundColor: '#F1F5F9',
-  },
-  quickActionButtonPrimary: {
-    backgroundColor: '#6366F1',
-  },
-  quickActionLabel: {
-    fontSize: 12,
-  },
-  detailCard: {
-    marginBottom: 12,
-    borderRadius: 12,
-    borderColor: '#E2E8F0',
-  },
-  detailCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 12,
-  },
-  detailCardHeaderText: {
-    flex: 1,
-  },
-  detailCardIcon: {
+  infoIcon: {
     backgroundColor: '#EEF2FF',
   },
-  detailCardTitle: {
-    fontWeight: '600',
-    color: '#1E293B',
+  infoTextContainer: {
+    flex: 1,
   },
-  detailCardLabel: {
-    color: '#64748B',
-    marginBottom: 4,
-  },
-  detailCardText: {
-    color: '#475569',
-    lineHeight: 22,
-  },
-  contactInfoContainer: {
-    gap: 12,
-    marginTop: 8,
-  },
-  contactInfoRow: {
+  // Pagination
+  paginationContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 16,
+    gap: 8,
   },
-  contactInfoLabel: {
+  paginationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#CBD5E1',
+  },
+  paginationDotActive: {
+    width: 28,
+    backgroundColor: '#6366F1',
+  },
+  // Vue détaillée
+  detailsContainer: {
+    gap: 16,
+    paddingTop: 8,
+  },
+  detailMainCard: {
+    marginBottom: 8,
+    borderRadius: 16,
+  },
+  detailSection: {
+    paddingVertical: 12,
+  },
+  detailHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 12,
+  },
+  detailAvatar: {
+    backgroundColor: '#EEF2FF',
+  },
+  detailSectionTitle: {
+    flex: 1,
+    textTransform: 'uppercase',
     color: '#64748B',
-    fontWeight: '500',
+    fontWeight: '700',
   },
-  contactInfoValue: {
-    color: '#1E293B',
-    fontWeight: '600',
+  detailSectionText: {
+    marginLeft: 48,
+    lineHeight: 22,
+    color: '#334155',
   },
-  servicesContainer: {
+  detailDivider: {
+    marginVertical: 4,
+  },
+  chipContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
+    marginLeft: 48,
     marginTop: 8,
   },
-  serviceChipModern: {
+  serviceChipDetail: {
     backgroundColor: '#EEF2FF',
   },
-  serviceChipText: {
-    color: '#6366F1',
-    fontWeight: '500',
+  contactContainer: {
+    marginLeft: 48,
+    gap: 8,
   },
-  markerContainer: {
-    backgroundColor: '#EF4444',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
+  contactRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 3,
-    borderColor: 'white',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
-    elevation: 5,
+    gap: 8,
   },
-  markerContainerFocused: {
+  detailActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  backButton: {
+    flex: 1,
+    backgroundColor: '#F1F5F9',
+  },
+  directionsButton: {
+    flex: 1,
     backgroundColor: '#6366F1',
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    transform: [{ scale: 1.1 }],
   },
-  userMarkerContainer: {
-    width: 50,
-    height: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  userMarkerAccuracyCircle: {
-    position: 'absolute',
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: 'rgba(66, 133, 244, 0.15)',
-    borderWidth: 2,
-    borderColor: 'rgba(66, 133, 244, 0.3)',
-  },
-  userMarkerDot: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: '#4285F4',
-    borderWidth: 3,
-    borderColor: 'white',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 3,
-    elevation: 6,
-  },
-  eventMarkerContainer: {
-    backgroundColor: '#10B981',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 3,
-    borderColor: 'white',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
-    elevation: 5,
-  },
-  eventMarkerContainerFocused: {
-    backgroundColor: '#059669',
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    transform: [{ scale: 1.1 }],
-  },
-  eventTypeChip: {
-    alignSelf: 'flex-start',
-  },
-  eventTypeChipText: {
-    color: 'white',
-    fontSize: 11,
-    fontWeight: '600',
-  },
+  // Dialog
   navigationDialog: {
     maxWidth: 400,
     alignSelf: 'center',
@@ -1246,5 +954,303 @@ const styles = StyleSheet.create({
   },
   appName: {
     fontWeight: '500',
+  },
+  // Liste verticale style Google Maps
+  churchListVertical: {
+    gap: 12,
+    paddingHorizontal: 16,
+  },
+  churchCardCompact: {
+    marginBottom: 12,
+    borderRadius: 12,
+    backgroundColor: 'white',
+  },
+  churchCardCompactFocused: {
+    borderWidth: 2,
+    borderColor: '#6366F1',
+    backgroundColor: '#F8FAFC',
+  },
+  cardCompactContent: {
+    padding: 12,
+  },
+  cardCompactMain: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 12,
+  },
+  cardCompactAvatar: {
+    backgroundColor: '#F1F5F9',
+  },
+  cardCompactAvatarFocused: {
+    backgroundColor: '#6366F1',
+  },
+  cardCompactInfo: {
+    flex: 1,
+    gap: 6,
+  },
+  cardCompactTitle: {
+    fontWeight: '600',
+    color: '#1E293B',
+  },
+  cardCompactMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  cardCompactDistanceChip: {
+    backgroundColor: '#FEF3C7',
+    height: 24,
+  },
+  cardCompactDistanceText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#92400E',
+  },
+  cardCompactAddress: {
+    color: '#64748B',
+    lineHeight: 18,
+  },
+  cardCompactActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+  },
+  cardCompactActionButton: {
+    margin: 0,
+  },
+  cardCompactDirectionsButton: {
+    backgroundColor: '#6366F1',
+  },
+  cardCompactDirectionsLabel: {
+    fontSize: 13,
+  },
+  // Badge de distance personnalisé
+  distanceBadge: {
+    backgroundColor: '#64748B',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+  },
+  distanceBadgeText: {
+    color: 'white',
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 0.3,
+  },
+  // Bouton de recentrage GPS
+  recenterButton: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 140 : (StatusBar.currentHeight || 0) + 90,
+    right: 16,
+    zIndex: 10,
+    borderRadius: 28,
+    backgroundColor: 'white',
+    width: 56,
+    height: 56,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  recenterIconButton: {
+    margin: 0,
+  },
+  // Vue détaillée moderne
+  detailsContainerModern: {
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingBottom: 20,
+  },
+  detailHeaderModern: {
+    backgroundColor: '#6366F1',
+    marginHorizontal: -16,
+    marginTop: -16,
+    padding: 20,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    marginBottom: 16,
+  },
+  detailBackButton: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    zIndex: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  detailHeaderContent: {
+    marginTop: 40,
+  },
+  detailChurchName: {
+    color: 'white',
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  detailDistanceBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+  },
+  detailDistanceText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  // Actions rapides
+  quickActionsContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 8,
+  },
+  quickActionButton: {
+    flex: 1,
+    backgroundColor: '#F1F5F9',
+  },
+  quickActionButtonPrimary: {
+    backgroundColor: '#6366F1',
+  },
+  quickActionLabel: {
+    fontSize: 12,
+  },
+  // Cards détail
+  detailCard: {
+    marginBottom: 12,
+    borderRadius: 12,
+    borderColor: '#E2E8F0',
+  },
+  detailCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 12,
+  },
+  detailCardHeaderText: {
+    flex: 1,
+  },
+  detailCardIcon: {
+    backgroundColor: '#EEF2FF',
+  },
+  detailCardTitle: {
+    fontWeight: '600',
+    color: '#1E293B',
+  },
+  detailCardLabel: {
+    color: '#64748B',
+    marginBottom: 4,
+  },
+  detailCardText: {
+    color: '#475569',
+    lineHeight: 22,
+  },
+  // Contact info
+  contactInfoContainer: {
+    gap: 12,
+    marginTop: 8,
+  },
+  contactInfoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  contactInfoLabel: {
+    color: '#64748B',
+    fontWeight: '500',
+  },
+  contactInfoValue: {
+    color: '#1E293B',
+    fontWeight: '600',
+  },
+  // Services
+  servicesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 8,
+  },
+  serviceChipModern: {
+    backgroundColor: '#EEF2FF',
+  },
+  serviceChipText: {
+    color: '#6366F1',
+    fontWeight: '500',
+  },
+  // Marker personnalisé avec icône de colombe
+  markerContainer: {
+    backgroundColor: '#EF4444',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 5,
+  },
+  markerContainerFocused: {
+    backgroundColor: '#6366F1',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    transform: [{ scale: 1.1 }],
+  },
+  // Marker de position utilisateur - Style Google Maps
+  userMarkerContainer: {
+    width: 50,
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  userMarkerAccuracyCircle: {
+    position: 'absolute',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(66, 133, 244, 0.15)',
+    borderWidth: 2,
+    borderColor: 'rgba(66, 133, 244, 0.3)',
+  },
+  userMarkerDot: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#4285F4',
+    borderWidth: 3,
+    borderColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 3,
+    elevation: 6,
+  },
+  // Marker personnalisé pour les événements (vert pour les différencier)
+  eventMarkerContainer: {
+    backgroundColor: '#10B981',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 5,
+  },
+  eventMarkerContainerFocused: {
+    backgroundColor: '#059669',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    transform: [{ scale: 1.1 }],
   },
 });
