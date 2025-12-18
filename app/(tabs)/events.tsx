@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { StyleSheet, View, ScrollView, Platform, StatusBar } from 'react-native';
-import { Card, Text, Searchbar, Surface, Avatar, Chip } from 'react-native-paper';
+import { StyleSheet, View, ScrollView, Platform, StatusBar, Linking, Alert } from 'react-native';
+import { Card, Text, Searchbar, Surface, Avatar, Chip, Button, Divider } from 'react-native-paper';
 import mockEventsData from '../../mockEventsData.json';
 import { Event } from '../../types';
 
@@ -8,6 +8,15 @@ const allEvents: Event[] = mockEventsData.data.events as Event[];
 
 export default function EventsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandedCards, setExpandedCards] = useState<Record<number, boolean>>({});
+
+  // Toggle l'état d'une carte
+  const toggleCard = (eventId: number) => {
+    setExpandedCards(prev => ({
+      ...prev,
+      [eventId]: !prev[eventId]
+    }));
+  };
 
   // Helper pour formatter la date
   const formatDate = (dateString: string) => {
@@ -89,7 +98,7 @@ export default function EventsScreen() {
                     style={styles.eventAvatar}
                   />
                   <View style={styles.cardHeaderText}>
-                    <Text variant="titleMedium" style={styles.eventTitle} numberOfLines={2}>
+                    <Text variant="titleLarge" style={styles.eventTitle} numberOfLines={2}>
                       {event.title}
                     </Text>
                     <View style={styles.locationContainer}>
@@ -122,22 +131,114 @@ export default function EventsScreen() {
                   </Chip>
                 </View>
 
-                <Text variant="bodyMedium" style={styles.eventDescription} numberOfLines={2}>
-                  {event.description}
-                </Text>
+                {expandedCards[event.id] && (
+                  <>
+                    <Divider style={styles.divider} />
 
-                <View style={styles.cardFooter}>
-                  <View style={styles.churchInfo}>
-                    <Avatar.Icon
-                      icon="church"
-                      size={20}
-                      style={styles.churchIcon}
-                    />
-                    <Text variant="bodySmall" style={styles.churchName} numberOfLines={1}>
-                      {event.churchName}
-                    </Text>
-                  </View>
-                </View>
+                    <View style={styles.infoSection}>
+                      <View style={styles.infoRow}>
+                        <Avatar.Icon icon="map-marker" size={24} style={styles.infoIcon} />
+                        <View style={styles.infoTextContainer}>
+                          <Text variant="labelSmall" style={styles.infoLabel}>Lieu</Text>
+                          <Text variant="bodyMedium" style={styles.infoText}>
+                            {event.address}
+                          </Text>
+                          <Text variant="bodySmall" style={styles.infoSubtext}>
+                            {event.city}, {event.country}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.infoRow}>
+                        <Avatar.Icon icon="church" size={24} style={styles.infoIcon} />
+                        <View style={styles.infoTextContainer}>
+                          <Text variant="labelSmall" style={styles.infoLabel}>Église organisatrice</Text>
+                          <Text variant="bodyMedium" style={styles.infoText}>
+                            {event.churchName}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.infoRow}>
+                        <Avatar.Icon icon="account" size={24} style={styles.infoIcon} />
+                        <View style={styles.infoTextContainer}>
+                          <Text variant="labelSmall" style={styles.infoLabel}>Organisateur</Text>
+                          <Text variant="bodyMedium" style={styles.infoText}>
+                            {event.organizer}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.infoRow}>
+                        <Avatar.Icon icon="information" size={24} style={styles.infoIcon} />
+                        <View style={styles.infoTextContainer}>
+                          <Text variant="labelSmall" style={styles.infoLabel}>Description</Text>
+                          <Text variant="bodyMedium" style={styles.infoText}>
+                            {event.description}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.infoRow}>
+                        <Avatar.Icon icon="email" size={24} style={styles.infoIcon} />
+                        <View style={styles.infoTextContainer}>
+                          <Text variant="labelSmall" style={styles.infoLabel}>Contact</Text>
+                          <Text variant="bodySmall" style={styles.infoText}>
+                            {event.email}
+                          </Text>
+                          <Text variant="bodySmall" style={styles.infoText}>
+                            {event.phone}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+
+                    <Divider style={styles.divider} />
+
+                    <View style={styles.actionButtons}>
+                      <Button
+                        mode="contained"
+                        icon="phone"
+                        style={[styles.actionButton, { backgroundColor: '#3B82F6' }]}
+                        labelStyle={styles.actionButtonLabel}
+                        onPress={() => Linking.openURL(`tel:${event.phone}`)}
+                      >
+                        Appeler
+                      </Button>
+                      <Button
+                        mode="contained"
+                        icon="whatsapp"
+                        style={[styles.actionButton, { backgroundColor: '#25D366' }]}
+                        labelStyle={styles.actionButtonLabel}
+                        onPress={() => Linking.openURL(event.whatsapp)}
+                      >
+                        WhatsApp
+                      </Button>
+                      <Button
+                        mode="contained"
+                        icon="directions"
+                        style={[styles.actionButton, { backgroundColor: '#6366F1' }]}
+                        labelStyle={styles.actionButtonLabel}
+                        onPress={() => {
+                          const url = `https://www.google.com/maps/dir/?api=1&destination=${event.latitude},${event.longitude}`;
+                          Linking.openURL(url).catch(() => Alert.alert('Erreur', 'Impossible d\'ouvrir Google Maps'));
+                        }}
+                      >
+                        Itinéraire
+                      </Button>
+                    </View>
+                  </>
+                )}
+
+                <Button
+                  mode="text"
+                  icon={expandedCards[event.id] ? "chevron-up" : "chevron-down"}
+                  onPress={() => toggleCard(event.id)}
+                  style={styles.toggleButton}
+                  labelStyle={styles.toggleButtonLabel}
+                >
+                  {expandedCards[event.id] ? 'Voir moins' : 'Voir plus de détails'}
+                </Button>
               </Card.Content>
             </Card>
           ))
@@ -269,28 +370,59 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
-  eventDescription: {
-    color: '#475569',
+  divider: {
+    marginVertical: 12,
+    backgroundColor: '#E2E8F0',
+  },
+  infoSection: {
+    gap: 16,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    gap: 12,
+    alignItems: 'flex-start',
+  },
+  infoIcon: {
+    backgroundColor: '#F1F5F9',
+  },
+  infoTextContainer: {
+    flex: 1,
+    gap: 4,
+  },
+  infoLabel: {
+    color: '#64748B',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  infoText: {
+    color: '#1E293B',
     lineHeight: 20,
   },
-  cardFooter: {
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
-    paddingTop: 12,
+  infoSubtext: {
+    color: '#64748B',
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    gap: 8,
     marginTop: 4,
   },
-  churchInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  churchIcon: {
-    backgroundColor: 'transparent',
-  },
-  churchName: {
-    color: '#64748B',
-    fontSize: 13,
+  actionButton: {
     flex: 1,
+    borderRadius: 12,
+  },
+  actionButtonLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: 'white',
+  },
+  toggleButton: {
+    marginTop: 8,
+  },
+  toggleButtonLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#6366F1',
   },
   emptyState: {
     alignItems: 'center',
