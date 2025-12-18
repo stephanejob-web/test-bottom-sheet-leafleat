@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { StyleSheet, View, Platform, Alert, Linking, StatusBar } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE, Circle } from 'react-native-maps';
 import * as Location from 'expo-location';
 import * as Calendar from 'expo-calendar';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Slider from '@react-native-community/slider';
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { Card, Text, Searchbar, Button, Surface, Chip, IconButton, Avatar, Divider, Dialog, Portal } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -59,6 +61,7 @@ export default function MapScreen() {
   const [showMapDialog, setShowMapDialog] = useState(false);
   const [itemForDirections, setItemForDirections] = useState<ListItem | null>(null);
   const [searchCenter, setSearchCenter] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [searchRadius, setSearchRadius] = useState<number>(20); // Rayon en km (défaut: 20km)
 
   const mapRef = useRef<MapView>(null);
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -67,6 +70,9 @@ export default function MapScreen() {
 
   // Débouncer la recherche pour éviter les re-renders excessifs
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+  // Débouncer le rayon de recherche
+  const debouncedSearchRadius = useDebounce(searchRadius, 300);
 
   // Détecter la recherche de ville et centrer la carte
   useEffect(() => {
@@ -152,11 +158,12 @@ export default function MapScreen() {
       })
       .filter(({ matchesSearch }) => matchesSearch);
 
-    // Fusionner et trier par distance
+    // Fusionner, filtrer par rayon et trier par distance
     return [...churchesWithDistance, ...eventsWithDistance]
+      .filter(item => item.distance <= debouncedSearchRadius) // Filtrer par rayon
       .sort((a, b) => a.distance - b.distance)
-      .slice(0, 20); // Limiter à 20 éléments au total
-  }, [location, searchCenter, searchQuery]);
+      .slice(0, 50); // Limiter à 50 éléments au total
+  }, [location, searchCenter, searchQuery, debouncedSearchRadius]);
 
   // Compteurs séparés pour églises et événements
   const churchCount = useMemo(() =>
@@ -242,6 +249,31 @@ export default function MapScreen() {
       Alert.alert('Erreur', 'Impossible de récupérer votre position');
     }
   }, [location]);
+
+  // Charger le rayon sauvegardé depuis AsyncStorage
+  useEffect(() => {
+    (async () => {
+      try {
+        const savedRadius = await AsyncStorage.getItem('searchRadius');
+        if (savedRadius) {
+          setSearchRadius(parseFloat(savedRadius));
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement du rayon:', error);
+      }
+    })();
+  }, []);
+
+  // Sauvegarder le rayon dans AsyncStorage quand il change
+  useEffect(() => {
+    (async () => {
+      try {
+        await AsyncStorage.setItem('searchRadius', searchRadius.toString());
+      } catch (error) {
+        console.error('Erreur lors de la sauvegarde du rayon:', error);
+      }
+    })();
+  }, [searchRadius]);
 
   // Géolocalisation
   useEffect(() => {
@@ -405,6 +437,20 @@ export default function MapScreen() {
             )}
           </Marker>
         ))}
+
+        {/* Cercle de rayon de recherche */}
+        {(location || searchCenter) && (
+          <Circle
+            center={{
+              latitude: searchCenter ? searchCenter.latitude : location!.coords.latitude,
+              longitude: searchCenter ? searchCenter.longitude : location!.coords.longitude,
+            }}
+            radius={debouncedSearchRadius * 1000} // Convertir km en mètres
+            fillColor="rgba(74, 144, 226, 0.1)" // Bleu transparent
+            strokeColor="#4A90E2" // Bleu solide
+            strokeWidth={2}
+          />
+        )}
       </MapView>
 
       {/* Barre de recherche toujours visible */}
@@ -515,6 +561,35 @@ export default function MapScreen() {
                 onPress={() => bottomSheetRef.current?.snapToIndex(0)}
                 style={styles.minimizeButton}
               />
+            </View>
+
+            {/* Slider pour le rayon de recherche */}
+            <View style={styles.radiusSliderContainer}>
+              <View style={styles.radiusSliderHeader}>
+                <MaterialCommunityIcons name="radar" size={16} color="#6366F1" />
+                <Text variant="labelMedium" style={styles.radiusSliderLabel}>
+                  Rayon : {searchRadius} km
+                </Text>
+              </View>
+              <Slider
+                style={styles.radiusSlider}
+                minimumValue={5}
+                maximumValue={100}
+                step={5}
+                value={searchRadius}
+                onValueChange={setSearchRadius}
+                minimumTrackTintColor="#6366F1"
+                maximumTrackTintColor="#E2E8F0"
+                thumbTintColor="#6366F1"
+              />
+              <View style={styles.radiusSliderLabels}>
+                <Text variant="labelSmall" style={styles.radiusSliderLabelText}>
+                  5 km
+                </Text>
+                <Text variant="labelSmall" style={styles.radiusSliderLabelText}>
+                  100 km
+                </Text>
+              </View>
             </View>
           </View>
         )}
@@ -1323,5 +1398,33 @@ const styles = StyleSheet.create({
   addToCalendarLabel: {
     fontSize: 14,
     fontWeight: '600',
+  },
+  radiusSliderContainer: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+  },
+  radiusSliderHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  radiusSliderLabel: {
+    color: '#6366F1',
+    fontWeight: '600',
+  },
+  radiusSlider: {
+    width: '100%',
+    height: 40,
+  },
+  radiusSliderLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: -8,
+  },
+  radiusSliderLabelText: {
+    color: '#94A3B8',
   },
 });
