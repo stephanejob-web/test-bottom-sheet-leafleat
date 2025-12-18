@@ -8,6 +8,15 @@ const allEvents: Event[] = mockEventsData.data.events as Event[];
 
 export default function EventsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandedCards, setExpandedCards] = useState<Record<number, boolean>>({});
+
+  // Toggle l'état d'une carte
+  const toggleCard = (eventId: number) => {
+    setExpandedCards(prev => ({
+      ...prev,
+      [eventId]: !prev[eventId]
+    }));
+  };
 
   // Helper pour formatter la date
   const formatDate = (dateString: string) => {
@@ -92,6 +101,16 @@ export default function EventsScreen() {
                     <Text variant="titleLarge" style={styles.eventTitle} numberOfLines={2}>
                       {event.title}
                     </Text>
+                    <View style={styles.locationContainer}>
+                      <Avatar.Icon
+                        icon="map-marker"
+                        size={16}
+                        style={styles.locationIcon}
+                      />
+                      <Text variant="bodySmall" style={styles.locationText}>
+                        {event.city}
+                      </Text>
+                    </View>
                   </View>
                 </View>
 
@@ -112,100 +131,114 @@ export default function EventsScreen() {
                   </Chip>
                 </View>
 
-                <Divider style={styles.divider} />
+                {expandedCards[event.id] && (
+                  <>
+                    <Divider style={styles.divider} />
 
-                <View style={styles.infoSection}>
-                  <View style={styles.infoRow}>
-                    <Avatar.Icon icon="map-marker" size={24} style={styles.infoIcon} />
-                    <View style={styles.infoTextContainer}>
-                      <Text variant="labelSmall" style={styles.infoLabel}>Lieu</Text>
-                      <Text variant="bodyMedium" style={styles.infoText}>
-                        {event.address}
-                      </Text>
-                      <Text variant="bodySmall" style={styles.infoSubtext}>
-                        {event.city}, {event.country}
-                      </Text>
+                    <View style={styles.infoSection}>
+                      <View style={styles.infoRow}>
+                        <Avatar.Icon icon="map-marker" size={24} style={styles.infoIcon} />
+                        <View style={styles.infoTextContainer}>
+                          <Text variant="labelSmall" style={styles.infoLabel}>Lieu</Text>
+                          <Text variant="bodyMedium" style={styles.infoText}>
+                            {event.address}
+                          </Text>
+                          <Text variant="bodySmall" style={styles.infoSubtext}>
+                            {event.city}, {event.country}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.infoRow}>
+                        <Avatar.Icon icon="church" size={24} style={styles.infoIcon} />
+                        <View style={styles.infoTextContainer}>
+                          <Text variant="labelSmall" style={styles.infoLabel}>Église organisatrice</Text>
+                          <Text variant="bodyMedium" style={styles.infoText}>
+                            {event.churchName}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.infoRow}>
+                        <Avatar.Icon icon="account" size={24} style={styles.infoIcon} />
+                        <View style={styles.infoTextContainer}>
+                          <Text variant="labelSmall" style={styles.infoLabel}>Organisateur</Text>
+                          <Text variant="bodyMedium" style={styles.infoText}>
+                            {event.organizer}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.infoRow}>
+                        <Avatar.Icon icon="information" size={24} style={styles.infoIcon} />
+                        <View style={styles.infoTextContainer}>
+                          <Text variant="labelSmall" style={styles.infoLabel}>Description</Text>
+                          <Text variant="bodyMedium" style={styles.infoText}>
+                            {event.description}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.infoRow}>
+                        <Avatar.Icon icon="email" size={24} style={styles.infoIcon} />
+                        <View style={styles.infoTextContainer}>
+                          <Text variant="labelSmall" style={styles.infoLabel}>Contact</Text>
+                          <Text variant="bodySmall" style={styles.infoText}>
+                            {event.email}
+                          </Text>
+                          <Text variant="bodySmall" style={styles.infoText}>
+                            {event.phone}
+                          </Text>
+                        </View>
+                      </View>
                     </View>
-                  </View>
 
-                  <View style={styles.infoRow}>
-                    <Avatar.Icon icon="church" size={24} style={styles.infoIcon} />
-                    <View style={styles.infoTextContainer}>
-                      <Text variant="labelSmall" style={styles.infoLabel}>Église organisatrice</Text>
-                      <Text variant="bodyMedium" style={styles.infoText}>
-                        {event.churchName}
-                      </Text>
+                    <Divider style={styles.divider} />
+
+                    <View style={styles.actionButtons}>
+                      <Button
+                        mode="contained"
+                        icon="phone"
+                        style={[styles.actionButton, { backgroundColor: '#3B82F6' }]}
+                        labelStyle={styles.actionButtonLabel}
+                        onPress={() => Linking.openURL(`tel:${event.phone}`)}
+                      >
+                        Appeler
+                      </Button>
+                      <Button
+                        mode="contained"
+                        icon="whatsapp"
+                        style={[styles.actionButton, { backgroundColor: '#25D366' }]}
+                        labelStyle={styles.actionButtonLabel}
+                        onPress={() => Linking.openURL(event.whatsapp)}
+                      >
+                        WhatsApp
+                      </Button>
+                      <Button
+                        mode="contained"
+                        icon="directions"
+                        style={[styles.actionButton, { backgroundColor: '#6366F1' }]}
+                        labelStyle={styles.actionButtonLabel}
+                        onPress={() => {
+                          const url = `https://www.google.com/maps/dir/?api=1&destination=${event.latitude},${event.longitude}`;
+                          Linking.openURL(url).catch(() => Alert.alert('Erreur', 'Impossible d\'ouvrir Google Maps'));
+                        }}
+                      >
+                        Itinéraire
+                      </Button>
                     </View>
-                  </View>
+                  </>
+                )}
 
-                  <View style={styles.infoRow}>
-                    <Avatar.Icon icon="account" size={24} style={styles.infoIcon} />
-                    <View style={styles.infoTextContainer}>
-                      <Text variant="labelSmall" style={styles.infoLabel}>Organisateur</Text>
-                      <Text variant="bodyMedium" style={styles.infoText}>
-                        {event.organizer}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.infoRow}>
-                    <Avatar.Icon icon="information" size={24} style={styles.infoIcon} />
-                    <View style={styles.infoTextContainer}>
-                      <Text variant="labelSmall" style={styles.infoLabel}>Description</Text>
-                      <Text variant="bodyMedium" style={styles.infoText}>
-                        {event.description}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.infoRow}>
-                    <Avatar.Icon icon="email" size={24} style={styles.infoIcon} />
-                    <View style={styles.infoTextContainer}>
-                      <Text variant="labelSmall" style={styles.infoLabel}>Contact</Text>
-                      <Text variant="bodySmall" style={styles.infoText}>
-                        {event.email}
-                      </Text>
-                      <Text variant="bodySmall" style={styles.infoText}>
-                        {event.phone}
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-
-                <Divider style={styles.divider} />
-
-                <View style={styles.actionButtons}>
-                  <Button
-                    mode="contained"
-                    icon="phone"
-                    style={[styles.actionButton, { backgroundColor: '#3B82F6' }]}
-                    labelStyle={styles.actionButtonLabel}
-                    onPress={() => Linking.openURL(`tel:${event.phone}`)}
-                  >
-                    Appeler
-                  </Button>
-                  <Button
-                    mode="contained"
-                    icon="whatsapp"
-                    style={[styles.actionButton, { backgroundColor: '#25D366' }]}
-                    labelStyle={styles.actionButtonLabel}
-                    onPress={() => Linking.openURL(event.whatsapp)}
-                  >
-                    WhatsApp
-                  </Button>
-                  <Button
-                    mode="contained"
-                    icon="directions"
-                    style={[styles.actionButton, { backgroundColor: '#6366F1' }]}
-                    labelStyle={styles.actionButtonLabel}
-                    onPress={() => {
-                      const url = `https://www.google.com/maps/dir/?api=1&destination=${event.latitude},${event.longitude}`;
-                      Linking.openURL(url).catch(() => Alert.alert('Erreur', 'Impossible d\'ouvrir Google Maps'));
-                    }}
-                  >
-                    Itinéraire
-                  </Button>
-                </View>
+                <Button
+                  mode="text"
+                  icon={expandedCards[event.id] ? "chevron-up" : "chevron-down"}
+                  onPress={() => toggleCard(event.id)}
+                  style={styles.toggleButton}
+                  labelStyle={styles.toggleButtonLabel}
+                >
+                  {expandedCards[event.id] ? 'Voir moins' : 'Voir plus de détails'}
+                </Button>
               </Card.Content>
             </Card>
           ))
@@ -382,6 +415,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: 'white',
+  },
+  toggleButton: {
+    marginTop: 8,
+  },
+  toggleButtonLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#6366F1',
   },
   emptyState: {
     alignItems: 'center',
