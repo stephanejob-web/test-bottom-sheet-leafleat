@@ -8,10 +8,10 @@ const allEvents: Event[] = mockEventsData.data.events as Event[];
 
 export default function EventsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [expandedCards, setExpandedCards] = useState<Record<number, boolean>>({});
+  const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
 
   // Toggle l'état d'une carte
-  const toggleCard = (eventId: number) => {
+  const toggleCard = (eventId: string) => {
     setExpandedCards(prev => ({
       ...prev,
       [eventId]: !prev[eventId]

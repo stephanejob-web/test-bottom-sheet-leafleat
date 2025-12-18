@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
-import { StyleSheet, View, Platform, Alert, ScrollView, Linking, StatusBar } from 'react-native';
+import { StyleSheet, View, Platform, Alert, Linking, StatusBar } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
 import * as Calendar from 'expo-calendar';
@@ -12,6 +12,7 @@ import { Church, ChurchWithDistance, Event, EventWithDistance } from '../../type
 import { calculateDistance } from '../../utils/geo';
 import { cityCoordinates } from '../../constants/cities';
 import { eventTypeConfig } from '../../constants/eventTypes';
+import { useDebounce } from '../../hooks/use-debounce';
 
 // Chargement des données depuis le mock API
 const allChurches: Church[] = mockApiResponse.data.churches as Church[];
@@ -61,18 +62,20 @@ export default function MapScreen() {
 
   const mapRef = useRef<MapView>(null);
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const scrollViewRef = useRef<ScrollView>(null);
 
   const snapPoints = useMemo(() => ['25%', '50%', '85%'], []);
 
+  // Débouncer la recherche pour éviter les re-renders excessifs
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
   // Détecter la recherche de ville et centrer la carte
   useEffect(() => {
-    if (searchQuery.trim() === '') {
+    if (debouncedSearchQuery.trim() === '') {
       setSearchCenter(null);
       return;
     }
 
-    const searchLower = searchQuery.toLowerCase().trim();
+    const searchLower = debouncedSearchQuery.toLowerCase().trim();
     const cityKey = Object.keys(cityCoordinates).find(city =>
       searchLower.includes(city) || city.includes(searchLower)
     );
@@ -90,7 +93,7 @@ export default function MapScreen() {
         }, 1000);
       }
     }
-  }, [searchQuery]);
+  }, [debouncedSearchQuery]);
 
   // Détermine si on utilise la position actuelle de l'utilisateur
   const isUsingCurrentLocation = useMemo(() => {
@@ -235,13 +238,15 @@ export default function MapScreen() {
         setSearchCenter(null);
         setSearchQuery('');
       }
-    } catch (error) {
+    } catch {
       Alert.alert('Erreur', 'Impossible de récupérer votre position');
     }
   }, [location]);
 
   // Géolocalisation
   useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
     (async () => {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
@@ -259,7 +264,7 @@ export default function MapScreen() {
         setLocation(currentLocation);
 
         if (mapRef.current) {
-          setTimeout(() => {
+          timeoutId = setTimeout(() => {
             mapRef.current?.animateToRegion({
               latitude: currentLocation.coords.latitude,
               longitude: currentLocation.coords.longitude,
@@ -268,13 +273,19 @@ export default function MapScreen() {
             }, 1500);
           }, 1000);
         }
-      } catch (error) {
+      } catch {
         Alert.alert(
           'Erreur de géolocalisation',
           'Les églises et événements seront affichés autour de Paris.'
         );
       }
     })();
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, []);
 
   // Helper pour formatter la date
@@ -325,7 +336,7 @@ export default function MapScreen() {
       endDate.setHours(endHour, endMinute, 0, 0);
 
       // Créer l'événement dans le calendrier
-      const eventId = await Calendar.createEventAsync(defaultCalendar.id, {
+      await Calendar.createEventAsync(defaultCalendar.id, {
         title: event.title,
         startDate: startDate,
         endDate: endDate,
@@ -1241,14 +1252,6 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 24,
     transform: [{ scale: 1.1 }],
-  },
-  eventTypeChip: {
-    alignSelf: 'flex-start',
-  },
-  eventTypeChipText: {
-    color: 'white',
-    fontSize: 11,
-    fontWeight: '600',
   },
   navigationDialog: {
     maxWidth: 400,
