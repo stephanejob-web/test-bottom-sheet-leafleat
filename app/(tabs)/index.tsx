@@ -370,27 +370,72 @@ export default function MapScreen() {
         backgroundStyle={styles.bottomSheetBackground}
         handleIndicatorStyle={styles.handleIndicator}
       >
-        {/* Header amélioré */}
-        <View style={styles.bottomSheetHeader}>
-          <View style={styles.headerTop}>
-            <Avatar.Icon
-              icon={selectedItem ? (selectedItem.itemType === 'church' ? "church" : "calendar-star") : "map-marker-multiple"}
-              size={40}
-              style={styles.headerAvatar}
-            />
-            <View style={styles.headerTextContainer}>
-              <Text variant="headlineSmall" style={styles.bottomSheetTitle}>
-                {selectedItem ?
-                  (selectedItem.itemType === 'church' ? selectedItem.name : selectedItem.title) :
-                  'Églises et événements à proximité'}
-              </Text>
-              {!selectedItem && (
+        {/* Header conditionnel - reste fixe en haut */}
+        {selectedItem ? (
+          selectedItem.itemType === 'church' ? (
+            // Header fixe église
+            <View style={styles.detailHeaderModern}>
+              <IconButton
+                icon="arrow-left"
+                size={24}
+                iconColor="white"
+                onPress={() => setSelectedItem(null)}
+                style={styles.detailBackButton}
+              />
+              <View style={styles.detailHeaderContent}>
+                <Text variant="headlineMedium" style={styles.detailChurchName}>
+                  {selectedItem.name}
+                </Text>
+                {isUsingCurrentLocation && (
+                  <View style={styles.detailDistanceBadge}>
+                    <Text style={styles.detailDistanceText}>
+                      {selectedItem.distance.toFixed(1)} km
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          ) : (
+            // Header fixe événement
+            <View style={[styles.detailHeaderModern, { backgroundColor: eventTypeConfig[selectedItem.type]?.color || '#10B981' }]}>
+              <IconButton
+                icon="arrow-left"
+                size={24}
+                iconColor="white"
+                onPress={() => setSelectedItem(null)}
+                style={styles.detailBackButton}
+              />
+              <View style={styles.detailHeaderContent}>
+                <Text variant="headlineMedium" style={styles.detailChurchName}>
+                  {selectedItem.title}
+                </Text>
+                {isUsingCurrentLocation && (
+                  <View style={styles.detailDistanceBadge}>
+                    <Text style={styles.detailDistanceText}>
+                      {selectedItem.distance.toFixed(1)} km
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          )
+        ) : (
+          // Header fixe liste
+          <View style={styles.bottomSheetHeader}>
+            <View style={styles.headerTop}>
+              <Avatar.Icon
+                icon="map-marker-multiple"
+                size={40}
+                style={styles.headerAvatar}
+              />
+              <View style={styles.headerTextContainer}>
+                <Text variant="headlineSmall" style={styles.bottomSheetTitle}>
+                  Églises et événements à proximité
+                </Text>
                 <Text variant="bodySmall" style={styles.headerSubtitle}>
                   {churchCount} église(s) • {eventCount} événement(s)
                 </Text>
-              )}
-            </View>
-            {!selectedItem && (
+              </View>
               <IconButton
                 icon="chevron-down"
                 size={24}
@@ -398,9 +443,9 @@ export default function MapScreen() {
                 onPress={() => bottomSheetRef.current?.snapToIndex(0)}
                 style={styles.minimizeButton}
               />
-            )}
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Contenu */}
         <BottomSheetScrollView style={styles.bottomSheetContent}>
@@ -408,28 +453,6 @@ export default function MapScreen() {
             selectedItem.itemType === 'church' ? (
               // Vue détaillée église
               <View style={styles.detailsContainerModern}>
-                <View style={styles.detailHeaderModern}>
-                  <IconButton
-                    icon="arrow-left"
-                    size={24}
-                    iconColor="white"
-                    onPress={() => setSelectedItem(null)}
-                    style={styles.detailBackButton}
-                  />
-                  <View style={styles.detailHeaderContent}>
-                    <Text variant="headlineMedium" style={styles.detailChurchName}>
-                      {selectedItem.name}
-                    </Text>
-                    {isUsingCurrentLocation && (
-                      <View style={styles.detailDistanceBadge}>
-                        <Text style={styles.detailDistanceText}>
-                          {selectedItem.distance.toFixed(1)} km
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                </View>
-
                 <View style={styles.quickActionsContainer}>
                   <Button
                     mode="contained"
@@ -540,28 +563,6 @@ export default function MapScreen() {
             ) : (
               // Vue détaillée événement
               <View style={styles.detailsContainerModern}>
-                <View style={[styles.detailHeaderModern, { backgroundColor: eventTypeConfig[selectedItem.type]?.color || '#10B981' }]}>
-                  <IconButton
-                    icon="arrow-left"
-                    size={24}
-                    iconColor="white"
-                    onPress={() => setSelectedItem(null)}
-                    style={styles.detailBackButton}
-                  />
-                  <View style={styles.detailHeaderContent}>
-                    <Text variant="headlineMedium" style={styles.detailChurchName}>
-                      {selectedItem.title}
-                    </Text>
-                    {isUsingCurrentLocation && (
-                      <View style={styles.detailDistanceBadge}>
-                        <Text style={styles.detailDistanceText}>
-                          {selectedItem.distance.toFixed(1)} km
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                </View>
-
                 <View style={styles.quickActionsContainer}>
                   <Button
                     mode="contained"
@@ -712,17 +713,6 @@ export default function MapScreen() {
                         >
                           {item.itemType === 'church' ? item.name : item.title}
                         </Text>
-
-                        {item.itemType === 'event' && (
-                          <Chip
-                            icon={eventTypeConfig[item.type]?.icon}
-                            style={[styles.eventTypeChip, { backgroundColor: eventTypeConfig[item.type]?.color || '#10B981' }]}
-                            textStyle={styles.eventTypeChipText}
-                            compact
-                          >
-                            {eventTypeConfig[item.type]?.label || 'Événement'}
-                          </Chip>
-                        )}
 
                         {isUsingCurrentLocation && (
                           <View style={styles.cardCompactMeta}>
