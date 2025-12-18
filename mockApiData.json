@@ -1,0 +1,2421 @@
+{
+  "status": "success",
+  "data": {
+    "churches": [
+      {
+        "id": "1",
+        "name": "Église Évangélique Bonne Nouvelle Toulon",
+        "address": "25 Avenue de la République, 83000 Toulon",
+        "latitude": 43.1242,
+        "longitude": 5.9280,
+        "pastor": "Pasteur Marc Dubois",
+        "email": "contact@ebntoulon.fr",
+        "phone": "04 94 92 45 67",
+        "description": "Église évangélique accueillante au cœur de Toulon, communauté dynamique et multigénérationnelle.",
+        "services": [
+          "Dimanche 10h - Culte principal",
+          "Dimanche 18h - Culte jeunesse",
+          "Mercredi 19h30 - Étude biblique"
+        ],
+        "tags": ["évangélique", "toulon", "familial"],
+        "capacity": 200,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ebntoulon.fr"
+      },
+      {
+        "id": "2",
+        "name": "Église Protestante Évangélique La Valette",
+        "address": "12 Rue Jean Jaurès, 83160 La Valette-du-Var",
+        "latitude": 43.1394,
+        "longitude": 5.9839,
+        "pastor": "Pasteur Sophie Arnaud",
+        "email": "contact@epe-lavalette.fr",
+        "phone": "04 94 27 33 89",
+        "description": "Communauté évangélique chaleureuse à La Valette, engagée dans l'entraide et le partage.",
+        "services": [
+          "Dimanche 10h30 - Culte familial",
+          "Jeudi 20h - Groupe de prière"
+        ],
+        "tags": ["évangélique", "la-valette", "entraide"],
+        "capacity": 120,
+        "accessible": true,
+        "parking": true,
+        "website": "https://epe-lavalette.fr"
+      },
+      {
+        "id": "3",
+        "name": "Centre Chrétien La Seyne",
+        "address": "45 Boulevard du 4 Septembre, 83500 La Seyne-sur-Mer",
+        "latitude": 43.1014,
+        "longitude": 5.8814,
+        "pastor": "Pasteur David Martin",
+        "email": "info@cc-laseyne.fr",
+        "phone": "04 94 30 56 78",
+        "description": "Centre chrétien moderne avec une approche contemporaine de la foi, ouvert à tous.",
+        "services": [
+          "Dimanche 11h - Célébration",
+          "Vendredi 19h30 - Soirée jeunes"
+        ],
+        "tags": ["évangélique", "la-seyne", "moderne"],
+        "capacity": 180,
+        "accessible": true,
+        "parking": true,
+        "website": "https://cc-laseyne.fr"
+      },
+      {
+        "id": "4",
+        "name": "Église Évangélique de Lyon Part-Dieu",
+        "address": "78 Rue de Bonnel, 69003 Lyon",
+        "latitude": 45.7640,
+        "longitude": 4.8357,
+        "pastor": "Pasteur Pierre Lefort",
+        "email": "contact@eel-partdieu.fr",
+        "phone": "04 78 62 45 90",
+        "description": "Église évangélique dynamique au cœur de Lyon, offrant des cultes en français et en anglais.",
+        "services": [
+          "Dimanche 10h - Culte principal",
+          "Dimanche 17h - Culte en anglais",
+          "Mercredi 19h - Étude biblique"
+        ],
+        "tags": ["évangélique", "lyon", "bilingue"],
+        "capacity": 300,
+        "accessible": true,
+        "parking": false,
+        "website": "https://eel-partdieu.fr"
+      },
+      {
+        "id": "5",
+        "name": "Assemblée Chrétienne de Marseille",
+        "address": "156 Avenue du Prado, 13008 Marseille",
+        "latitude": 43.2965,
+        "longitude": 5.3698,
+        "pastor": "Pasteur Jean-Luc Rossi",
+        "email": "accueil@ac-marseille.fr",
+        "phone": "04 91 71 23 45",
+        "description": "Grande communauté évangélique multiculturelle au cœur de Marseille.",
+        "services": [
+          "Dimanche 10h - Culte principal",
+          "Dimanche 15h - Culte en créole",
+          "Jeudi 19h30 - Prière et louange"
+        ],
+        "tags": ["évangélique", "marseille", "multiculturel"],
+        "capacity": 400,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ac-marseille.fr"
+      },
+      {
+        "id": "6",
+        "name": "Église Évangélique de Nice",
+        "address": "23 Avenue Jean Médecin, 06000 Nice",
+        "latitude": 43.7102,
+        "longitude": 7.2620,
+        "pastor": "Pasteur Marie Blanc",
+        "email": "contact@ee-nice.fr",
+        "phone": "04 93 88 12 34",
+        "description": "Église accueillante sur la Côte d'Azur, lieu de partage et de croissance spirituelle.",
+        "services": [
+          "Dimanche 10h30 - Culte dominical",
+          "Mardi 19h - Groupe de maison"
+        ],
+        "tags": ["évangélique", "nice", "cote-azur"],
+        "capacity": 150,
+        "accessible": true,
+        "parking": false,
+        "website": "https://ee-nice.fr"
+      },
+      {
+        "id": "7",
+        "name": "Centre Évangélique de Bordeaux",
+        "address": "89 Cours de l'Intendance, 33000 Bordeaux",
+        "latitude": 44.8378,
+        "longitude": -0.5792,
+        "pastor": "Pasteur Thomas Dupont",
+        "email": "info@ce-bordeaux.fr",
+        "phone": "05 56 44 78 90",
+        "description": "Centre évangélique moderne dans le centre historique de Bordeaux.",
+        "services": [
+          "Dimanche 11h - Culte principal",
+          "Vendredi 20h - Soirée jeunes adultes"
+        ],
+        "tags": ["évangélique", "bordeaux", "jeunes-adultes"],
+        "capacity": 250,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ce-bordeaux.fr"
+      },
+      {
+        "id": "8",
+        "name": "Église Protestante Évangélique de Toulouse",
+        "address": "45 Rue de Metz, 31000 Toulouse",
+        "latitude": 43.6047,
+        "longitude": 1.4442,
+        "pastor": "Pasteur André Garnier",
+        "email": "contact@epe-toulouse.fr",
+        "phone": "05 61 23 45 67",
+        "description": "Église évangélique au cœur de la ville rose, engagement social et spirituel.",
+        "services": [
+          "Dimanche 10h - Culte familial",
+          "Mercredi 19h30 - Étude biblique",
+          "Samedi 18h - Groupe jeunes"
+        ],
+        "tags": ["évangélique", "toulouse", "social"],
+        "capacity": 200,
+        "accessible": true,
+        "parking": false,
+        "website": "https://epe-toulouse.fr"
+      },
+      {
+        "id": "9",
+        "name": "Église Évangélique de Lille Fives",
+        "address": "34 Rue Pierre Legrand, 59000 Lille",
+        "latitude": 50.6292,
+        "longitude": 3.0573,
+        "pastor": "Pasteur Philippe Durand",
+        "email": "contact@ee-lille.fr",
+        "phone": "03 20 55 67 89",
+        "description": "Communauté évangélique chaleureuse dans le Nord de la France.",
+        "services": [
+          "Dimanche 10h30 - Culte dominical",
+          "Jeudi 19h - Réunion de prière"
+        ],
+        "tags": ["évangélique", "lille", "nord"],
+        "capacity": 180,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ee-lille.fr"
+      },
+      {
+        "id": "10",
+        "name": "Centre Chrétien de Nantes",
+        "address": "67 Rue de Strasbourg, 44000 Nantes",
+        "latitude": 47.2184,
+        "longitude": -1.5536,
+        "pastor": "Pasteur Élisabeth Moreau",
+        "email": "info@cc-nantes.fr",
+        "phone": "02 40 47 89 12",
+        "description": "Centre chrétien dynamique avec une forte implication dans la ville de Nantes.",
+        "services": [
+          "Dimanche 11h - Célébration",
+          "Dimanche 18h30 - Culte jeunesse"
+        ],
+        "tags": ["évangélique", "nantes", "jeunesse"],
+        "capacity": 220,
+        "accessible": true,
+        "parking": true,
+        "website": "https://cc-nantes.fr"
+      },
+      {
+        "id": "11",
+        "name": "Église Évangélique de Strasbourg",
+        "address": "12 Rue du Faubourg National, 67000 Strasbourg",
+        "latitude": 48.5734,
+        "longitude": 7.7521,
+        "pastor": "Pasteur François Schmidt",
+        "email": "contact@ee-strasbourg.fr",
+        "phone": "03 88 35 67 89",
+        "description": "Église évangélique multiculturelle au carrefour de l'Europe.",
+        "services": [
+          "Dimanche 10h - Culte en français",
+          "Dimanche 15h - Culte en allemand",
+          "Mercredi 19h30 - Étude biblique"
+        ],
+        "tags": ["évangélique", "strasbourg", "bilingue"],
+        "capacity": 160,
+        "accessible": true,
+        "parking": false,
+        "website": "https://ee-strasbourg.fr"
+      },
+      {
+        "id": "12",
+        "name": "Assemblée Évangélique de Montpellier",
+        "address": "89 Rue de la Loge, 34000 Montpellier",
+        "latitude": 43.6108,
+        "longitude": 3.8767,
+        "pastor": "Pasteur Olivier Bernard",
+        "email": "contact@ae-montpellier.fr",
+        "phone": "04 67 60 45 78",
+        "description": "Assemblée évangélique jeune et dynamique dans le sud de la France.",
+        "services": [
+          "Dimanche 10h30 - Culte principal",
+          "Vendredi 19h30 - Soirée jeunes"
+        ],
+        "tags": ["évangélique", "montpellier", "dynamique"],
+        "capacity": 190,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ae-montpellier.fr"
+      },
+      {
+        "id": "13",
+        "name": "Église Évangélique de Rennes",
+        "address": "45 Rue de la Monnaie, 35000 Rennes",
+        "latitude": 48.1173,
+        "longitude": -1.6778,
+        "pastor": "Pasteur Isabelle Le Goff",
+        "email": "contact@ee-rennes.fr",
+        "phone": "02 99 79 23 45",
+        "description": "Église évangélique accueillante en Bretagne, forte communauté étudiante.",
+        "services": [
+          "Dimanche 10h - Culte familial",
+          "Mardi 19h - Groupe étudiants"
+        ],
+        "tags": ["évangélique", "rennes", "étudiants"],
+        "capacity": 140,
+        "accessible": true,
+        "parking": false,
+        "website": "https://ee-rennes.fr"
+      },
+      {
+        "id": "14",
+        "name": "Centre Chrétien de Reims",
+        "address": "23 Rue de Vesle, 51100 Reims",
+        "latitude": 49.2583,
+        "longitude": 4.0317,
+        "pastor": "Pasteur Michel Fontaine",
+        "email": "info@cc-reims.fr",
+        "phone": "03 26 47 89 12",
+        "description": "Centre chrétien moderne dans la ville du champagne.",
+        "services": [
+          "Dimanche 11h - Culte principal",
+          "Jeudi 19h30 - Prière et louange"
+        ],
+        "tags": ["évangélique", "reims", "moderne"],
+        "capacity": 130,
+        "accessible": true,
+        "parking": true,
+        "website": "https://cc-reims.fr"
+      },
+      {
+        "id": "15",
+        "name": "Église Évangélique du Havre",
+        "address": "67 Rue de Paris, 76600 Le Havre",
+        "latitude": 49.4944,
+        "longitude": 0.1079,
+        "pastor": "Pasteur Laurent Dupuis",
+        "email": "contact@ee-lehavre.fr",
+        "phone": "02 35 42 67 89",
+        "description": "Église évangélique portuaire ouverte sur le monde.",
+        "services": [
+          "Dimanche 10h30 - Culte dominical",
+          "Mercredi 19h - Étude biblique"
+        ],
+        "tags": ["évangélique", "le-havre", "portuaire"],
+        "capacity": 110,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ee-lehavre.fr"
+      },
+      {
+        "id": "16",
+        "name": "Église Protestante Évangélique de Saint-Étienne",
+        "address": "34 Rue Michelet, 42000 Saint-Étienne",
+        "latitude": 45.4397,
+        "longitude": 4.3872,
+        "pastor": "Pasteur Christian Rousseau",
+        "email": "contact@epe-saintetienne.fr",
+        "phone": "04 77 32 45 67",
+        "description": "Communauté évangélique solidaire dans la Loire.",
+        "services": [
+          "Dimanche 10h - Culte familial",
+          "Vendredi 19h30 - Groupe de prière"
+        ],
+        "tags": ["évangélique", "saint-etienne", "solidaire"],
+        "capacity": 100,
+        "accessible": true,
+        "parking": false,
+        "website": "https://epe-saintetienne.fr"
+      },
+      {
+        "id": "17",
+        "name": "Église Évangélique de Grenoble",
+        "address": "56 Avenue Alsace-Lorraine, 38000 Grenoble",
+        "latitude": 45.1885,
+        "longitude": 5.7245,
+        "pastor": "Pasteur Daniel Faure",
+        "email": "contact@ee-grenoble.fr",
+        "phone": "04 76 46 78 90",
+        "description": "Église évangélique alpine, communauté montagnarde chaleureuse.",
+        "services": [
+          "Dimanche 10h30 - Culte principal",
+          "Jeudi 19h30 - Étude biblique"
+        ],
+        "tags": ["évangélique", "grenoble", "alpes"],
+        "capacity": 150,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ee-grenoble.fr"
+      },
+      {
+        "id": "18",
+        "name": "Centre Évangélique de Dijon",
+        "address": "78 Rue de la Liberté, 21000 Dijon",
+        "latitude": 47.3220,
+        "longitude": 5.0415,
+        "pastor": "Pasteur Sylvie Chevalier",
+        "email": "info@ce-dijon.fr",
+        "phone": "03 80 30 56 78",
+        "description": "Centre évangélique accueillant en Bourgogne.",
+        "services": [
+          "Dimanche 11h - Culte dominical",
+          "Mardi 19h - Groupe de maison"
+        ],
+        "tags": ["évangélique", "dijon", "bourgogne"],
+        "capacity": 120,
+        "accessible": true,
+        "parking": false,
+        "website": "https://ce-dijon.fr"
+      },
+      {
+        "id": "19",
+        "name": "Église Évangélique d'Angers",
+        "address": "45 Rue Saint-Laud, 49100 Angers",
+        "latitude": 47.4784,
+        "longitude": -0.5632,
+        "pastor": "Pasteur Nathalie Leroux",
+        "email": "contact@ee-angers.fr",
+        "phone": "02 41 87 23 45",
+        "description": "Église évangélique dynamique dans la douceur angevine.",
+        "services": [
+          "Dimanche 10h - Culte familial",
+          "Mercredi 19h30 - Prière"
+        ],
+        "tags": ["évangélique", "angers", "familial"],
+        "capacity": 130,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ee-angers.fr"
+      },
+      {
+        "id": "20",
+        "name": "Église Évangélique de Brest",
+        "address": "23 Rue de Siam, 29200 Brest",
+        "latitude": 48.3904,
+        "longitude": -4.4861,
+        "pastor": "Pasteur Jean-Yves Le Bihan",
+        "email": "contact@ee-brest.fr",
+        "phone": "02 98 44 67 89",
+        "description": "Église évangélique bretonne au bout du monde, tournée vers la mer.",
+        "services": [
+          "Dimanche 10h30 - Culte principal",
+          "Jeudi 19h - Étude biblique"
+        ],
+        "tags": ["évangélique", "brest", "bretagne"],
+        "capacity": 100,
+        "accessible": true,
+        "parking": false,
+        "website": "https://ee-brest.fr"
+      },
+      {
+        "id": "21",
+        "name": "Église Évangélique de Paris Marais",
+        "address": "15 Rue des Francs Bourgeois, 75004 Paris",
+        "latitude": 48.8575,
+        "longitude": 2.3620,
+        "pastor": "Pasteur Antoine Leroy",
+        "email": "contact@ee-parismarais.fr",
+        "phone": "01 42 77 89 12",
+        "description": "Église évangélique au cœur du Marais, accueillant une communauté internationale.",
+        "services": [
+          "Dimanche 10h - Culte principal",
+          "Dimanche 17h - Culte en anglais"
+        ],
+        "tags": ["évangélique", "paris", "international"],
+        "capacity": 280,
+        "accessible": true,
+        "parking": false,
+        "website": "https://ee-parismarais.fr"
+      },
+      {
+        "id": "22",
+        "name": "Centre Chrétien de Montmartre",
+        "address": "34 Rue Lamarck, 75018 Paris",
+        "latitude": 48.8890,
+        "longitude": 2.3395,
+        "pastor": "Pasteur Céline Dubois",
+        "email": "info@cc-montmartre.fr",
+        "phone": "01 46 06 23 45",
+        "description": "Centre chrétien artistique sur la butte Montmartre, lieu de créativité et de foi.",
+        "services": [
+          "Dimanche 11h - Célébration créative",
+          "Vendredi 19h30 - Soirée louange"
+        ],
+        "tags": ["évangélique", "paris", "artistique"],
+        "capacity": 150,
+        "accessible": false,
+        "parking": false,
+        "website": "https://cc-montmartre.fr"
+      },
+      {
+        "id": "23",
+        "name": "Assemblée de Dieu Paris 15",
+        "address": "67 Rue de Vaugirard, 75015 Paris",
+        "latitude": 48.8428,
+        "longitude": 2.3112,
+        "pastor": "Pasteur Samuel Koné",
+        "email": "contact@add-paris15.fr",
+        "phone": "01 47 34 56 78",
+        "description": "Assemblée de Dieu multiculturelle, forte présence africaine.",
+        "services": [
+          "Dimanche 10h - Culte principal",
+          "Dimanche 15h - Culte en lingala",
+          "Mercredi 19h30 - Prière"
+        ],
+        "tags": ["évangélique", "paris", "africaine"],
+        "capacity": 350,
+        "accessible": true,
+        "parking": true,
+        "website": "https://add-paris15.fr"
+      },
+      {
+        "id": "24",
+        "name": "Église Évangélique de Belleville",
+        "address": "89 Rue de Belleville, 75019 Paris",
+        "latitude": 48.8723,
+        "longitude": 2.3897,
+        "pastor": "Pasteur Li Chen",
+        "email": "contact@ee-belleville.fr",
+        "phone": "01 42 08 45 67",
+        "description": "Église évangélique asiatique dans le quartier chinois de Paris.",
+        "services": [
+          "Dimanche 10h - Culte en français",
+          "Dimanche 14h - Culte en mandarin"
+        ],
+        "tags": ["évangélique", "paris", "asiatique"],
+        "capacity": 180,
+        "accessible": true,
+        "parking": false,
+        "website": "https://ee-belleville.fr"
+      },
+      {
+        "id": "25",
+        "name": "Centre Évangélique de Clichy",
+        "address": "23 Boulevard Jean Jaurès, 92110 Clichy",
+        "latitude": 48.9048,
+        "longitude": 2.3069,
+        "pastor": "Pasteur Bruno Petit",
+        "email": "info@ce-clichy.fr",
+        "phone": "01 47 37 89 12",
+        "description": "Centre évangélique moderne en banlieue parisienne, jeune et dynamique.",
+        "services": [
+          "Dimanche 10h30 - Culte principal",
+          "Vendredi 20h - Groupe jeunes"
+        ],
+        "tags": ["évangélique", "clichy", "jeunesse"],
+        "capacity": 200,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ce-clichy.fr"
+      },
+      {
+        "id": "26",
+        "name": "Église Protestante de Versailles",
+        "address": "45 Rue de la Paroisse, 78000 Versailles",
+        "latitude": 48.8048,
+        "longitude": 2.1256,
+        "pastor": "Pasteur Henri de la Rochefoucauld",
+        "email": "contact@ep-versailles.fr",
+        "phone": "01 39 50 12 34",
+        "description": "Église protestante historique dans la ville royale.",
+        "services": [
+          "Dimanche 10h - Culte liturgique",
+          "Dimanche 18h - Culte moderne"
+        ],
+        "tags": ["évangélique", "versailles", "historique"],
+        "capacity": 220,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ep-versailles.fr"
+      },
+      {
+        "id": "27",
+        "name": "Centre Chrétien de Créteil",
+        "address": "78 Avenue du Général de Gaulle, 94000 Créteil",
+        "latitude": 48.7901,
+        "longitude": 2.4555,
+        "pastor": "Pasteur Rachel Nguyen",
+        "email": "info@cc-creteil.fr",
+        "phone": "01 48 98 23 45",
+        "description": "Centre chrétien interculturel dans le Val-de-Marne.",
+        "services": [
+          "Dimanche 10h - Culte familial",
+          "Jeudi 19h30 - Étude biblique"
+        ],
+        "tags": ["évangélique", "créteil", "interculturel"],
+        "capacity": 240,
+        "accessible": true,
+        "parking": true,
+        "website": "https://cc-creteil.fr"
+      },
+      {
+        "id": "28",
+        "name": "Église Évangélique de Saint-Denis",
+        "address": "56 Rue Gabriel Péri, 93200 Saint-Denis",
+        "latitude": 48.9362,
+        "longitude": 2.3544,
+        "pastor": "Pasteur Mohamed Diallo",
+        "email": "contact@ee-saintdenis.fr",
+        "phone": "01 48 20 34 56",
+        "description": "Église évangélique multiculturelle au nord de Paris.",
+        "services": [
+          "Dimanche 10h30 - Culte principal",
+          "Samedi 19h - Groupe jeunes"
+        ],
+        "tags": ["évangélique", "saint-denis", "multiculturel"],
+        "capacity": 160,
+        "accessible": true,
+        "parking": false,
+        "website": "https://ee-saintdenis.fr"
+      },
+      {
+        "id": "29",
+        "name": "Assemblée Évangélique de Montreuil",
+        "address": "123 Rue de Paris, 93100 Montreuil",
+        "latitude": 48.8543,
+        "longitude": 2.4470,
+        "pastor": "Pasteur Fatou Ba",
+        "email": "contact@ae-montreuil.fr",
+        "phone": "01 48 58 67 89",
+        "description": "Assemblée évangélique africaine vibrante à Montreuil.",
+        "services": [
+          "Dimanche 9h - Culte principal",
+          "Dimanche 14h - Culte en wolof",
+          "Vendredi 20h - Vigile de prière"
+        ],
+        "tags": ["évangélique", "montreuil", "africaine"],
+        "capacity": 320,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ae-montreuil.fr"
+      },
+      {
+        "id": "30",
+        "name": "Église Évangélique de Boulogne",
+        "address": "34 Avenue Victor Hugo, 92100 Boulogne-Billancourt",
+        "latitude": 48.8353,
+        "longitude": 2.2429,
+        "pastor": "Pasteur Christophe Lambert",
+        "email": "contact@ee-boulogne.fr",
+        "phone": "01 46 04 23 45",
+        "description": "Église évangélique bourgeoise dans l'ouest parisien.",
+        "services": [
+          "Dimanche 10h - Culte familial",
+          "Mercredi 19h30 - Étude biblique"
+        ],
+        "tags": ["évangélique", "boulogne", "familial"],
+        "capacity": 190,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ee-boulogne.fr"
+      },
+      {
+        "id": "31",
+        "name": "Centre Chrétien d'Aix-en-Provence",
+        "address": "67 Cours Mirabeau, 13100 Aix-en-Provence",
+        "latitude": 43.5263,
+        "longitude": 5.4454,
+        "pastor": "Pasteur Julien Mercier",
+        "email": "info@cc-aix.fr",
+        "phone": "04 42 26 34 56",
+        "description": "Centre chrétien étudiant dans la ville universitaire d'Aix.",
+        "services": [
+          "Dimanche 10h30 - Culte principal",
+          "Mardi 19h - Groupe étudiants"
+        ],
+        "tags": ["évangélique", "aix", "étudiants"],
+        "capacity": 170,
+        "accessible": true,
+        "parking": false,
+        "website": "https://cc-aix.fr"
+      },
+      {
+        "id": "32",
+        "name": "Église Évangélique de Cannes",
+        "address": "23 Rue d'Antibes, 06400 Cannes",
+        "latitude": 43.5513,
+        "longitude": 7.0128,
+        "pastor": "Pasteur Laurent Azur",
+        "email": "contact@ee-cannes.fr",
+        "phone": "04 93 39 12 34",
+        "description": "Église évangélique sur la Croisette, ouverte aux touristes.",
+        "services": [
+          "Dimanche 11h - Culte dominical",
+          "Jeudi 19h30 - Prière"
+        ],
+        "tags": ["évangélique", "cannes", "touristique"],
+        "capacity": 130,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ee-cannes.fr"
+      },
+      {
+        "id": "33",
+        "name": "Assemblée de Dieu Antibes",
+        "address": "45 Avenue de Nice, 06600 Antibes",
+        "latitude": 43.5808,
+        "longitude": 7.1248,
+        "pastor": "Pasteur Pierre Méditerranée",
+        "email": "contact@add-antibes.fr",
+        "phone": "04 93 34 56 78",
+        "description": "Assemblée de Dieu internationale dans une ville balnéaire.",
+        "services": [
+          "Dimanche 10h - Culte en français",
+          "Dimanche 16h - Culte en anglais"
+        ],
+        "tags": ["évangélique", "antibes", "international"],
+        "capacity": 140,
+        "accessible": true,
+        "parking": true,
+        "website": "https://add-antibes.fr"
+      },
+      {
+        "id": "34",
+        "name": "Église Évangélique d'Avignon",
+        "address": "89 Rue de la République, 84000 Avignon",
+        "latitude": 43.9493,
+        "longitude": 4.8055,
+        "pastor": "Pasteur Valérie Mistral",
+        "email": "contact@ee-avignon.fr",
+        "phone": "04 90 82 23 45",
+        "description": "Église évangélique dans la cité des papes.",
+        "services": [
+          "Dimanche 10h - Culte principal",
+          "Vendredi 19h30 - Soirée louange"
+        ],
+        "tags": ["évangélique", "avignon", "historique"],
+        "capacity": 150,
+        "accessible": true,
+        "parking": false,
+        "website": "https://ee-avignon.fr"
+      },
+      {
+        "id": "35",
+        "name": "Centre Évangélique de Perpignan",
+        "address": "12 Rue de la République, 66000 Perpignan",
+        "latitude": 42.6986,
+        "longitude": 2.8954,
+        "pastor": "Pasteur Carlos Sanchez",
+        "email": "info@ce-perpignan.fr",
+        "phone": "04 68 34 56 78",
+        "description": "Centre évangélique catalan, proche de l'Espagne.",
+        "services": [
+          "Dimanche 11h - Culte bilingue",
+          "Mercredi 19h30 - Étude biblique"
+        ],
+        "tags": ["évangélique", "perpignan", "catalan"],
+        "capacity": 110,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ce-perpignan.fr"
+      },
+      {
+        "id": "36",
+        "name": "Église Évangélique de Lyon Croix-Rousse",
+        "address": "23 Boulevard de la Croix-Rousse, 69004 Lyon",
+        "latitude": 45.7746,
+        "longitude": 4.8326,
+        "pastor": "Pasteur Anne-Marie Dubois",
+        "email": "contact@ee-croixrousse.fr",
+        "phone": "04 78 28 34 56",
+        "description": "Église évangélique dans le quartier des canuts.",
+        "services": [
+          "Dimanche 10h30 - Culte familial",
+          "Jeudi 19h - Groupe de maison"
+        ],
+        "tags": ["évangélique", "lyon", "quartier"],
+        "capacity": 120,
+        "accessible": false,
+        "parking": false,
+        "website": "https://ee-croixrousse.fr"
+      },
+      {
+        "id": "37",
+        "name": "Centre Chrétien de Villeurbanne",
+        "address": "56 Cours Émile Zola, 69100 Villeurbanne",
+        "latitude": 45.7667,
+        "longitude": 4.8800,
+        "pastor": "Pasteur Moussa Traoré",
+        "email": "info@cc-villeurbanne.fr",
+        "phone": "04 78 84 12 34",
+        "description": "Centre chrétien multiculturel dans la banlieue lyonnaise.",
+        "services": [
+          "Dimanche 10h - Culte principal",
+          "Dimanche 15h - Culte en bambara"
+        ],
+        "tags": ["évangélique", "villeurbanne", "multiculturel"],
+        "capacity": 200,
+        "accessible": true,
+        "parking": true,
+        "website": "https://cc-villeurbanne.fr"
+      },
+      {
+        "id": "38",
+        "name": "Assemblée Évangélique de Vénissieux",
+        "address": "78 Avenue Jules Guesde, 69200 Vénissieux",
+        "latitude": 45.6975,
+        "longitude": 4.8864,
+        "pastor": "Pasteur Ibrahim Diaby",
+        "email": "contact@ae-venissieux.fr",
+        "phone": "04 78 70 23 45",
+        "description": "Assemblée évangélique dans le sud lyonnais.",
+        "services": [
+          "Dimanche 9h30 - Culte principal",
+          "Mercredi 19h30 - Prière"
+        ],
+        "tags": ["évangélique", "venissieux", "sud"],
+        "capacity": 180,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ae-venissieux.fr"
+      },
+      {
+        "id": "39",
+        "name": "Église Évangélique d'Annecy",
+        "address": "34 Rue Carnot, 74000 Annecy",
+        "latitude": 45.8992,
+        "longitude": 6.1294,
+        "pastor": "Pasteur Sébastien Montagne",
+        "email": "contact@ee-annecy.fr",
+        "phone": "04 50 45 67 89",
+        "description": "Église évangélique au bord du lac d'Annecy.",
+        "services": [
+          "Dimanche 10h - Culte principal",
+          "Jeudi 19h30 - Étude biblique"
+        ],
+        "tags": ["évangélique", "annecy", "lac"],
+        "capacity": 140,
+        "accessible": true,
+        "parking": false,
+        "website": "https://ee-annecy.fr"
+      },
+      {
+        "id": "40",
+        "name": "Centre Évangélique de Chambéry",
+        "address": "67 Rue de la République, 73000 Chambéry",
+        "latitude": 45.5646,
+        "longitude": 5.9178,
+        "pastor": "Pasteur Claire Savoie",
+        "email": "info@ce-chambery.fr",
+        "phone": "04 79 33 12 34",
+        "description": "Centre évangélique savoyard en plein cœur de ville.",
+        "services": [
+          "Dimanche 11h - Culte dominical",
+          "Vendredi 19h30 - Soirée jeunes"
+        ],
+        "tags": ["évangélique", "chambery", "savoie"],
+        "capacity": 100,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ce-chambery.fr"
+      },
+      {
+        "id": "41",
+        "name": "Église Évangélique de Pau",
+        "address": "23 Boulevard des Pyrénées, 64000 Pau",
+        "latitude": 43.2951,
+        "longitude": -0.3708,
+        "pastor": "Pasteur Jean-Pierre Béarn",
+        "email": "contact@ee-pau.fr",
+        "phone": "05 59 27 34 56",
+        "description": "Église évangélique avec vue sur les Pyrénées.",
+        "services": [
+          "Dimanche 10h30 - Culte familial",
+          "Mercredi 19h - Groupe de prière"
+        ],
+        "tags": ["évangélique", "pau", "pyrénées"],
+        "capacity": 130,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ee-pau.fr"
+      },
+      {
+        "id": "42",
+        "name": "Centre Chrétien de Bayonne",
+        "address": "45 Rue Port-Neuf, 64100 Bayonne",
+        "latitude": 43.4933,
+        "longitude": -1.4748,
+        "pastor": "Pasteur Xavier Gascon",
+        "email": "info@cc-bayonne.fr",
+        "phone": "05 59 59 12 34",
+        "description": "Centre chrétien basque au confluent des rivières.",
+        "services": [
+          "Dimanche 11h - Célébration",
+          "Jeudi 19h30 - Étude biblique"
+        ],
+        "tags": ["évangélique", "bayonne", "basque"],
+        "capacity": 110,
+        "accessible": true,
+        "parking": false,
+        "website": "https://cc-bayonne.fr"
+      },
+      {
+        "id": "43",
+        "name": "Assemblée de Dieu La Rochelle",
+        "address": "56 Rue du Palais, 17000 La Rochelle",
+        "latitude": 46.1591,
+        "longitude": -1.1520,
+        "pastor": "Pasteur Marc Océan",
+        "email": "contact@add-larochelle.fr",
+        "phone": "05 46 41 23 45",
+        "description": "Assemblée de Dieu dans la ville portuaire.",
+        "services": [
+          "Dimanche 10h - Culte principal",
+          "Dimanche 18h - Culte jeunesse"
+        ],
+        "tags": ["évangélique", "la-rochelle", "portuaire"],
+        "capacity": 150,
+        "accessible": true,
+        "parking": true,
+        "website": "https://add-larochelle.fr"
+      },
+      {
+        "id": "44",
+        "name": "Église Évangélique de Poitiers",
+        "address": "78 Rue Gambetta, 86000 Poitiers",
+        "latitude": 46.5802,
+        "longitude": 0.3404,
+        "pastor": "Pasteur Sophie Poitou",
+        "email": "contact@ee-poitiers.fr",
+        "phone": "05 49 88 34 56",
+        "description": "Église évangélique étudiante dans la ville universitaire.",
+        "services": [
+          "Dimanche 10h30 - Culte familial",
+          "Mardi 19h - Groupe étudiants"
+        ],
+        "tags": ["évangélique", "poitiers", "étudiants"],
+        "capacity": 120,
+        "accessible": true,
+        "parking": false,
+        "website": "https://ee-poitiers.fr"
+      },
+      {
+        "id": "45",
+        "name": "Centre Évangélique de Limoges",
+        "address": "34 Avenue de la Libération, 87000 Limoges",
+        "latitude": 45.8336,
+        "longitude": 1.2611,
+        "pastor": "Pasteur André Porcelaine",
+        "email": "info@ce-limoges.fr",
+        "phone": "05 55 34 12 34",
+        "description": "Centre évangélique dans la capitale de la porcelaine.",
+        "services": [
+          "Dimanche 11h - Culte principal",
+          "Vendredi 19h30 - Soirée louange"
+        ],
+        "tags": ["évangélique", "limoges", "centre"],
+        "capacity": 100,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ce-limoges.fr"
+      },
+      {
+        "id": "46",
+        "name": "Église Évangélique de Tours",
+        "address": "67 Rue Nationale, 37000 Tours",
+        "latitude": 47.3941,
+        "longitude": 0.6848,
+        "pastor": "Pasteur Mathieu Loire",
+        "email": "contact@ee-tours.fr",
+        "phone": "02 47 64 23 45",
+        "description": "Église évangélique dans le jardin de la France.",
+        "services": [
+          "Dimanche 10h - Culte familial",
+          "Mercredi 19h30 - Étude biblique"
+        ],
+        "tags": ["évangélique", "tours", "loire"],
+        "capacity": 160,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ee-tours.fr"
+      },
+      {
+        "id": "47",
+        "name": "Assemblée Évangélique d'Orléans",
+        "address": "23 Rue Jeanne d'Arc, 45000 Orléans",
+        "latitude": 47.9029,
+        "longitude": 1.9093,
+        "pastor": "Pasteur François Pucelle",
+        "email": "contact@ae-orleans.fr",
+        "phone": "02 38 53 34 56",
+        "description": "Assemblée évangélique dans la ville de Jeanne d'Arc.",
+        "services": [
+          "Dimanche 10h30 - Culte principal",
+          "Jeudi 19h - Groupe de prière"
+        ],
+        "tags": ["évangélique", "orleans", "historique"],
+        "capacity": 140,
+        "accessible": true,
+        "parking": false,
+        "website": "https://ae-orleans.fr"
+      },
+      {
+        "id": "48",
+        "name": "Centre Chrétien du Mans",
+        "address": "45 Avenue Bollée, 72000 Le Mans",
+        "latitude": 48.0077,
+        "longitude": 0.1984,
+        "pastor": "Pasteur Luc Sarthe",
+        "email": "info@cc-lemans.fr",
+        "phone": "02 43 24 12 34",
+        "description": "Centre chrétien dans la ville des 24 heures.",
+        "services": [
+          "Dimanche 11h - Culte dominical",
+          "Vendredi 19h30 - Soirée jeunes"
+        ],
+        "tags": ["évangélique", "le-mans", "automobile"],
+        "capacity": 130,
+        "accessible": true,
+        "parking": true,
+        "website": "https://cc-lemans.fr"
+      },
+      {
+        "id": "49",
+        "name": "Église Évangélique de Caen",
+        "address": "56 Rue Saint-Pierre, 14000 Caen",
+        "latitude": 49.1829,
+        "longitude": -0.3707,
+        "pastor": "Pasteur Guillaume Normand",
+        "email": "contact@ee-caen.fr",
+        "phone": "02 31 86 23 45",
+        "description": "Église évangélique dans la capitale normande.",
+        "services": [
+          "Dimanche 10h - Culte familial",
+          "Mercredi 19h30 - Étude biblique"
+        ],
+        "tags": ["évangélique", "caen", "normandie"],
+        "capacity": 150,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ee-caen.fr"
+      },
+      {
+        "id": "50",
+        "name": "Assemblée de Dieu Rouen",
+        "address": "34 Rue Jeanne d'Arc, 76000 Rouen",
+        "latitude": 49.4431,
+        "longitude": 1.0993,
+        "pastor": "Pasteur Philippe Seine",
+        "email": "contact@add-rouen.fr",
+        "phone": "02 35 71 34 56",
+        "description": "Assemblée de Dieu normande sur les bords de Seine.",
+        "services": [
+          "Dimanche 10h30 - Culte principal",
+          "Jeudi 19h - Prière"
+        ],
+        "tags": ["évangélique", "rouen", "seine"],
+        "capacity": 120,
+        "accessible": true,
+        "parking": false,
+        "website": "https://add-rouen.fr"
+      },
+      {
+        "id": "51",
+        "name": "Centre Évangélique d'Amiens",
+        "address": "67 Rue des Trois Cailloux, 80000 Amiens",
+        "latitude": 49.8941,
+        "longitude": 2.2958,
+        "pastor": "Pasteur Émilie Picard",
+        "email": "info@ce-amiens.fr",
+        "phone": "03 22 91 12 34",
+        "description": "Centre évangélique dans la capitale picarde.",
+        "services": [
+          "Dimanche 11h - Culte dominical",
+          "Mardi 19h30 - Groupe de maison"
+        ],
+        "tags": ["évangélique", "amiens", "picardie"],
+        "capacity": 110,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ce-amiens.fr"
+      },
+      {
+        "id": "52",
+        "name": "Église Évangélique de Valenciennes",
+        "address": "23 Place d'Armes, 59300 Valenciennes",
+        "latitude": 50.3575,
+        "longitude": 3.5233,
+        "pastor": "Pasteur Patrick Hainaut",
+        "email": "contact@ee-valenciennes.fr",
+        "phone": "03 27 46 23 45",
+        "description": "Église évangélique dans le Nord minier.",
+        "services": [
+          "Dimanche 10h - Culte familial",
+          "Vendredi 19h30 - Soirée louange"
+        ],
+        "tags": ["évangélique", "valenciennes", "nord"],
+        "capacity": 90,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ee-valenciennes.fr"
+      },
+      {
+        "id": "53",
+        "name": "Assemblée Évangélique de Roubaix",
+        "address": "45 Grand'Place, 59100 Roubaix",
+        "latitude": 50.6942,
+        "longitude": 3.1746,
+        "pastor": "Pasteur Ahmed Bouaziz",
+        "email": "contact@ae-roubaix.fr",
+        "phone": "03 20 73 34 56",
+        "description": "Assemblée évangélique multiculturelle à Roubaix.",
+        "services": [
+          "Dimanche 10h - Culte principal",
+          "Dimanche 15h - Culte en arabe"
+        ],
+        "tags": ["évangélique", "roubaix", "multiculturel"],
+        "capacity": 140,
+        "accessible": true,
+        "parking": false,
+        "website": "https://ae-roubaix.fr"
+      },
+      {
+        "id": "54",
+        "name": "Centre Chrétien de Dunkerque",
+        "address": "78 Rue Clemenceau, 59140 Dunkerque",
+        "latitude": 51.0343,
+        "longitude": 2.3767,
+        "pastor": "Pasteur Michel Flandre",
+        "email": "info@cc-dunkerque.fr",
+        "phone": "03 28 66 12 34",
+        "description": "Centre chrétien portuaire au nord de la France.",
+        "services": [
+          "Dimanche 11h - Culte dominical",
+          "Mercredi 19h30 - Étude biblique"
+        ],
+        "tags": ["évangélique", "dunkerque", "portuaire"],
+        "capacity": 100,
+        "accessible": true,
+        "parking": true,
+        "website": "https://cc-dunkerque.fr"
+      },
+      {
+        "id": "55",
+        "name": "Église Évangélique de Metz",
+        "address": "34 Rue Serpenoise, 57000 Metz",
+        "latitude": 49.1193,
+        "longitude": 6.1757,
+        "pastor": "Pasteur Thomas Lorrain",
+        "email": "contact@ee-metz.fr",
+        "phone": "03 87 75 23 45",
+        "description": "Église évangélique mosellane à la frontière allemande.",
+        "services": [
+          "Dimanche 10h30 - Culte familial",
+          "Jeudi 19h - Groupe de prière"
+        ],
+        "tags": ["évangélique", "metz", "lorraine"],
+        "capacity": 130,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ee-metz.fr"
+      },
+      {
+        "id": "56",
+        "name": "Assemblée de Dieu Nancy",
+        "address": "56 Rue Saint-Dizier, 54000 Nancy",
+        "latitude": 48.6921,
+        "longitude": 6.1844,
+        "pastor": "Pasteur Jean-Claude Stanislas",
+        "email": "contact@add-nancy.fr",
+        "phone": "03 83 35 34 56",
+        "description": "Assemblée de Dieu dans la capitale des ducs de Lorraine.",
+        "services": [
+          "Dimanche 10h - Culte principal",
+          "Vendredi 19h30 - Soirée jeunes"
+        ],
+        "tags": ["évangélique", "nancy", "ducale"],
+        "capacity": 150,
+        "accessible": true,
+        "parking": false,
+        "website": "https://add-nancy.fr"
+      },
+      {
+        "id": "57",
+        "name": "Centre Évangélique de Mulhouse",
+        "address": "23 Avenue du Général de Gaulle, 68100 Mulhouse",
+        "latitude": 47.7508,
+        "longitude": 7.3359,
+        "pastor": "Pasteur Hans Muller",
+        "email": "info@ce-mulhouse.fr",
+        "phone": "03 89 45 12 34",
+        "description": "Centre évangélique alsacien trilingue.",
+        "services": [
+          "Dimanche 10h - Culte en français",
+          "Dimanche 15h - Culte en allemand"
+        ],
+        "tags": ["évangélique", "mulhouse", "trilingue"],
+        "capacity": 140,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ce-mulhouse.fr"
+      },
+      {
+        "id": "58",
+        "name": "Église Évangélique de Colmar",
+        "address": "45 Grand'Rue, 68000 Colmar",
+        "latitude": 48.0777,
+        "longitude": 7.3579,
+        "pastor": "Pasteur Marie Vignes",
+        "email": "contact@ee-colmar.fr",
+        "phone": "03 89 41 23 45",
+        "description": "Église évangélique dans la capitale des vins d'Alsace.",
+        "services": [
+          "Dimanche 10h30 - Culte familial",
+          "Mercredi 19h - Étude biblique"
+        ],
+        "tags": ["évangélique", "colmar", "vins"],
+        "capacity": 100,
+        "accessible": true,
+        "parking": false,
+        "website": "https://ee-colmar.fr"
+      },
+      {
+        "id": "59",
+        "name": "Assemblée Évangélique de Besançon",
+        "address": "67 Grande Rue, 25000 Besançon",
+        "latitude": 47.2380,
+        "longitude": 6.0240,
+        "pastor": "Pasteur Luc Comtois",
+        "email": "contact@ae-besancon.fr",
+        "phone": "03 81 81 34 56",
+        "description": "Assemblée évangélique franc-comtoise.",
+        "services": [
+          "Dimanche 11h - Culte principal",
+          "Jeudi 19h30 - Prière"
+        ],
+        "tags": ["évangélique", "besançon", "franche-comte"],
+        "capacity": 110,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ae-besancon.fr"
+      },
+      {
+        "id": "60",
+        "name": "Centre Chrétien de Clermont-Ferrand",
+        "address": "34 Place de Jaude, 63000 Clermont-Ferrand",
+        "latitude": 45.7772,
+        "longitude": 3.0870,
+        "pastor": "Pasteur Pierre Volcan",
+        "email": "info@cc-clermont.fr",
+        "phone": "04 73 92 12 34",
+        "description": "Centre chrétien dans la capitale auvergnate.",
+        "services": [
+          "Dimanche 10h - Culte familial",
+          "Vendredi 19h30 - Soirée louange"
+        ],
+        "tags": ["évangélique", "clermont-ferrand", "auvergne"],
+        "capacity": 160,
+        "accessible": true,
+        "parking": true,
+        "website": "https://cc-clermont.fr"
+      },
+      {
+        "id": "61",
+        "name": "Église Évangélique d'Ajaccio",
+        "address": "23 Cours Napoléon, 20000 Ajaccio",
+        "latitude": 41.9267,
+        "longitude": 8.7369,
+        "pastor": "Pasteur Antoine Corse",
+        "email": "contact@ee-ajaccio.fr",
+        "phone": "04 95 21 12 34",
+        "description": "Église évangélique insulaire en Corse.",
+        "services": [
+          "Dimanche 10h30 - Culte principal",
+          "Mercredi 19h - Étude biblique"
+        ],
+        "tags": ["évangélique", "ajaccio", "corse"],
+        "capacity": 80,
+        "accessible": true,
+        "parking": false,
+        "website": "https://ee-ajaccio.fr"
+      },
+      {
+        "id": "62",
+        "name": "Assemblée de Dieu Bastia",
+        "address": "45 Boulevard Paoli, 20200 Bastia",
+        "latitude": 42.7028,
+        "longitude": 9.4507,
+        "pastor": "Pasteur Jean-Paul Île",
+        "email": "contact@add-bastia.fr",
+        "phone": "04 95 32 23 45",
+        "description": "Assemblée de Dieu au nord de la Corse.",
+        "services": [
+          "Dimanche 11h - Culte dominical",
+          "Jeudi 19h30 - Prière"
+        ],
+        "tags": ["évangélique", "bastia", "corse"],
+        "capacity": 70,
+        "accessible": true,
+        "parking": true,
+        "website": "https://add-bastia.fr"
+      },
+      {
+        "id": "63",
+        "name": "Centre Évangélique de Toulon Centre",
+        "address": "12 Rue Lafayette, 83000 Toulon",
+        "latitude": 43.1198,
+        "longitude": 5.9325,
+        "pastor": "Pasteur Éric Maritime",
+        "email": "info@ce-touloncentre.fr",
+        "phone": "04 94 03 12 34",
+        "description": "Centre évangélique dans le centre historique de Toulon.",
+        "services": [
+          "Dimanche 11h - Culte principal",
+          "Vendredi 19h30 - Soirée jeunes"
+        ],
+        "tags": ["évangélique", "toulon", "centre"],
+        "capacity": 140,
+        "accessible": true,
+        "parking": false,
+        "website": "https://ce-touloncentre.fr"
+      },
+      {
+        "id": "64",
+        "name": "Église Évangélique de Hyères",
+        "address": "34 Avenue Gambetta, 83400 Hyères",
+        "latitude": 43.1204,
+        "longitude": 6.1289,
+        "pastor": "Pasteur Sylvie Palmier",
+        "email": "contact@ee-hyeres.fr",
+        "phone": "04 94 65 23 45",
+        "description": "Église évangélique dans la ville aux palmiers.",
+        "services": [
+          "Dimanche 10h - Culte familial",
+          "Mercredi 19h30 - Étude biblique"
+        ],
+        "tags": ["évangélique", "hyeres", "palmiers"],
+        "capacity": 90,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ee-hyeres.fr"
+      },
+      {
+        "id": "65",
+        "name": "Assemblée Évangélique de Fréjus",
+        "address": "56 Rue Jean Jaurès, 83600 Fréjus",
+        "latitude": 43.4333,
+        "longitude": 6.7367,
+        "pastor": "Pasteur Laurent Romain",
+        "email": "contact@ae-frejus.fr",
+        "phone": "04 94 51 34 56",
+        "description": "Assemblée évangélique dans la ville romaine.",
+        "services": [
+          "Dimanche 10h30 - Culte principal",
+          "Jeudi 19h - Groupe de prière"
+        ],
+        "tags": ["évangélique", "frejus", "romaine"],
+        "capacity": 100,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ae-frejus.fr"
+      },
+      {
+        "id": "66",
+        "name": "Centre Chrétien de Saint-Raphaël",
+        "address": "23 Boulevard Félix Martin, 83700 Saint-Raphaël",
+        "latitude": 43.4247,
+        "longitude": 6.7686,
+        "pastor": "Pasteur Christine Azur",
+        "email": "info@cc-saintraphael.fr",
+        "phone": "04 94 95 12 34",
+        "description": "Centre chrétien balnéaire sur la Côte d'Azur.",
+        "services": [
+          "Dimanche 11h - Célébration",
+          "Vendredi 19h30 - Soirée louange"
+        ],
+        "tags": ["évangélique", "saint-raphael", "balnéaire"],
+        "capacity": 110,
+        "accessible": true,
+        "parking": true,
+        "website": "https://cc-saintraphael.fr"
+      },
+      {
+        "id": "67",
+        "name": "Église Évangélique de Draguignan",
+        "address": "45 Boulevard Clemenceau, 83300 Draguignan",
+        "latitude": 43.5382,
+        "longitude": 6.4667,
+        "pastor": "Pasteur François Provençal",
+        "email": "contact@ee-draguignan.fr",
+        "phone": "04 94 68 23 45",
+        "description": "Église évangélique dans le Var intérieur.",
+        "services": [
+          "Dimanche 10h - Culte familial",
+          "Mercredi 19h30 - Étude biblique"
+        ],
+        "tags": ["évangélique", "draguignan", "var"],
+        "capacity": 80,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ee-draguignan.fr"
+      },
+      {
+        "id": "68",
+        "name": "Assemblée de Dieu Marseille Nord",
+        "address": "78 Boulevard Chave, 13005 Marseille",
+        "latitude": 43.2956,
+        "longitude": 5.3907,
+        "pastor": "Pasteur Samir Méditerranée",
+        "email": "contact@add-marseillenord.fr",
+        "phone": "04 91 48 34 56",
+        "description": "Assemblée de Dieu multiculturelle dans le nord de Marseille.",
+        "services": [
+          "Dimanche 10h - Culte principal",
+          "Dimanche 15h - Culte en arabe"
+        ],
+        "tags": ["évangélique", "marseille", "nord"],
+        "capacity": 280,
+        "accessible": true,
+        "parking": true,
+        "website": "https://add-marseillenord.fr"
+      },
+      {
+        "id": "69",
+        "name": "Centre Évangélique d'Aubagne",
+        "address": "34 Cours Voltaire, 13400 Aubagne",
+        "latitude": 43.2933,
+        "longitude": 5.5712,
+        "pastor": "Pasteur Marcel Pagnol",
+        "email": "info@ce-aubagne.fr",
+        "phone": "04 42 03 12 34",
+        "description": "Centre évangélique dans la ville de Pagnol.",
+        "services": [
+          "Dimanche 11h - Culte dominical",
+          "Jeudi 19h30 - Prière"
+        ],
+        "tags": ["évangélique", "aubagne", "pagnol"],
+        "capacity": 90,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ce-aubagne.fr"
+      },
+      {
+        "id": "70",
+        "name": "Église Évangélique d'Arles",
+        "address": "23 Boulevard des Lices, 13200 Arles",
+        "latitude": 43.6772,
+        "longitude": 4.6281,
+        "pastor": "Pasteur Vincent Van Gogh",
+        "email": "contact@ee-arles.fr",
+        "phone": "04 90 96 23 45",
+        "description": "Église évangélique dans la ville romaine et camarguaise.",
+        "services": [
+          "Dimanche 10h30 - Culte familial",
+          "Vendredi 19h30 - Soirée louange"
+        ],
+        "tags": ["évangélique", "arles", "camargue"],
+        "capacity": 100,
+        "accessible": true,
+        "parking": false,
+        "website": "https://ee-arles.fr"
+      },
+      {
+        "id": "71",
+        "name": "Assemblée Évangélique de Salon-de-Provence",
+        "address": "45 Cours Carnot, 13300 Salon-de-Provence",
+        "latitude": 43.6403,
+        "longitude": 5.0979,
+        "pastor": "Pasteur Nostradamus Prophète",
+        "email": "contact@ae-salon.fr",
+        "phone": "04 90 56 34 56",
+        "description": "Assemblée évangélique dans la ville de Nostradamus.",
+        "services": [
+          "Dimanche 10h - Culte principal",
+          "Mercredi 19h30 - Étude biblique"
+        ],
+        "tags": ["évangélique", "salon", "provence"],
+        "capacity": 110,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ae-salon.fr"
+      },
+      {
+        "id": "72",
+        "name": "Centre Chrétien de Carcassonne",
+        "address": "56 Rue de Verdun, 11000 Carcassonne",
+        "latitude": 43.2130,
+        "longitude": 2.3491,
+        "pastor": "Pasteur Jean Médiéval",
+        "email": "info@cc-carcassonne.fr",
+        "phone": "04 68 25 12 34",
+        "description": "Centre chrétien dans la cité médiévale.",
+        "services": [
+          "Dimanche 11h - Célébration",
+          "Jeudi 19h30 - Prière"
+        ],
+        "tags": ["évangélique", "carcassonne", "médiéval"],
+        "capacity": 90,
+        "accessible": false,
+        "parking": false,
+        "website": "https://cc-carcassonne.fr"
+      },
+      {
+        "id": "73",
+        "name": "Église Évangélique de Béziers",
+        "address": "67 Allées Paul Riquet, 34500 Béziers",
+        "latitude": 43.3442,
+        "longitude": 3.2150,
+        "pastor": "Pasteur Claire Canal",
+        "email": "contact@ee-beziers.fr",
+        "phone": "04 67 28 23 45",
+        "description": "Église évangélique dans la ville du rugby.",
+        "services": [
+          "Dimanche 10h - Culte familial",
+          "Vendredi 19h30 - Soirée jeunes"
+        ],
+        "tags": ["évangélique", "beziers", "rugby"],
+        "capacity": 120,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ee-beziers.fr"
+      },
+      {
+        "id": "74",
+        "name": "Assemblée de Dieu Nîmes",
+        "address": "34 Boulevard Victor Hugo, 30000 Nîmes",
+        "latitude": 43.8367,
+        "longitude": 4.3601,
+        "pastor": "Pasteur Romain Arène",
+        "email": "contact@add-nimes.fr",
+        "phone": "04 66 67 34 56",
+        "description": "Assemblée de Dieu dans la Rome française.",
+        "services": [
+          "Dimanche 10h30 - Culte principal",
+          "Mercredi 19h30 - Étude biblique"
+        ],
+        "tags": ["évangélique", "nimes", "romaine"],
+        "capacity": 170,
+        "accessible": true,
+        "parking": true,
+        "website": "https://add-nimes.fr"
+      },
+      {
+        "id": "75",
+        "name": "Centre Évangélique d'Alès",
+        "address": "23 Grand'Rue, 30100 Alès",
+        "latitude": 44.1253,
+        "longitude": 4.0809,
+        "pastor": "Pasteur Pierre Cévennes",
+        "email": "info@ce-ales.fr",
+        "phone": "04 66 86 12 34",
+        "description": "Centre évangélique cévenol dans une région protestante.",
+        "services": [
+          "Dimanche 11h - Culte dominical",
+          "Jeudi 19h30 - Prière"
+        ],
+        "tags": ["évangélique", "ales", "cevennes"],
+        "capacity": 100,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ce-ales.fr"
+      },
+      {
+        "id": "76",
+        "name": "Église Évangélique de Valence",
+        "address": "45 Avenue Gambetta, 26000 Valence",
+        "latitude": 44.9334,
+        "longitude": 4.8924,
+        "pastor": "Pasteur Sophie Drôme",
+        "email": "contact@ee-valence.fr",
+        "phone": "04 75 43 23 45",
+        "description": "Église évangélique dans la porte du midi.",
+        "services": [
+          "Dimanche 10h - Culte familial",
+          "Vendredi 19h30 - Soirée louange"
+        ],
+        "tags": ["évangélique", "valence", "drome"],
+        "capacity": 130,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ee-valence.fr"
+      },
+      {
+        "id": "77",
+        "name": "Assemblée Évangélique de Montélimar",
+        "address": "67 Boulevard Aristide Briand, 26200 Montélimar",
+        "latitude": 44.5586,
+        "longitude": 4.7511,
+        "pastor": "Pasteur Nougat Sucré",
+        "email": "contact@ae-montelimar.fr",
+        "phone": "04 75 01 34 56",
+        "description": "Assemblée évangélique dans la capitale du nougat.",
+        "services": [
+          "Dimanche 10h30 - Culte principal",
+          "Mercredi 19h30 - Étude biblique"
+        ],
+        "tags": ["évangélique", "montelimar", "nougat"],
+        "capacity": 80,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ae-montelimar.fr"
+      },
+      {
+        "id": "78",
+        "name": "Centre Chrétien de Gap",
+        "address": "34 Rue Pérolière, 05000 Gap",
+        "latitude": 44.5597,
+        "longitude": 6.0798,
+        "pastor": "Pasteur Alain Haute-Alpes",
+        "email": "info@cc-gap.fr",
+        "phone": "04 92 53 12 34",
+        "description": "Centre chrétien dans les Alpes du Sud.",
+        "services": [
+          "Dimanche 11h - Culte dominical",
+          "Jeudi 19h30 - Prière"
+        ],
+        "tags": ["évangélique", "gap", "alpes"],
+        "capacity": 70,
+        "accessible": true,
+        "parking": false,
+        "website": "https://cc-gap.fr"
+      },
+      {
+        "id": "79",
+        "name": "Église Évangélique de Briançon",
+        "address": "23 Grande Rue, 05100 Briançon",
+        "latitude": 44.8997,
+        "longitude": 6.6415,
+        "pastor": "Pasteur Vauban Forteresse",
+        "email": "contact@ee-briancon.fr",
+        "phone": "04 92 21 23 45",
+        "description": "Église évangélique dans la ville la plus haute d'Europe.",
+        "services": [
+          "Dimanche 10h - Culte familial",
+          "Vendredi 19h30 - Soirée jeunes"
+        ],
+        "tags": ["évangélique", "briancon", "altitude"],
+        "capacity": 60,
+        "accessible": false,
+        "parking": true,
+        "website": "https://ee-briancon.fr"
+      },
+      {
+        "id": "80",
+        "name": "Assemblée de Dieu Grasse",
+        "address": "45 Boulevard du Jeu de Ballon, 06130 Grasse",
+        "latitude": 43.6584,
+        "longitude": 6.9222,
+        "pastor": "Pasteur Parfum Fleur",
+        "email": "contact@add-grasse.fr",
+        "phone": "04 93 36 34 56",
+        "description": "Assemblée de Dieu dans la capitale mondiale du parfum.",
+        "services": [
+          "Dimanche 10h30 - Culte principal",
+          "Mercredi 19h30 - Étude biblique"
+        ],
+        "tags": ["évangélique", "grasse", "parfum"],
+        "capacity": 90,
+        "accessible": true,
+        "parking": true,
+        "website": "https://add-grasse.fr"
+      },
+      {
+        "id": "81",
+        "name": "Centre Évangélique de Menton",
+        "address": "56 Avenue Boyer, 06500 Menton",
+        "latitude": 43.7745,
+        "longitude": 7.5031,
+        "pastor": "Pasteur Citron Jaune",
+        "email": "info@ce-menton.fr",
+        "phone": "04 93 35 12 34",
+        "description": "Centre évangélique à la frontière italienne.",
+        "services": [
+          "Dimanche 11h - Culte dominical",
+          "Jeudi 19h30 - Prière"
+        ],
+        "tags": ["évangélique", "menton", "frontiere"],
+        "capacity": 70,
+        "accessible": true,
+        "parking": false,
+        "website": "https://ce-menton.fr"
+      },
+      {
+        "id": "82",
+        "name": "Église Évangélique de Villefranche-sur-Mer",
+        "address": "23 Rue de Mai, 06230 Villefranche-sur-Mer",
+        "latitude": 43.7050,
+        "longitude": 7.3087,
+        "pastor": "Pasteur Rade Bleue",
+        "email": "contact@ee-villefranche.fr",
+        "phone": "04 93 01 23 45",
+        "description": "Église évangélique dans la plus belle rade de Méditerranée.",
+        "services": [
+          "Dimanche 10h - Culte familial",
+          "Vendredi 19h30 - Soirée louange"
+        ],
+        "tags": ["évangélique", "villefranche", "rade"],
+        "capacity": 60,
+        "accessible": false,
+        "parking": false,
+        "website": "https://ee-villefranche.fr"
+      },
+      {
+        "id": "83",
+        "name": "Assemblée Évangélique de Vence",
+        "address": "34 Avenue Marcellin Maurel, 06140 Vence",
+        "latitude": 43.7230,
+        "longitude": 7.1128,
+        "pastor": "Pasteur Henri Matisse",
+        "email": "contact@ae-vence.fr",
+        "phone": "04 93 58 34 56",
+        "description": "Assemblée évangélique dans la ville d'art.",
+        "services": [
+          "Dimanche 10h30 - Culte principal",
+          "Mercredi 19h30 - Étude biblique"
+        ],
+        "tags": ["évangélique", "vence", "art"],
+        "capacity": 50,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ae-vence.fr"
+      },
+      {
+        "id": "84",
+        "name": "Centre Chrétien de Cagnes-sur-Mer",
+        "address": "67 Avenue de Nice, 06800 Cagnes-sur-Mer",
+        "latitude": 43.6638,
+        "longitude": 7.1489,
+        "pastor": "Pasteur Auguste Renoir",
+        "email": "info@cc-cagnes.fr",
+        "phone": "04 93 20 12 34",
+        "description": "Centre chrétien entre mer et collines.",
+        "services": [
+          "Dimanche 11h - Célébration",
+          "Jeudi 19h30 - Prière"
+        ],
+        "tags": ["évangélique", "cagnes", "mer"],
+        "capacity": 80,
+        "accessible": true,
+        "parking": true,
+        "website": "https://cc-cagnes.fr"
+      },
+      {
+        "id": "85",
+        "name": "Église Évangélique de Saint-Laurent-du-Var",
+        "address": "45 Promenade des Flots Bleus, 06700 Saint-Laurent-du-Var",
+        "latitude": 43.6691,
+        "longitude": 7.1897,
+        "pastor": "Pasteur Marina Port",
+        "email": "contact@ee-saintlaurent.fr",
+        "phone": "04 93 07 23 45",
+        "description": "Église évangélique au bord de la mer.",
+        "services": [
+          "Dimanche 10h - Culte familial",
+          "Vendredi 19h30 - Soirée jeunes"
+        ],
+        "tags": ["évangélique", "saint-laurent", "marina"],
+        "capacity": 100,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ee-saintlaurent.fr"
+      },
+      {
+        "id": "86",
+        "name": "Assemblée de Dieu Valbonne",
+        "address": "23 Route de Cannes, 06560 Valbonne",
+        "latitude": 43.6410,
+        "longitude": 7.0098,
+        "pastor": "Pasteur Sophia Antipolis",
+        "email": "contact@add-valbonne.fr",
+        "phone": "04 93 12 34 56",
+        "description": "Assemblée de Dieu dans la technopole de Sophia Antipolis.",
+        "services": [
+          "Dimanche 10h30 - Culte principal",
+          "Mercredi 19h30 - Étude biblique"
+        ],
+        "tags": ["évangélique", "valbonne", "technopole"],
+        "capacity": 120,
+        "accessible": true,
+        "parking": true,
+        "website": "https://add-valbonne.fr"
+      },
+      {
+        "id": "87",
+        "name": "Centre Évangélique de Mougins",
+        "address": "56 Avenue Charles Mallet, 06250 Mougins",
+        "latitude": 43.5997,
+        "longitude": 6.9969,
+        "pastor": "Pasteur Pablo Picasso",
+        "email": "info@ce-mougins.fr",
+        "phone": "04 92 92 12 34",
+        "description": "Centre évangélique dans le village de Picasso.",
+        "services": [
+          "Dimanche 11h - Culte dominical",
+          "Jeudi 19h30 - Prière"
+        ],
+        "tags": ["évangélique", "mougins", "village"],
+        "capacity": 70,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ce-mougins.fr"
+      },
+      {
+        "id": "88",
+        "name": "Église Évangélique d'Aubagne La Penne",
+        "address": "34 Avenue de la Libération, 13780 Aubagne",
+        "latitude": 43.2842,
+        "longitude": 5.5621,
+        "pastor": "Pasteur Marius César",
+        "email": "contact@ee-aubagnepenne.fr",
+        "phone": "04 42 84 23 45",
+        "description": "Église évangélique dans l'est d'Aubagne.",
+        "services": [
+          "Dimanche 10h - Culte familial",
+          "Vendredi 19h30 - Soirée louange"
+        ],
+        "tags": ["évangélique", "aubagne", "penne"],
+        "capacity": 80,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ee-aubagnepenne.fr"
+      },
+      {
+        "id": "89",
+        "name": "Assemblée Évangélique de La Ciotat",
+        "address": "67 Avenue Victor Hugo, 13600 La Ciotat",
+        "latitude": 43.1746,
+        "longitude": 5.6064,
+        "pastor": "Pasteur Louis Lumière",
+        "email": "contact@ae-laciotat.fr",
+        "phone": "04 42 08 34 56",
+        "description": "Assemblée évangélique dans la ville du cinéma.",
+        "services": [
+          "Dimanche 10h30 - Culte principal",
+          "Mercredi 19h30 - Étude biblique"
+        ],
+        "tags": ["évangélique", "la-ciotat", "cinema"],
+        "capacity": 90,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ae-laciotat.fr"
+      },
+      {
+        "id": "90",
+        "name": "Centre Chrétien de Cassis",
+        "address": "23 Quai des Baux, 13260 Cassis",
+        "latitude": 43.2146,
+        "longitude": 5.5383,
+        "pastor": "Pasteur Cap Calanques",
+        "email": "info@cc-cassis.fr",
+        "phone": "04 42 01 12 34",
+        "description": "Centre chrétien face aux calanques.",
+        "services": [
+          "Dimanche 11h - Célébration",
+          "Jeudi 19h30 - Prière"
+        ],
+        "tags": ["évangélique", "cassis", "calanques"],
+        "capacity": 60,
+        "accessible": false,
+        "parking": false,
+        "website": "https://cc-cassis.fr"
+      },
+      {
+        "id": "91",
+        "name": "Église Évangélique de Six-Fours-les-Plages",
+        "address": "45 Avenue du Maréchal Juin, 83140 Six-Fours-les-Plages",
+        "latitude": 43.0937,
+        "longitude": 5.8384,
+        "pastor": "Pasteur Paul Plages",
+        "email": "contact@ee-sixfours.fr",
+        "phone": "04 94 25 23 45",
+        "description": "Église évangélique balnéaire dans le Var.",
+        "services": [
+          "Dimanche 10h - Culte familial",
+          "Vendredi 19h30 - Soirée jeunes"
+        ],
+        "tags": ["évangélique", "six-fours", "plages"],
+        "capacity": 100,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ee-sixfours.fr"
+      },
+      {
+        "id": "92",
+        "name": "Assemblée de Dieu Sanary-sur-Mer",
+        "address": "56 Quai du Levant, 83110 Sanary-sur-Mer",
+        "latitude": 43.1194,
+        "longitude": 5.7995,
+        "pastor": "Pasteur Portus Magnus",
+        "email": "contact@add-sanary.fr",
+        "phone": "04 94 74 34 56",
+        "description": "Assemblée de Dieu dans le port provençal.",
+        "services": [
+          "Dimanche 10h30 - Culte principal",
+          "Mercredi 19h30 - Étude biblique"
+        ],
+        "tags": ["évangélique", "sanary", "port"],
+        "capacity": 80,
+        "accessible": true,
+        "parking": false,
+        "website": "https://add-sanary.fr"
+      },
+      {
+        "id": "93",
+        "name": "Centre Évangélique de Bandol",
+        "address": "34 Allée Jean Moulin, 83150 Bandol",
+        "latitude": 43.1353,
+        "longitude": 5.7542,
+        "pastor": "Pasteur Rosé Vin",
+        "email": "info@ce-bandol.fr",
+        "phone": "04 94 29 12 34",
+        "description": "Centre évangélique dans la capitale du vin rosé.",
+        "services": [
+          "Dimanche 11h - Culte dominical",
+          "Jeudi 19h30 - Prière"
+        ],
+        "tags": ["évangélique", "bandol", "vin"],
+        "capacity": 70,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ce-bandol.fr"
+      },
+      {
+        "id": "94",
+        "name": "Église Évangélique d'Ollioules",
+        "address": "67 Avenue Barthélémy Dagnan, 83190 Ollioules",
+        "latitude": 43.1397,
+        "longitude": 5.8478,
+        "pastor": "Pasteur Gorges Fleur",
+        "email": "contact@ee-ollioules.fr",
+        "phone": "04 94 63 23 45",
+        "description": "Église évangélique dans les gorges d'Ollioules.",
+        "services": [
+          "Dimanche 10h - Culte familial",
+          "Vendredi 19h30 - Soirée louange"
+        ],
+        "tags": ["évangélique", "ollioules", "gorges"],
+        "capacity": 90,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ee-ollioules.fr"
+      },
+      {
+        "id": "95",
+        "name": "Assemblée Évangélique de Solliès-Pont",
+        "address": "23 Cours de la République, 83210 Solliès-Pont",
+        "latitude": 43.1917,
+        "longitude": 6.0436,
+        "pastor": "Pasteur Figue Violette",
+        "email": "contact@ae-solliespont.fr",
+        "phone": "04 94 33 34 56",
+        "description": "Assemblée évangélique dans le pays de la figue.",
+        "services": [
+          "Dimanche 10h30 - Culte principal",
+          "Mercredi 19h30 - Étude biblique"
+        ],
+        "tags": ["évangélique", "sollies", "figue"],
+        "capacity": 70,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ae-solliespont.fr"
+      },
+      {
+        "id": "96",
+        "name": "Centre Chrétien de Cuers",
+        "address": "45 Avenue du Général de Gaulle, 83390 Cuers",
+        "latitude": 43.2379,
+        "longitude": 6.0712,
+        "pastor": "Pasteur Vignes Terroir",
+        "email": "info@cc-cuers.fr",
+        "phone": "04 94 28 12 34",
+        "description": "Centre chrétien viticole dans le Var.",
+        "services": [
+          "Dimanche 11h - Célébration",
+          "Jeudi 19h30 - Prière"
+        ],
+        "tags": ["évangélique", "cuers", "vignes"],
+        "capacity": 60,
+        "accessible": true,
+        "parking": true,
+        "website": "https://cc-cuers.fr"
+      },
+      {
+        "id": "97",
+        "name": "Église Évangélique de Brignoles",
+        "address": "56 Boulevard de la République, 83170 Brignoles",
+        "latitude": 43.4059,
+        "longitude": 6.0625,
+        "pastor": "Pasteur Provence Verte",
+        "email": "contact@ee-brignoles.fr",
+        "phone": "04 94 69 23 45",
+        "description": "Église évangélique dans la Provence Verte.",
+        "services": [
+          "Dimanche 10h - Culte familial",
+          "Vendredi 19h30 - Soirée jeunes"
+        ],
+        "tags": ["évangélique", "brignoles", "provence"],
+        "capacity": 80,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ee-brignoles.fr"
+      },
+      {
+        "id": "98",
+        "name": "Assemblée de Dieu Cogolin",
+        "address": "34 Boulevard Léon Blum, 83310 Cogolin",
+        "latitude": 43.2548,
+        "longitude": 6.5346,
+        "pastor": "Pasteur Golfe Saint-Tropez",
+        "email": "contact@add-cogolin.fr",
+        "phone": "04 94 54 34 56",
+        "description": "Assemblée de Dieu dans le golfe de Saint-Tropez.",
+        "services": [
+          "Dimanche 10h30 - Culte principal",
+          "Mercredi 19h30 - Étude biblique"
+        ],
+        "tags": ["évangélique", "cogolin", "golfe"],
+        "capacity": 90,
+        "accessible": true,
+        "parking": true,
+        "website": "https://add-cogolin.fr"
+      },
+      {
+        "id": "99",
+        "name": "Centre Évangélique de Sainte-Maxime",
+        "address": "67 Avenue Charles de Gaulle, 83120 Sainte-Maxime",
+        "latitude": 43.3088,
+        "longitude": 6.6407,
+        "pastor": "Pasteur Maxime Plage",
+        "email": "info@ce-saintemaxime.fr",
+        "phone": "04 94 96 12 34",
+        "description": "Centre évangélique balnéaire face à Saint-Tropez.",
+        "services": [
+          "Dimanche 11h - Culte dominical",
+          "Jeudi 19h30 - Prière"
+        ],
+        "tags": ["évangélique", "sainte-maxime", "balnéaire"],
+        "capacity": 100,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ce-saintemaxime.fr"
+      },
+      {
+        "id": "100",
+        "name": "Église Évangélique du Pradet",
+        "address": "23 Avenue du 8 Mai 1945, 83220 Le Pradet",
+        "latitude": 43.1047,
+        "longitude": 6.0243,
+        "pastor": "Pasteur Cap Carqueiranne",
+        "email": "contact@ee-lepradet.fr",
+        "phone": "04 94 21 23 45",
+        "description": "Église évangélique près du Cap Carqueiranne.",
+        "services": [
+          "Dimanche 10h - Culte familial",
+          "Vendredi 19h30 - Soirée louange"
+        ],
+        "tags": ["évangélique", "le-pradet", "cap"],
+        "capacity": 70,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ee-lepradet.fr"
+      },
+      {
+        "id": "101",
+        "name": "Assemblée Évangélique de La Garde",
+        "address": "45 Avenue Jean Moulin, 83130 La Garde",
+        "latitude": 43.1250,
+        "longitude": 6.0103,
+        "pastor": "Pasteur Colline Vue",
+        "email": "contact@ae-lagarde.fr",
+        "phone": "04 94 08 34 56",
+        "description": "Assemblée évangélique avec vue sur Toulon.",
+        "services": [
+          "Dimanche 10h30 - Culte principal",
+          "Mercredi 19h30 - Étude biblique"
+        ],
+        "tags": ["évangélique", "la-garde", "vue"],
+        "capacity": 110,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ae-lagarde.fr"
+      },
+      {
+        "id": "102",
+        "name": "Centre Chrétien de La Crau",
+        "address": "56 Avenue de la Libération, 83260 La Crau",
+        "latitude": 43.1494,
+        "longitude": 6.0717,
+        "pastor": "Pasteur Plaine Agricole",
+        "email": "info@cc-lacrau.fr",
+        "phone": "04 94 66 12 34",
+        "description": "Centre chrétien dans la plaine des Maures.",
+        "services": [
+          "Dimanche 11h - Célébration",
+          "Jeudi 19h30 - Prière"
+        ],
+        "tags": ["évangélique", "la-crau", "plaine"],
+        "capacity": 90,
+        "accessible": true,
+        "parking": true,
+        "website": "https://cc-lacrau.fr"
+      },
+      {
+        "id": "103",
+        "name": "Église Évangélique de Carqueiranne",
+        "address": "34 Avenue des Iles d'Or, 83320 Carqueiranne",
+        "latitude": 43.0953,
+        "longitude": 6.0745,
+        "pastor": "Pasteur Îles Or",
+        "email": "contact@ee-carqueiranne.fr",
+        "phone": "04 94 57 23 45",
+        "description": "Église évangélique face aux îles d'Hyères.",
+        "services": [
+          "Dimanche 10h - Culte familial",
+          "Vendredi 19h30 - Soirée jeunes"
+        ],
+        "tags": ["évangélique", "carqueiranne", "iles"],
+        "capacity": 60,
+        "accessible": true,
+        "parking": false,
+        "website": "https://ee-carqueiranne.fr"
+      },
+      {
+        "id": "104",
+        "name": "Assemblée de Dieu Bormes-les-Mimosas",
+        "address": "67 Route du Baguier, 83230 Bormes-les-Mimosas",
+        "latitude": 43.1503,
+        "longitude": 6.3429,
+        "pastor": "Pasteur Mimosa Fleur",
+        "email": "contact@add-bormes.fr",
+        "phone": "04 94 71 34 56",
+        "description": "Assemblée de Dieu fleurie dans le Var.",
+        "services": [
+          "Dimanche 10h30 - Culte principal",
+          "Mercredi 19h30 - Étude biblique"
+        ],
+        "tags": ["évangélique", "bormes", "mimosas"],
+        "capacity": 50,
+        "accessible": false,
+        "parking": true,
+        "website": "https://add-bormes.fr"
+      },
+      {
+        "id": "105",
+        "name": "Centre Évangélique du Lavandou",
+        "address": "23 Quai Gabriel Péri, 83980 Le Lavandou",
+        "latitude": 43.1375,
+        "longitude": 6.3670,
+        "pastor": "Pasteur Lavande Mer",
+        "email": "info@ce-lelavandou.fr",
+        "phone": "04 94 05 12 34",
+        "description": "Centre évangélique dans la baie du Lavandou.",
+        "services": [
+          "Dimanche 11h - Culte dominical",
+          "Jeudi 19h30 - Prière"
+        ],
+        "tags": ["évangélique", "le-lavandou", "baie"],
+        "capacity": 60,
+        "accessible": true,
+        "parking": false,
+        "website": "https://ce-lelavandou.fr"
+      },
+      {
+        "id": "106",
+        "name": "Église Évangélique de Ramatuelle",
+        "address": "45 Place de l'Ormeau, 83350 Ramatuelle",
+        "latitude": 43.2161,
+        "longitude": 6.6131,
+        "pastor": "Pasteur Pampelonne Beach",
+        "email": "contact@ee-ramatuelle.fr",
+        "phone": "04 94 79 23 45",
+        "description": "Église évangélique près de Saint-Tropez.",
+        "services": [
+          "Dimanche 10h - Culte familial",
+          "Vendredi 19h30 - Soirée louange"
+        ],
+        "tags": ["évangélique", "ramatuelle", "tropez"],
+        "capacity": 40,
+        "accessible": false,
+        "parking": false,
+        "website": "https://ee-ramatuelle.fr"
+      },
+      {
+        "id": "107",
+        "name": "Assemblée Évangélique de Gassin",
+        "address": "56 Place des Sarrasins, 83580 Gassin",
+        "latitude": 43.2294,
+        "longitude": 6.5856,
+        "pastor": "Pasteur Village Perché",
+        "email": "contact@ae-gassin.fr",
+        "phone": "04 94 56 34 56",
+        "description": "Assemblée évangélique dans un village perché.",
+        "services": [
+          "Dimanche 10h30 - Culte principal",
+          "Mercredi 19h30 - Étude biblique"
+        ],
+        "tags": ["évangélique", "gassin", "village"],
+        "capacity": 30,
+        "accessible": false,
+        "parking": true,
+        "website": "https://ae-gassin.fr"
+      },
+      {
+        "id": "108",
+        "name": "Centre Chrétien de Grimaud",
+        "address": "34 Rue des Templiers, 83310 Grimaud",
+        "latitude": 43.2733,
+        "longitude": 6.5215,
+        "pastor": "Pasteur Château Fort",
+        "email": "info@cc-grimaud.fr",
+        "phone": "04 94 43 12 34",
+        "description": "Centre chrétien médiéval dans le golfe de Saint-Tropez.",
+        "services": [
+          "Dimanche 11h - Célébration",
+          "Jeudi 19h30 - Prière"
+        ],
+        "tags": ["évangélique", "grimaud", "médiéval"],
+        "capacity": 50,
+        "accessible": false,
+        "parking": false,
+        "website": "https://cc-grimaud.fr"
+      },
+      {
+        "id": "109",
+        "name": "Église Évangélique de Cavalaire-sur-Mer",
+        "address": "67 Avenue des Alliés, 83240 Cavalaire-sur-Mer",
+        "latitude": 43.1725,
+        "longitude": 6.5334,
+        "pastor": "Pasteur Baie Azur",
+        "email": "contact@ee-cavalaire.fr",
+        "phone": "04 94 64 23 45",
+        "description": "Église évangélique dans la plus belle baie d'Europe.",
+        "services": [
+          "Dimanche 10h - Culte familial",
+          "Vendredi 19h30 - Soirée jeunes"
+        ],
+        "tags": ["évangélique", "cavalaire", "baie"],
+        "capacity": 80,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ee-cavalaire.fr"
+      },
+      {
+        "id": "110",
+        "name": "Assemblée de Dieu La Londe-les-Maures",
+        "address": "23 Avenue Albert Roux, 83250 La Londe-les-Maures",
+        "latitude": 43.1394,
+        "longitude": 6.2334,
+        "pastor": "Pasteur Maures Forêt",
+        "email": "contact@add-lalonde.fr",
+        "phone": "04 94 66 34 56",
+        "description": "Assemblée de Dieu entre mer et massif des Maures.",
+        "services": [
+          "Dimanche 10h30 - Culte principal",
+          "Mercredi 19h30 - Étude biblique"
+        ],
+        "tags": ["évangélique", "la-londe", "maures"],
+        "capacity": 90,
+        "accessible": true,
+        "parking": true,
+        "website": "https://add-lalonde.fr"
+      },
+      {
+        "id": "111",
+        "name": "Centre Évangélique de Pierrefeu-du-Var",
+        "address": "45 Avenue Jean Jaurès, 83390 Pierrefeu-du-Var",
+        "latitude": 43.2253,
+        "longitude": 6.1416,
+        "pastor": "Pasteur Vin Terroir",
+        "email": "info@ce-pierrefeu.fr",
+        "phone": "04 94 28 12 34",
+        "description": "Centre évangélique dans le terroir varois.",
+        "services": [
+          "Dimanche 11h - Culte dominical",
+          "Jeudi 19h30 - Prière"
+        ],
+        "tags": ["évangélique", "pierrefeu", "terroir"],
+        "capacity": 60,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ce-pierrefeu.fr"
+      },
+      {
+        "id": "112",
+        "name": "Église Évangélique de Puget-Ville",
+        "address": "56 Cours de la République, 83390 Puget-Ville",
+        "latitude": 43.2886,
+        "longitude": 6.1354,
+        "pastor": "Pasteur Colline Vignoble",
+        "email": "contact@ee-pugetville.fr",
+        "phone": "04 94 48 23 45",
+        "description": "Église évangélique dans les collines varoises.",
+        "services": [
+          "Dimanche 10h - Culte familial",
+          "Vendredi 19h30 - Soirée louange"
+        ],
+        "tags": ["évangélique", "puget-ville", "collines"],
+        "capacity": 50,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ee-pugetville.fr"
+      },
+      {
+        "id": "113",
+        "name": "Assemblée Évangélique de Rocbaron",
+        "address": "34 Place de la Mairie, 83136 Rocbaron",
+        "latitude": 43.3050,
+        "longitude": 6.0802,
+        "pastor": "Pasteur Roc Baron",
+        "email": "contact@ae-rocbaron.fr",
+        "phone": "04 94 04 34 56",
+        "description": "Assemblée évangélique dans le centre Var.",
+        "services": [
+          "Dimanche 10h30 - Culte principal",
+          "Mercredi 19h30 - Étude biblique"
+        ],
+        "tags": ["évangélique", "rocbaron", "centre"],
+        "capacity": 40,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ae-rocbaron.fr"
+      },
+      {
+        "id": "114",
+        "name": "Centre Chrétien de Néoules",
+        "address": "67 Avenue du Général de Gaulle, 83136 Néoules",
+        "latitude": 43.3169,
+        "longitude": 6.0169,
+        "pastor": "Pasteur Montagne Sainte-Baume",
+        "email": "info@cc-neoules.fr",
+        "phone": "04 94 37 12 34",
+        "description": "Centre chrétien au pied de la Sainte-Baume.",
+        "services": [
+          "Dimanche 11h - Célébration",
+          "Jeudi 19h30 - Prière"
+        ],
+        "tags": ["évangélique", "neoules", "sainte-baume"],
+        "capacity": 30,
+        "accessible": true,
+        "parking": true,
+        "website": "https://cc-neoules.fr"
+      },
+      {
+        "id": "115",
+        "name": "Église Évangélique de Garéoult",
+        "address": "23 Cours Gambetta, 83136 Garéoult",
+        "latitude": 43.3308,
+        "longitude": 6.0472,
+        "pastor": "Pasteur Provence Intérieur",
+        "email": "contact@ee-gareoult.fr",
+        "phone": "04 94 04 23 45",
+        "description": "Église évangélique en Provence intérieure.",
+        "services": [
+          "Dimanche 10h - Culte familial",
+          "Vendredi 19h30 - Soirée jeunes"
+        ],
+        "tags": ["évangélique", "gareoult", "provence"],
+        "capacity": 50,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ee-gareoult.fr"
+      },
+      {
+        "id": "116",
+        "name": "Assemblée de Dieu Belgentier",
+        "address": "45 Rue de la Fontaine, 83210 Belgentier",
+        "latitude": 43.2461,
+        "longitude": 6.0050,
+        "pastor": "Pasteur Source Fraîche",
+        "email": "contact@add-belgentier.fr",
+        "phone": "04 94 48 34 56",
+        "description": "Assemblée de Dieu dans un village de sources.",
+        "services": [
+          "Dimanche 10h30 - Culte principal",
+          "Mercredi 19h30 - Étude biblique"
+        ],
+        "tags": ["évangélique", "belgentier", "sources"],
+        "capacity": 40,
+        "accessible": true,
+        "parking": true,
+        "website": "https://add-belgentier.fr"
+      },
+      {
+        "id": "117",
+        "name": "Centre Évangélique de Méounes-lès-Montrieux",
+        "address": "56 Avenue de la Libération, 83136 Méounes-lès-Montrieux",
+        "latitude": 43.2867,
+        "longitude": 5.9736,
+        "pastor": "Pasteur Chartreuse Verte",
+        "email": "info@ce-meounes.fr",
+        "phone": "04 94 33 12 34",
+        "description": "Centre évangélique près de la Chartreuse de Montrieux.",
+        "services": [
+          "Dimanche 11h - Culte dominical",
+          "Jeudi 19h30 - Prière"
+        ],
+        "tags": ["évangélique", "meounes", "chartreuse"],
+        "capacity": 30,
+        "accessible": false,
+        "parking": true,
+        "website": "https://ce-meounes.fr"
+      },
+      {
+        "id": "118",
+        "name": "Église Évangélique de Signes",
+        "address": "34 Place de l'Église, 83870 Signes",
+        "latitude": 43.2889,
+        "longitude": 5.8611,
+        "pastor": "Pasteur Vignoble Colline",
+        "email": "contact@ee-signes.fr",
+        "phone": "04 94 90 23 45",
+        "description": "Église évangélique dans les vignobles signois.",
+        "services": [
+          "Dimanche 10h - Culte familial",
+          "Vendredi 19h30 - Soirée louange"
+        ],
+        "tags": ["évangélique", "signes", "vignobles"],
+        "capacity": 30,
+        "accessible": false,
+        "parking": false,
+        "website": "https://ee-signes.fr"
+      },
+      {
+        "id": "119",
+        "name": "Assemblée Évangélique du Beausset",
+        "address": "67 Avenue du 11 Novembre, 83330 Le Beausset",
+        "latitude": 43.1981,
+        "longitude": 5.8050,
+        "pastor": "Pasteur Vignes Olivier",
+        "email": "contact@ae-lebeausset.fr",
+        "phone": "04 94 98 34 56",
+        "description": "Assemblée évangélique entre vignes et oliveraies.",
+        "services": [
+          "Dimanche 10h30 - Culte principal",
+          "Mercredi 19h30 - Étude biblique"
+        ],
+        "tags": ["évangélique", "le-beausset", "vignes"],
+        "capacity": 70,
+        "accessible": true,
+        "parking": true,
+        "website": "https://ae-lebeausset.fr"
+      },
+      {
+        "id": "120",
+        "name": "Centre Chrétien de Paris Bastille",
+        "address": "78 Rue de la Roquette, 75011 Paris",
+        "latitude": 48.8557,
+        "longitude": 2.3750,
+        "pastor": "Pasteur David République",
+        "email": "info@cc-parisbastille.fr",
+        "phone": "01 43 55 12 34",
+        "description": "Centre chrétien moderne dans le quartier de la Bastille.",
+        "services": [
+          "Dimanche 10h - Culte principal",
+          "Dimanche 18h - Culte jeunesse",
+          "Mercredi 19h30 - Étude biblique"
+        ],
+        "tags": ["évangélique", "paris", "bastille"],
+        "capacity": 250,
+        "accessible": true,
+        "parking": false,
+        "website": "https://cc-parisbastille.fr"
+      }
+    ],
+    "meta": {
+      "total": 120,
+      "page": 1,
+      "perPage": 120,
+      "lastUpdated": "2025-12-17T16:00:00Z"
+    }
+  }
+}
