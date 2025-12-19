@@ -1,11 +1,10 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { StyleSheet, View, Platform, Alert, Linking, StatusBar } from 'react-native';
-import { Marker, PROVIDER_GOOGLE, Circle } from 'react-native-maps';
+import { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import ClusteredMapView from 'react-native-map-clustering';
 import * as Location from 'expo-location';
 import * as Calendar from 'expo-calendar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Slider from '@react-native-community/slider';
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { Card, Text, Searchbar, Button, Surface, Chip, IconButton, Avatar, Divider, Dialog, Portal, SegmentedButtons } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -62,8 +61,7 @@ export default function MapScreen() {
   const [showMapDialog, setShowMapDialog] = useState(false);
   const [itemForDirections, setItemForDirections] = useState<ListItem | null>(null);
   const [searchCenter, setSearchCenter] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [searchRadius, setSearchRadius] = useState<number>(20); // Rayon en km (défaut: 20km)
-  const [showRadiusDialog, setShowRadiusDialog] = useState(false);
+  const [visibleRegion, setVisibleRegion] = useState<{ latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number } | null>(null);
 
   const mapRef = useRef<any>(null); // ClusteredMapView type
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -72,9 +70,6 @@ export default function MapScreen() {
 
   // Débouncer la recherche pour éviter les re-renders excessifs
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
-
-  // Débouncer le rayon de recherche
-  const debouncedSearchRadius = useDebounce(searchRadius, 300);
 
   // Détecter la recherche de ville et centrer la carte
   useEffect(() => {
@@ -108,22 +103,7 @@ export default function MapScreen() {
     return searchCenter === null && location !== null;
   }, [searchCenter, location]);
 
-  // Texte dynamique pour le chip du rayon
-  const radiusChipText = useMemo(() => {
-    if (searchCenter && debouncedSearchQuery) {
-      // Ville recherchée : capitaliser le nom de la ville
-      const cityName = debouncedSearchQuery.charAt(0).toUpperCase() + debouncedSearchQuery.slice(1).toLowerCase();
-      return `${searchRadius} km autour de ${cityName}`;
-    } else if (location) {
-      // Position GPS de l'utilisateur
-      return `${searchRadius} km autour de moi`;
-    } else {
-      // Pas de position
-      return `Rayon: ${searchRadius} km`;
-    }
-  }, [searchCenter, debouncedSearchQuery, location, searchRadius]);
-
-  // Filtrer et fusionner églises et événements avec distance
+  // Filtrer et fusionner églises et événements par zone visible
   const filteredItemsWithDistance = useMemo((): ListItem[] => {
     const center = searchCenter || (location ? {
       latitude: location.coords.latitude,
@@ -135,8 +115,42 @@ export default function MapScreen() {
       return [];
     }
 
+    // Calculer la bounding box de la zone visible (si disponible)
+    let boundingBox: { minLat: number; maxLat: number; minLng: number; maxLng: number } | null = null;
+
+    if (visibleRegion) {
+      // Ajouter une petite marge (20%) pour ne pas couper trop strict
+      const marginLat = visibleRegion.latitudeDelta * 0.2;
+      const marginLng = visibleRegion.longitudeDelta * 0.2;
+
+      boundingBox = {
+        minLat: visibleRegion.latitude - (visibleRegion.latitudeDelta / 2) - marginLat,
+        maxLat: visibleRegion.latitude + (visibleRegion.latitudeDelta / 2) + marginLat,
+        minLng: visibleRegion.longitude - (visibleRegion.longitudeDelta / 2) - marginLng,
+        maxLng: visibleRegion.longitude + (visibleRegion.longitudeDelta / 2) + marginLng,
+      };
+    }
+
     // Filtrer et calculer distance pour les églises
     const churchesWithDistance = allChurches
+      .filter((church) => {
+        // Filtrer par bounding box si disponible
+        if (boundingBox) {
+          const inBounds = church.latitude >= boundingBox.minLat &&
+                          church.latitude <= boundingBox.maxLat &&
+                          church.longitude >= boundingBox.minLng &&
+                          church.longitude <= boundingBox.maxLng;
+          if (!inBounds) return false;
+        }
+
+        // Filtrer par recherche
+        const matchesSearch = searchQuery === '' ||
+          church.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          church.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          church.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+
+        return matchesSearch;
+      })
       .map((church) => {
         const distance = calculateDistance(
           center.latitude,
@@ -145,17 +159,30 @@ export default function MapScreen() {
           church.longitude
         );
 
-        const matchesSearch = searchQuery === '' ||
-          church.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          church.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          church.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-
-        return { ...church, distance, matchesSearch, itemType: 'church' as const };
-      })
-      .filter(({ matchesSearch, distance }) => matchesSearch && distance <= debouncedSearchRadius);
+        return { ...church, distance, itemType: 'church' as const };
+      });
 
     // Filtrer et calculer distance pour les événements
     const eventsWithDistance = allEvents
+      .filter((event) => {
+        // Filtrer par bounding box si disponible
+        if (boundingBox) {
+          const inBounds = event.latitude >= boundingBox.minLat &&
+                          event.latitude <= boundingBox.maxLat &&
+                          event.longitude >= boundingBox.minLng &&
+                          event.longitude <= boundingBox.maxLng;
+          if (!inBounds) return false;
+        }
+
+        // Filtrer par recherche
+        const matchesSearch = searchQuery === '' ||
+          event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          event.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          event.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          event.churchName.toLowerCase().includes(searchQuery.toLowerCase());
+
+        return matchesSearch;
+      })
       .map((event) => {
         const distance = calculateDistance(
           center.latitude,
@@ -164,23 +191,16 @@ export default function MapScreen() {
           event.longitude
         );
 
-        const matchesSearch = searchQuery === '' ||
-          event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          event.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          event.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          event.churchName.toLowerCase().includes(searchQuery.toLowerCase());
-
-        return { ...event, distance, matchesSearch, itemType: 'event' as const };
-      })
-      .filter(({ matchesSearch, distance }) => matchesSearch && distance <= debouncedSearchRadius);
+        return { ...event, distance, itemType: 'event' as const };
+      });
 
     // Fusionner et trier par distance
     const allItems = [...churchesWithDistance, ...eventsWithDistance];
 
     return allItems
       .sort((a, b) => a.distance - b.distance)
-      .slice(0, 1000); // Limite à 1000 items pour les performances
-  }, [location, searchCenter, searchQuery, debouncedSearchRadius]);
+      .slice(0, 500); // Limite à 500 items (réduit car maintenant filtré par zone visible)
+  }, [location, searchCenter, searchQuery, visibleRegion]);
 
   // Compteurs séparés pour églises et événements
   const churchCount = useMemo(() =>
@@ -236,6 +256,11 @@ export default function MapScreen() {
     }, 1000);
   }, []);
 
+  // Gérer le changement de région visible sur la carte
+  const handleRegionChangeComplete = useCallback((region: { latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number }) => {
+    setVisibleRegion(region);
+  }, []);
+
   // Fonction pour recentrer sur la position de l'utilisateur
   const recenterOnUser = useCallback(async () => {
     try {
@@ -266,31 +291,6 @@ export default function MapScreen() {
       Alert.alert('Erreur', 'Impossible de récupérer votre position');
     }
   }, [location]);
-
-  // Charger le rayon sauvegardé depuis AsyncStorage
-  useEffect(() => {
-    (async () => {
-      try {
-        const savedRadius = await AsyncStorage.getItem('searchRadius');
-        if (savedRadius) {
-          setSearchRadius(parseFloat(savedRadius));
-        }
-      } catch (error) {
-        console.error('Erreur lors du chargement du rayon:', error);
-      }
-    })();
-  }, []);
-
-  // Sauvegarder le rayon dans AsyncStorage quand il change
-  useEffect(() => {
-    (async () => {
-      try {
-        await AsyncStorage.setItem('searchRadius', searchRadius.toString());
-      } catch (error) {
-        console.error('Erreur lors de la sauvegarde du rayon:', error);
-      }
-    })();
-  }, [searchRadius]);
 
   // Géolocalisation
   useEffect(() => {
@@ -423,6 +423,7 @@ export default function MapScreen() {
         }}
         showsUserLocation={true}
         showsMyLocationButton={true}
+        onRegionChangeComplete={handleRegionChangeComplete}
         // Configuration du clustering
         clusterColor="#6366F1"
         clusterTextColor="#FFFFFF"
@@ -470,20 +471,6 @@ export default function MapScreen() {
             )}
           </Marker>
         ))}
-
-        {/* Cercle de rayon de recherche */}
-        {(location || searchCenter) && (
-          <Circle
-            center={{
-              latitude: searchCenter ? searchCenter.latitude : location!.coords.latitude,
-              longitude: searchCenter ? searchCenter.longitude : location!.coords.longitude,
-            }}
-            radius={debouncedSearchRadius * 1000} // Convertir km en mètres
-            fillColor="rgba(74, 144, 226, 0.1)" // Bleu transparent
-            strokeColor="#4A90E2" // Bleu solide
-            strokeWidth={2}
-          />
-        )}
       </ClusteredMapView>
 
       {/* Barre de recherche toujours visible */}
@@ -511,18 +498,6 @@ export default function MapScreen() {
           onPress={recenterOnUser}
           style={styles.recenterIconButton}
         />
-      </Surface>
-
-      {/* Chip flottant pour le rayon de recherche */}
-      <Surface style={styles.radiusFloatingChip} elevation={3}>
-        <Chip
-          icon="tune"
-          style={styles.radiusChip}
-          textStyle={styles.radiusChipText}
-          onPress={() => setShowRadiusDialog(true)}
-        >
-          {radiusChipText}
-        </Chip>
       </Surface>
 
       {/* Bottom Sheet */}
@@ -936,36 +911,8 @@ export default function MapScreen() {
         </BottomSheetScrollView>
       </BottomSheet>
 
-      {/* Dialog minimaliste pour ajuster le rayon */}
+      {/* Dialog navigation */}
       <Portal>
-        <Dialog visible={showRadiusDialog} onDismiss={() => setShowRadiusDialog(false)} style={styles.radiusDialogMinimal}>
-          <Dialog.Content style={styles.radiusDialogContentMinimal}>
-            <Text variant="displaySmall" style={styles.radiusValueDisplayMinimal}>
-              {searchRadius} km
-            </Text>
-            <Slider
-              style={styles.radiusDialogSlider}
-              minimumValue={5}
-              maximumValue={200}
-              step={5}
-              value={searchRadius}
-              onValueChange={setSearchRadius}
-              minimumTrackTintColor="#6366F1"
-              maximumTrackTintColor="#E2E8F0"
-              thumbTintColor="#6366F1"
-            />
-            <View style={styles.radiusDialogLabelsMinimal}>
-              <Text variant="labelSmall" style={styles.radiusDialogLabelText}>
-                5 km
-              </Text>
-              <Text variant="labelSmall" style={styles.radiusDialogLabelText}>
-                200 km
-              </Text>
-            </View>
-          </Dialog.Content>
-        </Dialog>
-
-        {/* Dialog navigation */}
         <Dialog visible={showMapDialog} onDismiss={() => setShowMapDialog(false)} style={styles.navigationDialog}>
           <Dialog.Title style={styles.dialogTitle}>
             <Avatar.Icon icon="navigation" size={40} style={styles.dialogIcon} />
