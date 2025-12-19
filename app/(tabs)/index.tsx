@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { StyleSheet, View, Platform, Alert, Linking, StatusBar } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE, Circle } from 'react-native-maps';
+import { Marker, PROVIDER_GOOGLE, Circle } from 'react-native-maps';
+import ClusteredMapView from 'react-native-map-clustering';
 import * as Location from 'expo-location';
 import * as Calendar from 'expo-calendar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -63,9 +64,8 @@ export default function MapScreen() {
   const [searchCenter, setSearchCenter] = useState<{ latitude: number; longitude: number } | null>(null);
   const [searchRadius, setSearchRadius] = useState<number>(20); // Rayon en km (défaut: 20km)
   const [showRadiusDialog, setShowRadiusDialog] = useState(false);
-  const [showAllChurches, setShowAllChurches] = useState(false); // Mode d'affichage: false = proximité, true = toutes
 
-  const mapRef = useRef<MapView>(null);
+  const mapRef = useRef<any>(null); // ClusteredMapView type
   const bottomSheetRef = useRef<BottomSheet>(null);
 
   const snapPoints = useMemo(() => ['25%', '50%', '95%'], []);
@@ -108,6 +108,21 @@ export default function MapScreen() {
     return searchCenter === null && location !== null;
   }, [searchCenter, location]);
 
+  // Texte dynamique pour le chip du rayon
+  const radiusChipText = useMemo(() => {
+    if (searchCenter && debouncedSearchQuery) {
+      // Ville recherchée : capitaliser le nom de la ville
+      const cityName = debouncedSearchQuery.charAt(0).toUpperCase() + debouncedSearchQuery.slice(1).toLowerCase();
+      return `${searchRadius} km autour de ${cityName}`;
+    } else if (location) {
+      // Position GPS de l'utilisateur
+      return `${searchRadius} km autour de moi`;
+    } else {
+      // Pas de position
+      return `Rayon: ${searchRadius} km`;
+    }
+  }, [searchCenter, debouncedSearchQuery, location, searchRadius]);
+
   // Filtrer et fusionner églises et événements avec distance
   const filteredItemsWithDistance = useMemo((): ListItem[] => {
     const center = searchCenter || (location ? {
@@ -115,10 +130,9 @@ export default function MapScreen() {
       longitude: location.coords.longitude
     } : null);
 
+    // Si pas de centre, on affiche un message ou retourne vide
     if (!center) {
-      const churches = allChurches.slice(0, 10).map(church => ({ ...church, distance: 0, itemType: 'church' as const }));
-      const events = allEvents.slice(0, 10).map(event => ({ ...event, distance: 0, itemType: 'event' as const }));
-      return [...churches, ...events];
+      return [];
     }
 
     // Filtrer et calculer distance pour les églises
@@ -138,7 +152,7 @@ export default function MapScreen() {
 
         return { ...church, distance, matchesSearch, itemType: 'church' as const };
       })
-      .filter(({ matchesSearch }) => matchesSearch);
+      .filter(({ matchesSearch, distance }) => matchesSearch && distance <= debouncedSearchRadius);
 
     // Filtrer et calculer distance pour les événements
     const eventsWithDistance = allEvents
@@ -158,20 +172,15 @@ export default function MapScreen() {
 
         return { ...event, distance, matchesSearch, itemType: 'event' as const };
       })
-      .filter(({ matchesSearch }) => matchesSearch);
+      .filter(({ matchesSearch, distance }) => matchesSearch && distance <= debouncedSearchRadius);
 
-    // Fusionner, filtrer par rayon (si mode proximité) et trier par distance
+    // Fusionner et trier par distance
     const allItems = [...churchesWithDistance, ...eventsWithDistance];
 
-    // Si mode "Toutes les églises", ne pas filtrer par rayon
-    const filteredByRadius = showAllChurches
-      ? allItems
-      : allItems.filter(item => item.distance <= debouncedSearchRadius);
-
-    return filteredByRadius
+    return allItems
       .sort((a, b) => a.distance - b.distance)
-      .slice(0, showAllChurches ? 200 : 50); // Plus d'éléments en mode "Toutes les églises"
-  }, [location, searchCenter, searchQuery, debouncedSearchRadius, showAllChurches]);
+      .slice(0, 1000); // Limite à 1000 items pour les performances
+  }, [location, searchCenter, searchQuery, debouncedSearchRadius]);
 
   // Compteurs séparés pour églises et événements
   const churchCount = useMemo(() =>
@@ -401,8 +410,8 @@ export default function MapScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Map */}
-      <MapView
+      {/* Map avec Clustering */}
+      <ClusteredMapView
         ref={mapRef}
         style={styles.map}
         provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
@@ -414,6 +423,22 @@ export default function MapScreen() {
         }}
         showsUserLocation={true}
         showsMyLocationButton={true}
+        // Configuration du clustering
+        clusterColor="#6366F1"
+        clusterTextColor="#FFFFFF"
+        clusterFontFamily="System"
+        radius={50}
+        maxZoom={20}
+        minZoom={0}
+        extent={512}
+        nodeSize={64}
+        // Clustering toujours actif
+        clustering={true}
+        // Animation fluide
+        animationEnabled={true}
+        layoutAnimationConf={{
+          duration: 200,
+        }}
       >
         {location && (
           <Marker
@@ -447,7 +472,7 @@ export default function MapScreen() {
         ))}
 
         {/* Cercle de rayon de recherche */}
-        {(location || searchCenter) && !showAllChurches && (
+        {(location || searchCenter) && (
           <Circle
             center={{
               latitude: searchCenter ? searchCenter.latitude : location!.coords.latitude,
@@ -459,7 +484,7 @@ export default function MapScreen() {
             strokeWidth={2}
           />
         )}
-      </MapView>
+      </ClusteredMapView>
 
       {/* Barre de recherche toujours visible */}
       <Surface style={styles.searchSection} elevation={5}>
@@ -489,40 +514,15 @@ export default function MapScreen() {
       </Surface>
 
       {/* Chip flottant pour le rayon de recherche */}
-      {!showAllChurches && (
-        <Surface style={styles.radiusFloatingChip} elevation={3}>
-          <Chip
-            icon="tune"
-            style={styles.radiusChip}
-            textStyle={styles.radiusChipText}
-            onPress={() => setShowRadiusDialog(true)}
-          >
-            Rayon: {searchRadius} km
-          </Chip>
-        </Surface>
-      )}
-
-      {/* SegmentedButtons pour le mode d'affichage */}
-      <Surface style={styles.viewModeSegmented} elevation={3}>
-        <SegmentedButtons
-          value={showAllChurches ? 'all' : 'nearby'}
-          onValueChange={(value) => setShowAllChurches(value === 'all')}
-          buttons={[
-            {
-              value: 'nearby',
-              label: 'À proximité',
-              icon: 'map-marker-radius',
-              style: styles.segmentButton,
-            },
-            {
-              value: 'all',
-              label: 'Toutes',
-              icon: 'earth',
-              style: styles.segmentButton,
-            },
-          ]}
-          style={styles.segmentedButtons}
-        />
+      <Surface style={styles.radiusFloatingChip} elevation={3}>
+        <Chip
+          icon="tune"
+          style={styles.radiusChip}
+          textStyle={styles.radiusChipText}
+          onPress={() => setShowRadiusDialog(true)}
+        >
+          {radiusChipText}
+        </Chip>
       </Surface>
 
       {/* Bottom Sheet */}
@@ -946,7 +946,7 @@ export default function MapScreen() {
             <Slider
               style={styles.radiusDialogSlider}
               minimumValue={5}
-              maximumValue={50}
+              maximumValue={200}
               step={5}
               value={searchRadius}
               onValueChange={setSearchRadius}
@@ -959,7 +959,7 @@ export default function MapScreen() {
                 5 km
               </Text>
               <Text variant="labelSmall" style={styles.radiusDialogLabelText}>
-                50 km
+                200 km
               </Text>
             </View>
           </Dialog.Content>
