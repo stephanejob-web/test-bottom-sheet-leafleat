@@ -1,0 +1,240 @@
+═══════════════════════════════════════════════════════════════════════════
+  TÂCHE IMPORTANTE : IMPLÉMENTATION DATE-FNS POUR DATES RELATIVES
+═══════════════════════════════════════════════════════════════════════════
+
+📅 Date de création : 19 Décembre 2025
+🎯 Priorité : MOYENNE
+📍 Fichiers concernés :
+   - app/(tabs)/index.tsx
+   - utils/ (nouveau dossier à créer si nécessaire)
+
+═══════════════════════════════════════════════════════════════════════════
+  OBJECTIF
+═══════════════════════════════════════════════════════════════════════════
+
+Afficher les dates des événements de manière relative et lisible :
+✅ "dans 12 jours"
+✅ "dans 2 heures"
+✅ "dans 1 mois"
+✅ "il y a 3 jours" (pour les événements passés)
+
+═══════════════════════════════════════════════════════════════════════════
+  ÉTAPE 1 : INSTALLATION
+═══════════════════════════════════════════════════════════════════════════
+
+Terminal :
+----------
+npm install date-fns
+
+Ou avec Yarn :
+--------------
+yarn add date-fns
+
+═══════════════════════════════════════════════════════════════════════════
+  ÉTAPE 2 : CRÉER UNE FONCTION HELPER
+═══════════════════════════════════════════════════════════════════════════
+
+Fichier : utils/dateHelpers.ts (à créer)
+----------------------------------------
+
+import { formatDistanceToNow, format, parseISO } from 'date-fns';
+import { fr } from 'date-fns/locale';
+
+/**
+ * Retourne le temps relatif avant/après un événement
+ * @param dateString - Date au format ISO string
+ * @returns "dans 12 jours" ou "il y a 3 jours"
+ */
+export const getRelativeEventTime = (dateString: string): string => {
+  const eventDate = parseISO(dateString);
+
+  return formatDistanceToNow(eventDate, {
+    addSuffix: true,  // Ajoute "dans" ou "il y a"
+    locale: fr,       // Texte en français
+  });
+};
+
+/**
+ * Formatte une date complète en français
+ * @param dateString - Date au format ISO string
+ * @returns "vendredi 20 décembre 2025"
+ */
+export const formatEventDate = (dateString: string): string => {
+  const date = parseISO(dateString);
+
+  return format(date, "EEEE d MMMM yyyy", { locale: fr });
+};
+
+/**
+ * Formatte une date avec heure
+ * @param dateString - Date au format ISO string
+ * @param timeString - Heure au format "HH:mm"
+ * @returns "ven. 20 déc. à 14h30"
+ */
+export const formatEventDateTime = (dateString: string, timeString: string): string => {
+  const date = parseISO(dateString);
+
+  return format(date, "EEE d MMM", { locale: fr }) + ` à ${timeString}`;
+};
+
+═══════════════════════════════════════════════════════════════════════════
+  ÉTAPE 3 : IMPORTER DANS index.tsx
+═══════════════════════════════════════════════════════════════════════════
+
+Ajouter en haut du fichier (ligne ~16) :
+-----------------------------------------
+import { getRelativeEventTime, formatEventDate } from '../../utils/dateHelpers';
+
+═══════════════════════════════════════════════════════════════════════════
+  ÉTAPE 4 : AFFICHER DANS LES CARDS D'ÉVÉNEMENTS (LISTE)
+═══════════════════════════════════════════════════════════════════════════
+
+Localisation : Ligne ~917 dans index.tsx
+-----------------------------------------
+
+AVANT (ligne ~917) :
+{item.itemType === 'church' ? item.address : `${item.city} • ${formatDate(item.date)}`}
+
+APRÈS :
+{item.itemType === 'church'
+  ? item.address
+  : `${item.city} • ${getRelativeEventTime(item.date)}`
+}
+
+Exemple de rendu :
+------------------
+"Paris • dans 12 jours"
+"Lyon • dans 2 heures"
+
+═══════════════════════════════════════════════════════════════════════════
+  ÉTAPE 5 : AFFICHER DANS LES DÉTAILS D'ÉVÉNEMENT
+═══════════════════════════════════════════════════════════════════════════
+
+Localisation : Ligne ~776-778 dans index.tsx
+---------------------------------------------
+
+AVANT :
+<Text variant="bodyMedium" style={styles.detailCardText}>
+  {formatDate(selectedItem.date)} • {selectedItem.startTime} - {selectedItem.endTime}
+</Text>
+
+APRÈS :
+<View style={styles.eventDateContainer}>
+  <Text variant="bodyMedium" style={styles.detailCardText}>
+    {formatDate(selectedItem.date)} • {selectedItem.startTime} - {selectedItem.endTime}
+  </Text>
+  <View style={styles.relativeTimeBadge}>
+    <MaterialCommunityIcons name="clock-outline" size={14} color="#6366F1" />
+    <Text style={styles.relativeTimeText}>
+      {getRelativeEventTime(selectedItem.date)}
+    </Text>
+  </View>
+</View>
+
+═══════════════════════════════════════════════════════════════════════════
+  ÉTAPE 6 : AJOUTER LES STYLES (SI NÉCESSAIRE)
+═══════════════════════════════════════════════════════════════════════════
+
+Ajouter dans StyleSheet (vers la fin du fichier) :
+---------------------------------------------------
+
+eventDateContainer: {
+  gap: 8,
+},
+relativeTimeBadge: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 6,
+  backgroundColor: '#EEF2FF',
+  paddingHorizontal: 12,
+  paddingVertical: 6,
+  borderRadius: 12,
+  alignSelf: 'flex-start',
+},
+relativeTimeText: {
+  color: '#6366F1',
+  fontSize: 13,
+  fontWeight: '600',
+},
+
+═══════════════════════════════════════════════════════════════════════════
+  ÉTAPE 7 : AMÉLIORATION OPTIONNELLE - BADGE DE COULEUR
+═══════════════════════════════════════════════════════════════════════════
+
+Fonction pour déterminer la couleur selon la proximité :
+---------------------------------------------------------
+
+export const getEventUrgencyColor = (dateString: string): string => {
+  const eventDate = parseISO(dateString);
+  const now = new Date();
+  const daysUntil = Math.floor((eventDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (daysUntil < 0) return '#94A3B8'; // Passé - Gris
+  if (daysUntil <= 2) return '#EF4444'; // Urgent - Rouge
+  if (daysUntil <= 7) return '#F59E0B'; // Bientôt - Orange
+  return '#10B981'; // Normal - Vert
+};
+
+Utilisation :
+-------------
+<View style={[styles.relativeTimeBadge, { backgroundColor: getEventUrgencyColor(selectedItem.date) + '20' }]}>
+  <MaterialCommunityIcons
+    name="clock-outline"
+    size={14}
+    color={getEventUrgencyColor(selectedItem.date)}
+  />
+  <Text style={[styles.relativeTimeText, { color: getEventUrgencyColor(selectedItem.date) }]}>
+    {getRelativeEventTime(selectedItem.date)}
+  </Text>
+</View>
+
+═══════════════════════════════════════════════════════════════════════════
+  RÉSULTATS ATTENDUS
+═══════════════════════════════════════════════════════════════════════════
+
+✓ Liste d'événements : "Paris • dans 12 jours"
+✓ Détails événement : Badge avec "dans 2 heures" + icône horloge
+✓ Texte en français : "dans", "il y a", "environ"
+✓ Badge coloré selon urgence (optionnel) :
+  - Rouge : événement dans moins de 2 jours
+  - Orange : événement dans moins de 7 jours
+  - Vert : événement dans plus de 7 jours
+  - Gris : événement passé
+
+═══════════════════════════════════════════════════════════════════════════
+  TESTS À EFFECTUER
+═══════════════════════════════════════════════════════════════════════════
+
+✓ Événement demain → "dans 1 jour" ou "demain"
+✓ Événement dans 2h → "dans environ 2 heures"
+✓ Événement passé → "il y a 3 jours"
+✓ Événement dans 1 mois → "dans environ 1 mois"
+✓ Texte bien en français (pas en anglais)
+
+═══════════════════════════════════════════════════════════════════════════
+  AVANTAGES
+═══════════════════════════════════════════════════════════════════════════
+
+✅ Meilleure UX - L'utilisateur voit rapidement si l'événement est proche
+✅ Date-fns est léger et performant
+✅ Localisation française automatique
+✅ Met à jour automatiquement (si tu re-render)
+✅ Compatible avec SQLite (pas de changement nécessaire)
+
+═══════════════════════════════════════════════════════════════════════════
+  NOTES SUPPLÉMENTAIRES
+═══════════════════════════════════════════════════════════════════════════
+
+💡 date-fns vs moment.js :
+   - date-fns est plus léger et moderne
+   - Fonctionne mieux avec TypeScript
+   - Tree-shakable (seules les fonctions utilisées sont incluses)
+
+💡 Mise à jour automatique :
+   - Si tu veux que "dans 2 heures" devienne "dans 1 heure" automatiquement,
+     il faudra ajouter un setInterval pour forcer le re-render
+   - Pas forcément nécessaire pour ton cas d'usage
+
+═══════════════════════════════════════════════════════════════════════════
+  FIN DU DOCUMENT
+═══════════════════════════════════════════════════════════════════════════

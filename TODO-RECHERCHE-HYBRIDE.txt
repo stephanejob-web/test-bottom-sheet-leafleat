@@ -1,0 +1,134 @@
+═══════════════════════════════════════════════════════════════════════════
+  TÂCHE IMPORTANTE : IMPLÉMENTATION RECHERCHE HYBRIDE
+═══════════════════════════════════════════════════════════════════════════
+
+📅 Date de création : 19 Décembre 2025
+🎯 Priorité : HAUTE
+📍 Fichier concerné : app/(tabs)/index.tsx
+
+═══════════════════════════════════════════════════════════════════════════
+  PROBLÈME ACTUEL
+═══════════════════════════════════════════════════════════════════════════
+
+❌ La recherche ne fonctionne que pour 23 villes prédéfinies dans constants/cities.ts
+❌ Si l'utilisateur tape "Auvergne" ou toute autre ville non listée → Rien ne se passe
+❌ Impossible d'ajouter les 35 000+ communes françaises manuellement
+
+═══════════════════════════════════════════════════════════════════════════
+  SOLUTION : RECHERCHE HYBRIDE
+═══════════════════════════════════════════════════════════════════════════
+
+✅ Étape 1 : Chercher dans cityCoordinates (rapide, villes principales)
+✅ Étape 2 : Si rien trouvé → Chercher dans la liste des églises
+✅ Étape 3 : Centrer la carte sur les résultats trouvés
+
+═══════════════════════════════════════════════════════════════════════════
+  IMPLÉMENTATION DÉTAILLÉE
+═══════════════════════════════════════════════════════════════════════════
+
+1️⃣ MODIFIER LE useEffect DE RECHERCHE (ligne ~92-116 dans index.tsx)
+
+   Logique actuelle :
+   ------------------
+   - Cherche uniquement dans cityCoordinates
+   - Si pas trouvé → Ne fait rien
+
+   Nouvelle logique :
+   ------------------
+   a) Chercher d'abord dans cityCoordinates (garde l'existant)
+   b) SI PAS TROUVÉ :
+      - Filtrer allChurches par :
+        * church.city.toLowerCase().includes(searchLower)
+        * church.address.toLowerCase().includes(searchLower)
+        * church.name.toLowerCase().includes(searchLower)
+      - Si églises trouvées :
+        * Calculer le centre géographique (moyenne des lat/lng)
+        * Centrer la carte sur ce point
+        * setSearchCenter(centerPoint)
+
+2️⃣ EXEMPLE DE CODE
+
+   useEffect(() => {
+     if (debouncedSearchQuery.trim() === '') {
+       setSearchCenter(null);
+       return;
+     }
+
+     const searchLower = debouncedSearchQuery.toLowerCase().trim();
+
+     // Étape 1 : Chercher dans cityCoordinates
+     const cityKey = Object.keys(cityCoordinates).find(city =>
+       searchLower.includes(city) || city.includes(searchLower)
+     );
+
+     if (cityKey) {
+       // Ville trouvée dans cityCoordinates
+       const coords = cityCoordinates[cityKey];
+       setSearchCenter(coords);
+       mapRef.current?.animateToRegion({...});
+     } else {
+       // Étape 2 : Chercher dans les églises
+       const matchingChurches = allChurches.filter(church =>
+         church.city.toLowerCase().includes(searchLower) ||
+         church.address.toLowerCase().includes(searchLower) ||
+         church.name.toLowerCase().includes(searchLower)
+       );
+
+       if (matchingChurches.length > 0) {
+         // Calculer le centre géographique
+         const centerLat = matchingChurches.reduce((sum, c) => sum + c.latitude, 0) / matchingChurches.length;
+         const centerLng = matchingChurches.reduce((sum, c) => sum + c.longitude, 0) / matchingChurches.length;
+
+         const center = { latitude: centerLat, longitude: centerLng };
+         setSearchCenter(center);
+
+         mapRef.current?.animateToRegion({
+           latitude: centerLat,
+           longitude: centerLng,
+           latitudeDelta: 0.15,
+           longitudeDelta: 0.15,
+         }, 1000);
+       }
+     }
+   }, [debouncedSearchQuery]);
+
+3️⃣ AMÉLIORATION OPTIONNELLE : AFFICHER LE NOMBRE DE RÉSULTATS
+
+   - Ajouter un state : const [searchResultCount, setSearchResultCount] = useState(0);
+   - Afficher sous la barre de recherche : "X église(s) trouvée(s)"
+
+═══════════════════════════════════════════════════════════════════════════
+  TESTS À EFFECTUER APRÈS IMPLÉMENTATION
+═══════════════════════════════════════════════════════════════════════════
+
+✓ Taper "Paris" → Doit centrer sur Paris (cityCoordinates)
+✓ Taper "Auvergne" → Doit trouver et centrer sur les églises d'Auvergne
+✓ Taper "Clermont-Ferrand" → Doit trouver les églises de cette ville
+✓ Taper "Saint-" → Doit trouver toutes les églises avec "Saint" dans le nom/ville
+✓ Taper une ville sans église → Ne fait rien (comportement attendu)
+
+═══════════════════════════════════════════════════════════════════════════
+  AVANTAGES DE CETTE SOLUTION
+═══════════════════════════════════════════════════════════════════════════
+
+✅ Pas besoin d'API externe (fonctionne hors-ligne)
+✅ Utilise les données déjà présentes (3000 églises)
+✅ Compatible avec SQLite quand tu l'implémenteras
+✅ Recherche flexible (ville, adresse, nom d'église)
+✅ Pas besoin d'ajouter 35 000 villes manuellement
+
+═══════════════════════════════════════════════════════════════════════════
+  NOTES SUPPLÉMENTAIRES
+═══════════════════════════════════════════════════════════════════════════
+
+💡 Quand tu implémenteras SQLite :
+   - Cette logique fonctionnera exactement pareil
+   - Tu interrogeras juste la BDD SQLite au lieu de allChurches
+
+💡 Si tu veux plus tard une vraie recherche universelle :
+   - Intégrer Nominatim API (gratuit, OpenStreetMap)
+   - Mais ce n'est pas nécessaire pour ton cas d'usage actuel
+
+═══════════════════════════════════════════════════════════════════════════
+  FIN DU DOCUMENT
+═══════════════════════════════════════════════════════════════════════════
