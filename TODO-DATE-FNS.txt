@@ -2,11 +2,6 @@
   TÂCHE IMPORTANTE : IMPLÉMENTATION DATE-FNS POUR DATES RELATIVES
 ═══════════════════════════════════════════════════════════════════════════
 
-📅 Date de création : 19 Décembre 2025
-🎯 Priorité : MOYENNE
-📍 Fichiers concernés :
-   - app/(tabs)/index.tsx
-   - utils/ (nouveau dossier à créer si nécessaire)
 
 ═══════════════════════════════════════════════════════════════════════════
   OBJECTIF
@@ -16,19 +11,7 @@ Afficher les dates des événements de manière relative et lisible :
 ✅ "dans 12 jours"
 ✅ "dans 2 heures"
 ✅ "dans 1 mois"
-✅ "il y a 3 jours" (pour les événements passés)
 
-═══════════════════════════════════════════════════════════════════════════
-  ÉTAPE 1 : INSTALLATION
-═══════════════════════════════════════════════════════════════════════════
-
-Terminal :
-----------
-npm install date-fns
-
-Ou avec Yarn :
---------------
-yarn add date-fns
 
 ═══════════════════════════════════════════════════════════════════════════
   ÉTAPE 2 : CRÉER UNE FONCTION HELPER

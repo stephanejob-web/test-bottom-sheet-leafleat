@@ -3,10 +3,10 @@
     "churches": [
       {
         "id": "1",
-        "name": "Église Évangélique Espoir Angers 1",
-        "address": "105 Rue de la République, Angers",
-        "latitude": 47.42141515264041,
-        "longitude": -0.5145861276894251,
+        "name": "Église Évangélique Ollioulrd",
+        "address": "614 routes de la seyne,83190 Ollioules",
+        "latitude": 43.1217146,
+        "longitude": 5.844671,
         "pastor": "Pasteur Jean Martin 1",
         "email": "contact1@eglise-espoir.fr",
         "phone": "04 75 77 54 32",
