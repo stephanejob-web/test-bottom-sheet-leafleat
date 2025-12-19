@@ -63,6 +63,7 @@ export default function MapScreen() {
   const [searchCenter, setSearchCenter] = useState<{ latitude: number; longitude: number } | null>(null);
   const [searchRadius, setSearchRadius] = useState<number>(20); // Rayon en km (défaut: 20km)
   const [showRadiusDialog, setShowRadiusDialog] = useState(false);
+  const [showAllChurches, setShowAllChurches] = useState(false); // Mode d'affichage: false = proximité, true = toutes
 
   const mapRef = useRef<MapView>(null);
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -440,7 +441,7 @@ export default function MapScreen() {
         ))}
 
         {/* Cercle de rayon de recherche */}
-        {(location || searchCenter) && (
+        {(location || searchCenter) && !showAllChurches && (
           <Circle
             center={{
               latitude: searchCenter ? searchCenter.latitude : location!.coords.latitude,
@@ -482,14 +483,34 @@ export default function MapScreen() {
       </Surface>
 
       {/* Chip flottant pour le rayon de recherche */}
-      <Surface style={styles.radiusFloatingChip} elevation={3}>
+      {!showAllChurches && (
+        <Surface style={styles.radiusFloatingChip} elevation={3}>
+          <Chip
+            icon="tune"
+            style={styles.radiusChip}
+            textStyle={styles.radiusChipText}
+            onPress={() => setShowRadiusDialog(true)}
+          >
+            Rayon: {searchRadius} km
+          </Chip>
+        </Surface>
+      )}
+
+      {/* Bouton toggle pour le mode d'affichage */}
+      <Surface style={styles.viewModeFloatingChip} elevation={3}>
         <Chip
-          icon="tune"
-          style={styles.radiusChip}
-          textStyle={styles.radiusChipText}
-          onPress={() => setShowRadiusDialog(true)}
+          icon={showAllChurches ? "earth" : "map-marker-radius"}
+          style={[
+            styles.viewModeChip,
+            showAllChurches && styles.viewModeChipActive
+          ]}
+          textStyle={[
+            styles.viewModeChipText,
+            showAllChurches && styles.viewModeChipTextActive
+          ]}
+          onPress={() => setShowAllChurches(!showAllChurches)}
         >
-          Rayon: {searchRadius} km
+          {showAllChurches ? "Toutes les églises" : "À proximité"}
         </Chip>
       </Surface>
 
@@ -1465,6 +1486,31 @@ const styles = StyleSheet.create({
     color: '#6366F1',
     fontWeight: '600',
     fontSize: 12,
+  },
+  viewModeFloatingChip: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 215 : (StatusBar.currentHeight || 0) + 165,
+    left: 16,
+    zIndex: 10,
+    borderRadius: 20,
+    backgroundColor: 'white',
+  },
+  viewModeChip: {
+    backgroundColor: 'transparent',
+    marginHorizontal: 0,
+    marginVertical: 0,
+  },
+  viewModeChipActive: {
+    backgroundColor: '#EEF2FF',
+  },
+  viewModeChipText: {
+    color: '#6366F1',
+    fontWeight: '600',
+    fontSize: 12,
+  },
+  viewModeChipTextActive: {
+    color: '#6366F1',
+    fontWeight: 'bold',
   },
   radiusDialogMinimal: {
     maxWidth: 280,
