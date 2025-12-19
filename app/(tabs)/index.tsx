@@ -160,12 +160,18 @@ export default function MapScreen() {
       })
       .filter(({ matchesSearch }) => matchesSearch);
 
-    // Fusionner, filtrer par rayon et trier par distance
-    return [...churchesWithDistance, ...eventsWithDistance]
-      .filter(item => item.distance <= debouncedSearchRadius) // Filtrer par rayon
+    // Fusionner, filtrer par rayon (si mode proximité) et trier par distance
+    const allItems = [...churchesWithDistance, ...eventsWithDistance];
+
+    // Si mode "Toutes les églises", ne pas filtrer par rayon
+    const filteredByRadius = showAllChurches
+      ? allItems
+      : allItems.filter(item => item.distance <= debouncedSearchRadius);
+
+    return filteredByRadius
       .sort((a, b) => a.distance - b.distance)
-      .slice(0, 50); // Limiter à 50 éléments au total
-  }, [location, searchCenter, searchQuery, debouncedSearchRadius]);
+      .slice(0, showAllChurches ? 200 : 50); // Plus d'éléments en mode "Toutes les églises"
+  }, [location, searchCenter, searchQuery, debouncedSearchRadius, showAllChurches]);
 
   // Compteurs séparés pour églises et événements
   const churchCount = useMemo(() =>
