@@ -484,13 +484,12 @@ export default function MapScreen() {
       {/* Chip flottant pour le rayon de recherche */}
       <Surface style={styles.radiusFloatingChip} elevation={3}>
         <Chip
-          icon="radar"
-          compact
+          icon="tune"
           style={styles.radiusChip}
           textStyle={styles.radiusChipText}
           onPress={() => setShowRadiusDialog(true)}
         >
-          {searchRadius} km
+          Rayon: {searchRadius} km
         </Chip>
       </Surface>
 
@@ -1137,7 +1136,7 @@ const styles = StyleSheet.create({
   },
   recenterButton: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 140 : (StatusBar.currentHeight || 0) + 90,
+    top: Platform.OS === 'ios' ? 155 : (StatusBar.currentHeight || 0) + 105,
     right: 16,
     zIndex: 10,
     borderRadius: 28,
@@ -1451,7 +1450,7 @@ const styles = StyleSheet.create({
   },
   radiusFloatingChip: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 140 : (StatusBar.currentHeight || 0) + 90,
+    top: Platform.OS === 'ios' ? 155 : (StatusBar.currentHeight || 0) + 105,
     left: 16,
     zIndex: 10,
     borderRadius: 20,
@@ -1471,7 +1470,7 @@ const styles = StyleSheet.create({
     maxWidth: 280,
     alignSelf: 'center',
     borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backgroundColor: 'rgba(255,255,255,0.47)',
   },
   radiusDialogContentMinimal: {
     alignItems: 'center',
