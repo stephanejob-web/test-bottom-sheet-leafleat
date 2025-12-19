@@ -6,7 +6,7 @@ import * as Calendar from 'expo-calendar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Slider from '@react-native-community/slider';
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
-import { Card, Text, Searchbar, Button, Surface, Chip, IconButton, Avatar, Divider, Dialog, Portal } from 'react-native-paper';
+import { Card, Text, Searchbar, Button, Surface, Chip, IconButton, Avatar, Divider, Dialog, Portal, SegmentedButtons } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import mockApiResponse from '../../mockApiData.json';
 import mockEventsData from '../../mockEventsData.json';
@@ -502,22 +502,27 @@ export default function MapScreen() {
         </Surface>
       )}
 
-      {/* Bouton toggle pour le mode d'affichage */}
-      <Surface style={styles.viewModeFloatingChip} elevation={3}>
-        <Chip
-          icon={showAllChurches ? "earth" : "map-marker-radius"}
-          style={[
-            styles.viewModeChip,
-            showAllChurches && styles.viewModeChipActive
+      {/* SegmentedButtons pour le mode d'affichage */}
+      <Surface style={styles.viewModeSegmented} elevation={3}>
+        <SegmentedButtons
+          value={showAllChurches ? 'all' : 'nearby'}
+          onValueChange={(value) => setShowAllChurches(value === 'all')}
+          buttons={[
+            {
+              value: 'nearby',
+              label: 'À proximité',
+              icon: 'map-marker-radius',
+              style: styles.segmentButton,
+            },
+            {
+              value: 'all',
+              label: 'Toutes',
+              icon: 'earth',
+              style: styles.segmentButton,
+            },
           ]}
-          textStyle={[
-            styles.viewModeChipText,
-            showAllChurches && styles.viewModeChipTextActive
-          ]}
-          onPress={() => setShowAllChurches(!showAllChurches)}
-        >
-          {showAllChurches ? "Toutes les églises" : "À proximité"}
-        </Chip>
+          style={styles.segmentedButtons}
+        />
       </Surface>
 
       {/* Bottom Sheet */}
@@ -1493,30 +1498,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 12,
   },
-  viewModeFloatingChip: {
+  viewModeSegmented: {
     position: 'absolute',
     top: Platform.OS === 'ios' ? 215 : (StatusBar.currentHeight || 0) + 165,
     left: 16,
+    right: 16,
     zIndex: 10,
-    borderRadius: 20,
+    borderRadius: 12,
     backgroundColor: 'white',
+    padding: 8,
   },
-  viewModeChip: {
-    backgroundColor: 'transparent',
-    marginHorizontal: 0,
-    marginVertical: 0,
+  segmentedButtons: {
+    borderRadius: 8,
   },
-  viewModeChipActive: {
-    backgroundColor: '#EEF2FF',
-  },
-  viewModeChipText: {
-    color: '#6366F1',
-    fontWeight: '600',
-    fontSize: 12,
-  },
-  viewModeChipTextActive: {
-    color: '#6366F1',
-    fontWeight: 'bold',
+  segmentButton: {
+    borderRadius: 8,
   },
   radiusDialogMinimal: {
     maxWidth: 280,
