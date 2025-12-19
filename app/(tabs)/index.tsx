@@ -1,10 +1,12 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
-import { StyleSheet, View, Platform, Alert, ScrollView, Linking, StatusBar } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import { StyleSheet, View, Platform, Alert, Linking, StatusBar } from 'react-native';
+import MapView, { Marker, PROVIDER_GOOGLE, Circle } from 'react-native-maps';
 import * as Location from 'expo-location';
 import * as Calendar from 'expo-calendar';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Slider from '@react-native-community/slider';
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
-import { Card, Text, Searchbar, Button, Surface, Chip, IconButton, Avatar, Divider, Dialog, Portal } from 'react-native-paper';
+import { Card, Text, Searchbar, Button, Surface, Chip, IconButton, Avatar, Divider, Dialog, Portal, SegmentedButtons } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import mockApiResponse from '../../mockApiData.json';
 import mockEventsData from '../../mockEventsData.json';
@@ -12,6 +14,7 @@ import { Church, ChurchWithDistance, Event, EventWithDistance } from '../../type
 import { calculateDistance } from '../../utils/geo';
 import { cityCoordinates } from '../../constants/cities';
 import { eventTypeConfig } from '../../constants/eventTypes';
+import { useDebounce } from '../../hooks/use-debounce';
 
 // Chargement des données depuis le mock API
 const allChurches: Church[] = mockApiResponse.data.churches as Church[];
@@ -58,21 +61,29 @@ export default function MapScreen() {
   const [showMapDialog, setShowMapDialog] = useState(false);
   const [itemForDirections, setItemForDirections] = useState<ListItem | null>(null);
   const [searchCenter, setSearchCenter] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [searchRadius, setSearchRadius] = useState<number>(20); // Rayon en km (défaut: 20km)
+  const [showRadiusDialog, setShowRadiusDialog] = useState(false);
+  const [showAllChurches, setShowAllChurches] = useState(false); // Mode d'affichage: false = proximité, true = toutes
 
   const mapRef = useRef<MapView>(null);
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const scrollViewRef = useRef<ScrollView>(null);
 
-  const snapPoints = useMemo(() => ['25%', '50%', '85%'], []);
+  const snapPoints = useMemo(() => ['25%', '50%', '95%'], []);
+
+  // Débouncer la recherche pour éviter les re-renders excessifs
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+  // Débouncer le rayon de recherche
+  const debouncedSearchRadius = useDebounce(searchRadius, 300);
 
   // Détecter la recherche de ville et centrer la carte
   useEffect(() => {
-    if (searchQuery.trim() === '') {
+    if (debouncedSearchQuery.trim() === '') {
       setSearchCenter(null);
       return;
     }
 
-    const searchLower = searchQuery.toLowerCase().trim();
+    const searchLower = debouncedSearchQuery.toLowerCase().trim();
     const cityKey = Object.keys(cityCoordinates).find(city =>
       searchLower.includes(city) || city.includes(searchLower)
     );
@@ -90,7 +101,7 @@ export default function MapScreen() {
         }, 1000);
       }
     }
-  }, [searchQuery]);
+  }, [debouncedSearchQuery]);
 
   // Détermine si on utilise la position actuelle de l'utilisateur
   const isUsingCurrentLocation = useMemo(() => {
@@ -149,11 +160,18 @@ export default function MapScreen() {
       })
       .filter(({ matchesSearch }) => matchesSearch);
 
-    // Fusionner et trier par distance
-    return [...churchesWithDistance, ...eventsWithDistance]
+    // Fusionner, filtrer par rayon (si mode proximité) et trier par distance
+    const allItems = [...churchesWithDistance, ...eventsWithDistance];
+
+    // Si mode "Toutes les églises", ne pas filtrer par rayon
+    const filteredByRadius = showAllChurches
+      ? allItems
+      : allItems.filter(item => item.distance <= debouncedSearchRadius);
+
+    return filteredByRadius
       .sort((a, b) => a.distance - b.distance)
-      .slice(0, 20); // Limiter à 20 éléments au total
-  }, [location, searchCenter, searchQuery]);
+      .slice(0, showAllChurches ? 200 : 50); // Plus d'éléments en mode "Toutes les églises"
+  }, [location, searchCenter, searchQuery, debouncedSearchRadius, showAllChurches]);
 
   // Compteurs séparés pour églises et événements
   const churchCount = useMemo(() =>
@@ -235,13 +253,40 @@ export default function MapScreen() {
         setSearchCenter(null);
         setSearchQuery('');
       }
-    } catch (error) {
+    } catch {
       Alert.alert('Erreur', 'Impossible de récupérer votre position');
     }
   }, [location]);
 
+  // Charger le rayon sauvegardé depuis AsyncStorage
+  useEffect(() => {
+    (async () => {
+      try {
+        const savedRadius = await AsyncStorage.getItem('searchRadius');
+        if (savedRadius) {
+          setSearchRadius(parseFloat(savedRadius));
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement du rayon:', error);
+      }
+    })();
+  }, []);
+
+  // Sauvegarder le rayon dans AsyncStorage quand il change
+  useEffect(() => {
+    (async () => {
+      try {
+        await AsyncStorage.setItem('searchRadius', searchRadius.toString());
+      } catch (error) {
+        console.error('Erreur lors de la sauvegarde du rayon:', error);
+      }
+    })();
+  }, [searchRadius]);
+
   // Géolocalisation
   useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
     (async () => {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
@@ -259,7 +304,7 @@ export default function MapScreen() {
         setLocation(currentLocation);
 
         if (mapRef.current) {
-          setTimeout(() => {
+          timeoutId = setTimeout(() => {
             mapRef.current?.animateToRegion({
               latitude: currentLocation.coords.latitude,
               longitude: currentLocation.coords.longitude,
@@ -268,13 +313,19 @@ export default function MapScreen() {
             }, 1500);
           }, 1000);
         }
-      } catch (error) {
+      } catch {
         Alert.alert(
           'Erreur de géolocalisation',
           'Les églises et événements seront affichés autour de Paris.'
         );
       }
     })();
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, []);
 
   // Helper pour formatter la date
@@ -325,7 +376,7 @@ export default function MapScreen() {
       endDate.setHours(endHour, endMinute, 0, 0);
 
       // Créer l'événement dans le calendrier
-      const eventId = await Calendar.createEventAsync(defaultCalendar.id, {
+      await Calendar.createEventAsync(defaultCalendar.id, {
         title: event.title,
         startDate: startDate,
         endDate: endDate,
@@ -394,6 +445,20 @@ export default function MapScreen() {
             )}
           </Marker>
         ))}
+
+        {/* Cercle de rayon de recherche */}
+        {(location || searchCenter) && !showAllChurches && (
+          <Circle
+            center={{
+              latitude: searchCenter ? searchCenter.latitude : location!.coords.latitude,
+              longitude: searchCenter ? searchCenter.longitude : location!.coords.longitude,
+            }}
+            radius={debouncedSearchRadius * 1000} // Convertir km en mètres
+            fillColor="rgba(74, 144, 226, 0.1)" // Bleu transparent
+            strokeColor="#4A90E2" // Bleu solide
+            strokeWidth={2}
+          />
+        )}
       </MapView>
 
       {/* Barre de recherche toujours visible */}
@@ -423,6 +488,43 @@ export default function MapScreen() {
         />
       </Surface>
 
+      {/* Chip flottant pour le rayon de recherche */}
+      {!showAllChurches && (
+        <Surface style={styles.radiusFloatingChip} elevation={3}>
+          <Chip
+            icon="tune"
+            style={styles.radiusChip}
+            textStyle={styles.radiusChipText}
+            onPress={() => setShowRadiusDialog(true)}
+          >
+            Rayon: {searchRadius} km
+          </Chip>
+        </Surface>
+      )}
+
+      {/* SegmentedButtons pour le mode d'affichage */}
+      <Surface style={styles.viewModeSegmented} elevation={3}>
+        <SegmentedButtons
+          value={showAllChurches ? 'all' : 'nearby'}
+          onValueChange={(value) => setShowAllChurches(value === 'all')}
+          buttons={[
+            {
+              value: 'nearby',
+              label: 'À proximité',
+              icon: 'map-marker-radius',
+              style: styles.segmentButton,
+            },
+            {
+              value: 'all',
+              label: 'Toutes',
+              icon: 'earth',
+              style: styles.segmentButton,
+            },
+          ]}
+          style={styles.segmentedButtons}
+        />
+      </Surface>
+
       {/* Bottom Sheet */}
       <BottomSheet
         ref={bottomSheetRef}
@@ -438,7 +540,7 @@ export default function MapScreen() {
             <View style={styles.detailHeaderModern}>
               <IconButton
                 icon="arrow-left"
-                size={24}
+                size={28}
                 iconColor="white"
                 onPress={() => setSelectedItem(null)}
                 style={styles.detailBackButton}
@@ -461,7 +563,7 @@ export default function MapScreen() {
             <View style={[styles.detailHeaderModern, { backgroundColor: eventTypeConfig[selectedItem.type]?.color || '#10B981' }]}>
               <IconButton
                 icon="arrow-left"
-                size={24}
+                size={28}
                 iconColor="white"
                 onPress={() => setSelectedItem(null)}
                 style={styles.detailBackButton}
@@ -834,8 +936,36 @@ export default function MapScreen() {
         </BottomSheetScrollView>
       </BottomSheet>
 
-      {/* Dialog navigation */}
+      {/* Dialog minimaliste pour ajuster le rayon */}
       <Portal>
+        <Dialog visible={showRadiusDialog} onDismiss={() => setShowRadiusDialog(false)} style={styles.radiusDialogMinimal}>
+          <Dialog.Content style={styles.radiusDialogContentMinimal}>
+            <Text variant="displaySmall" style={styles.radiusValueDisplayMinimal}>
+              {searchRadius} km
+            </Text>
+            <Slider
+              style={styles.radiusDialogSlider}
+              minimumValue={5}
+              maximumValue={50}
+              step={5}
+              value={searchRadius}
+              onValueChange={setSearchRadius}
+              minimumTrackTintColor="#6366F1"
+              maximumTrackTintColor="#E2E8F0"
+              thumbTintColor="#6366F1"
+            />
+            <View style={styles.radiusDialogLabelsMinimal}>
+              <Text variant="labelSmall" style={styles.radiusDialogLabelText}>
+                5 km
+              </Text>
+              <Text variant="labelSmall" style={styles.radiusDialogLabelText}>
+                50 km
+              </Text>
+            </View>
+          </Dialog.Content>
+        </Dialog>
+
+        {/* Dialog navigation */}
         <Dialog visible={showMapDialog} onDismiss={() => setShowMapDialog(false)} style={styles.navigationDialog}>
           <Dialog.Title style={styles.dialogTitle}>
             <Avatar.Icon icon="navigation" size={40} style={styles.dialogIcon} />
@@ -957,8 +1087,8 @@ const styles = StyleSheet.create({
     margin: 0,
   },
   bottomSheetContent: {
-    paddingTop: 16,
-    paddingBottom: 20,
+    paddingTop: 8,
+    paddingBottom: 40,
   },
   churchListVertical: {
     gap: 12,
@@ -1038,7 +1168,7 @@ const styles = StyleSheet.create({
   },
   recenterButton: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 140 : (StatusBar.currentHeight || 0) + 90,
+    top: Platform.OS === 'ios' ? 155 : (StatusBar.currentHeight || 0) + 105,
     right: 16,
     zIndex: 10,
     borderRadius: 28,
@@ -1061,21 +1191,30 @@ const styles = StyleSheet.create({
     marginHorizontal: -16,
     marginTop: -16,
     paddingHorizontal: 20,
-    paddingTop: 50,
-    paddingBottom: 24,
+    paddingTop: 40,
+    paddingBottom: 20,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   detailBackButton: {
     position: 'absolute',
-    top: 16,
-    left: 16,
+    top: 24,
+    left: 20,
     zIndex: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    borderRadius: 12,
+    width: 44,
+    height: 44,
+    margin: 0,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
   detailHeaderContent: {
-    marginTop: 8,
+    marginTop: 48,
   },
   detailChurchName: {
     color: 'white',
@@ -1242,14 +1381,6 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     transform: [{ scale: 1.1 }],
   },
-  eventTypeChip: {
-    alignSelf: 'flex-start',
-  },
-  eventTypeChipText: {
-    color: 'white',
-    fontSize: 11,
-    fontWeight: '600',
-  },
   navigationDialog: {
     maxWidth: 400,
     alignSelf: 'center',
@@ -1320,5 +1451,98 @@ const styles = StyleSheet.create({
   addToCalendarLabel: {
     fontSize: 14,
     fontWeight: '600',
+  },
+  radiusSliderContainer: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+  },
+  radiusSliderHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  radiusSliderLabel: {
+    color: '#6366F1',
+    fontWeight: '600',
+  },
+  radiusSlider: {
+    width: '100%',
+    height: 40,
+  },
+  radiusSliderLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: -8,
+  },
+  radiusSliderLabelText: {
+    color: '#94A3B8',
+  },
+  radiusFloatingChip: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 155 : (StatusBar.currentHeight || 0) + 105,
+    left: 16,
+    zIndex: 10,
+    borderRadius: 20,
+    backgroundColor: 'white',
+  },
+  radiusChip: {
+    backgroundColor: 'transparent',
+    marginHorizontal: 0,
+    marginVertical: 0,
+  },
+  radiusChipText: {
+    color: '#6366F1',
+    fontWeight: '600',
+    fontSize: 12,
+  },
+  viewModeSegmented: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 215 : (StatusBar.currentHeight || 0) + 165,
+    left: 16,
+    right: 16,
+    zIndex: 10,
+    borderRadius: 12,
+    backgroundColor: 'white',
+    padding: 8,
+  },
+  segmentedButtons: {
+    borderRadius: 8,
+  },
+  segmentButton: {
+    borderRadius: 8,
+  },
+  radiusDialogMinimal: {
+    maxWidth: 280,
+    alignSelf: 'center',
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.47)',
+  },
+  radiusDialogContentMinimal: {
+    alignItems: 'center',
+    paddingVertical: 24,
+    paddingHorizontal: 20,
+  },
+  radiusValueDisplayMinimal: {
+    color: '#6366F1',
+    fontWeight: 'bold',
+    marginBottom: 20,
+    fontSize: 40,
+  },
+  radiusDialogSlider: {
+    width: '100%',
+    height: 40,
+  },
+  radiusDialogLabelsMinimal: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: 4,
+  },
+  radiusDialogLabelText: {
+    color: '#94A3B8',
+    fontSize: 11,
   },
 });

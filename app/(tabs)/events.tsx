@@ -1,17 +1,24 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { StyleSheet, View, ScrollView, Platform, StatusBar, Linking, Alert } from 'react-native';
 import { Card, Text, Searchbar, Surface, Avatar, Chip, Button, Divider } from 'react-native-paper';
+import * as Calendar from 'expo-calendar';
 import mockEventsData from '../../mockEventsData.json';
 import { Event } from '../../types';
 
 const allEvents: Event[] = mockEventsData.data.events as Event[];
 
+
+
+
+
+
+
 export default function EventsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [expandedCards, setExpandedCards] = useState<Record<number, boolean>>({});
+  const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
 
   // Toggle l'état d'une carte
-  const toggleCard = (eventId: number) => {
+  const toggleCard = (eventId: string) => {
     setExpandedCards(prev => ({
       ...prev,
       [eventId]: !prev[eventId]
@@ -28,6 +35,66 @@ export default function EventsScreen() {
       year: 'numeric'
     });
   };
+
+  // Fonction pour ajouter un événement au calendrier
+  const addToCalendar = useCallback(async (event: Event) => {
+    try {
+      // Demander les permissions
+      const { status } = await Calendar.requestCalendarPermissionsAsync();
+
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permission refusée',
+          'Vous devez autoriser l\'accès au calendrier pour ajouter cet événement.'
+        );
+        return;
+      }
+
+      // Obtenir les calendriers disponibles
+      const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
+
+      // Trouver le calendrier par défaut ou le premier disponible
+      const defaultCalendar = calendars.find(cal => cal.isPrimary) || calendars[0];
+
+      if (!defaultCalendar) {
+        Alert.alert('Erreur', 'Aucun calendrier disponible');
+        return;
+      }
+
+      // Créer les dates de début et de fin
+      const eventDate = new Date(event.date);
+      const [startHour, startMinute] = event.startTime.split(':').map(Number);
+      const [endHour, endMinute] = event.endTime.split(':').map(Number);
+
+      const startDate = new Date(eventDate);
+      startDate.setHours(startHour, startMinute, 0, 0);
+
+      const endDate = new Date(eventDate);
+      endDate.setHours(endHour, endMinute, 0, 0);
+
+      // Créer l'événement dans le calendrier
+      await Calendar.createEventAsync(defaultCalendar.id, {
+        title: event.title,
+        startDate: startDate,
+        endDate: endDate,
+        location: `${event.address}, ${event.city}`,
+        notes: `${event.description}\n\nÉglise organisatrice: ${event.churchName}\nOrganisateur: ${event.organizer}\n\nContact:\nTél: ${event.phone}\nEmail: ${event.email}\nWhatsApp: ${event.whatsapp}`,
+        timeZone: 'Europe/Paris',
+        alarms: [{ relativeOffset: -60 }], // Rappel 1h avant
+      });
+
+      Alert.alert(
+        'Événement ajouté',
+        'L\'événement a été ajouté à votre calendrier avec succès.'
+      );
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout au calendrier:', error);
+      Alert.alert(
+        'Erreur',
+        'Impossible d\'ajouter l\'événement au calendrier. Veuillez réessayer.'
+      );
+    }
+  }, []);
 
   // Filtrer les événements par ville
   const filteredEvents = useMemo(() => {
@@ -227,6 +294,16 @@ export default function EventsScreen() {
                         Itinéraire
                       </Button>
                     </View>
+
+                    <Button
+                      mode="contained"
+                      icon="calendar-plus"
+                      onPress={() => addToCalendar(event)}
+                      style={styles.addToCalendarButton}
+                      labelStyle={styles.addToCalendarLabel}
+                    >
+                      Ajouter au calendrier
+                    </Button>
                   </>
                 )}
 
@@ -440,5 +517,15 @@ const styles = StyleSheet.create({
   emptyText: {
     color: '#64748B',
     textAlign: 'center',
+  },
+  addToCalendarButton: {
+    backgroundColor: '#10B981',
+    borderRadius: 12,
+    marginTop: 8,
+  },
+  addToCalendarLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: 'white',
   },
 });
