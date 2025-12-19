@@ -67,7 +67,7 @@ export default function MapScreen() {
   const mapRef = useRef<MapView>(null);
   const bottomSheetRef = useRef<BottomSheet>(null);
 
-  const snapPoints = useMemo(() => ['25%', '50%', '85%'], []);
+  const snapPoints = useMemo(() => ['25%', '50%', '95%'], []);
 
   // Débouncer la recherche pour éviter les re-renders excessifs
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
@@ -509,7 +509,7 @@ export default function MapScreen() {
             <View style={styles.detailHeaderModern}>
               <IconButton
                 icon="arrow-left"
-                size={24}
+                size={28}
                 iconColor="white"
                 onPress={() => setSelectedItem(null)}
                 style={styles.detailBackButton}
@@ -532,7 +532,7 @@ export default function MapScreen() {
             <View style={[styles.detailHeaderModern, { backgroundColor: eventTypeConfig[selectedItem.type]?.color || '#10B981' }]}>
               <IconButton
                 icon="arrow-left"
-                size={24}
+                size={28}
                 iconColor="white"
                 onPress={() => setSelectedItem(null)}
                 style={styles.detailBackButton}
@@ -1056,8 +1056,8 @@ const styles = StyleSheet.create({
     margin: 0,
   },
   bottomSheetContent: {
-    paddingTop: 16,
-    paddingBottom: 20,
+    paddingTop: 8,
+    paddingBottom: 40,
   },
   churchListVertical: {
     gap: 12,
@@ -1160,21 +1160,30 @@ const styles = StyleSheet.create({
     marginHorizontal: -16,
     marginTop: -16,
     paddingHorizontal: 20,
-    paddingTop: 50,
-    paddingBottom: 24,
+    paddingTop: 40,
+    paddingBottom: 20,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   detailBackButton: {
     position: 'absolute',
-    top: 16,
-    left: 16,
+    top: 24,
+    left: 20,
     zIndex: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    borderRadius: 12,
+    width: 44,
+    height: 44,
+    margin: 0,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
   detailHeaderContent: {
-    marginTop: 8,
+    marginTop: 48,
   },
   detailChurchName: {
     color: 'white',
