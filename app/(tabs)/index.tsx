@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
-import { StyleSheet, View, Platform, Alert, Linking, StatusBar } from 'react-native';
+import { StyleSheet, View, Platform, Alert, Linking, StatusBar, ActivityIndicator } from 'react-native';
 import { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import ClusteredMapView from 'react-native-map-clustering';
 import * as Location from 'expo-location';
 import * as Calendar from 'expo-calendar';
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
-import { Card, Text, Searchbar, Button, Surface, IconButton, Avatar, Divider, Dialog, Portal } from 'react-native-paper';
+import { Card, Text, Searchbar, Button, Surface, IconButton, Avatar, Divider, Dialog, Portal, Chip } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import mockApiResponse from '../../mockApiData.json';
 import mockEventsData from '../../mockEventsData.json';
@@ -61,6 +61,7 @@ export default function MapScreen() {
   const [itemForDirections, setItemForDirections] = useState<ListItem | null>(null);
   const [searchCenter, setSearchCenter] = useState<{ latitude: number; longitude: number } | null>(null);
   const [visibleRegion, setVisibleRegion] = useState<{ latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number } | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const mapRef = useRef<any>(null); // ClusteredMapView type
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -72,6 +73,20 @@ export default function MapScreen() {
 
   // Débouncer la région visible pour optimiser les performances pendant le pan/zoom
   const debouncedVisibleRegion = useDebounce(visibleRegion, 400);
+
+  // Gérer le loading pendant les changements de région
+  useEffect(() => {
+    if (visibleRegion) {
+      setIsLoading(true);
+    }
+  }, [visibleRegion]);
+
+  // Désactiver le loading une fois le debounce terminé
+  useEffect(() => {
+    if (debouncedVisibleRegion) {
+      setIsLoading(false);
+    }
+  }, [debouncedVisibleRegion]);
 
   // Détecter la recherche de ville et centrer la carte
   useEffect(() => {
@@ -501,6 +516,16 @@ export default function MapScreen() {
           style={styles.recenterIconButton}
         />
       </Surface>
+
+      {/* Indicateur de chargement */}
+      {isLoading && (
+        <Surface style={styles.loadingIndicator} elevation={3}>
+          <ActivityIndicator size="small" color="#6366F1" />
+          <Text variant="bodySmall" style={styles.loadingText}>
+            Chargement...
+          </Text>
+        </Surface>
+      )}
 
       {/* Bottom Sheet */}
       <BottomSheet
@@ -1129,6 +1154,27 @@ const styles = StyleSheet.create({
   },
   recenterIconButton: {
     margin: 0,
+  },
+  loadingIndicator: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 130 : (StatusBar.currentHeight || 0) + 80,
+    alignSelf: 'center',
+    backgroundColor: 'white',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  loadingText: {
+    color: '#6366F1',
+    fontWeight: '600',
   },
   detailsContainerModern: {
     gap: 12,
