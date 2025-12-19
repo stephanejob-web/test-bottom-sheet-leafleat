@@ -4,9 +4,8 @@ import { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import ClusteredMapView from 'react-native-map-clustering';
 import * as Location from 'expo-location';
 import * as Calendar from 'expo-calendar';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
-import { Card, Text, Searchbar, Button, Surface, Chip, IconButton, Avatar, Divider, Dialog, Portal, SegmentedButtons } from 'react-native-paper';
+import { Card, Text, Searchbar, Button, Surface, IconButton, Avatar, Divider, Dialog, Portal } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import mockApiResponse from '../../mockApiData.json';
 import mockEventsData from '../../mockEventsData.json';
@@ -71,6 +70,9 @@ export default function MapScreen() {
   // Débouncer la recherche pour éviter les re-renders excessifs
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
+  // Débouncer la région visible pour optimiser les performances pendant le pan/zoom
+  const debouncedVisibleRegion = useDebounce(visibleRegion, 400);
+
   // Détecter la recherche de ville et centrer la carte
   useEffect(() => {
     if (debouncedSearchQuery.trim() === '') {
@@ -118,16 +120,16 @@ export default function MapScreen() {
     // Calculer la bounding box de la zone visible (si disponible)
     let boundingBox: { minLat: number; maxLat: number; minLng: number; maxLng: number } | null = null;
 
-    if (visibleRegion) {
+    if (debouncedVisibleRegion) {
       // Ajouter une petite marge (20%) pour ne pas couper trop strict
-      const marginLat = visibleRegion.latitudeDelta * 0.2;
-      const marginLng = visibleRegion.longitudeDelta * 0.2;
+      const marginLat = debouncedVisibleRegion.latitudeDelta * 0.2;
+      const marginLng = debouncedVisibleRegion.longitudeDelta * 0.2;
 
       boundingBox = {
-        minLat: visibleRegion.latitude - (visibleRegion.latitudeDelta / 2) - marginLat,
-        maxLat: visibleRegion.latitude + (visibleRegion.latitudeDelta / 2) + marginLat,
-        minLng: visibleRegion.longitude - (visibleRegion.longitudeDelta / 2) - marginLng,
-        maxLng: visibleRegion.longitude + (visibleRegion.longitudeDelta / 2) + marginLng,
+        minLat: debouncedVisibleRegion.latitude - (debouncedVisibleRegion.latitudeDelta / 2) - marginLat,
+        maxLat: debouncedVisibleRegion.latitude + (debouncedVisibleRegion.latitudeDelta / 2) + marginLat,
+        minLng: debouncedVisibleRegion.longitude - (debouncedVisibleRegion.longitudeDelta / 2) - marginLng,
+        maxLng: debouncedVisibleRegion.longitude + (debouncedVisibleRegion.longitudeDelta / 2) + marginLng,
       };
     }
 
@@ -199,8 +201,8 @@ export default function MapScreen() {
 
     return allItems
       .sort((a, b) => a.distance - b.distance)
-      .slice(0, 500); // Limite à 500 items (réduit car maintenant filtré par zone visible)
-  }, [location, searchCenter, searchQuery, visibleRegion]);
+      .slice(0, 200); // Limite à 200 items pour optimiser les performances
+  }, [location, searchCenter, searchQuery, debouncedVisibleRegion]);
 
   // Compteurs séparés pour églises et événements
   const churchCount = useMemo(() =>
