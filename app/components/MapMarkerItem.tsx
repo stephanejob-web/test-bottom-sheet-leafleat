@@ -1,7 +1,7 @@
-import React from 'react';
-import { Marker } from 'react-native-maps';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { View, StyleSheet } from 'react-native';
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import { Marker } from 'react-native-maps';
 import { ChurchWithDistance, EventWithDistance } from '../../types';
 
 // Type pour les items de la liste
@@ -12,6 +12,7 @@ interface MapMarkerItemProps {
   index: number;
   focused: boolean;
   onPress: (item: ListItem) => void;
+  coordinate: { latitude: number; longitude: number }; // NECESSAIRE pour react-native-map-clustering
 }
 
 // Composant icône église memoized
@@ -30,16 +31,34 @@ const EventMarkerIcon = React.memo(({ focused }: { focused: boolean }) => (
 ));
 EventMarkerIcon.displayName = 'EventMarkerIcon';
 
-const MapMarkerItem: React.FC<MapMarkerItemProps> = ({ item, focused, onPress }) => {
+const MapMarkerItem: React.FC<MapMarkerItemProps> = ({ item, focused, onPress, coordinate }) => {
+  // OPTIMIZATION: tracksViewChanges is critical for performance on Android
+  // We set it to true initially to render the icon, then false to stop re-rendering
+  const [tracksViewChanges, setTracksViewChanges] = React.useState(true);
+
+  React.useEffect(() => {
+    if (tracksViewChanges) {
+      // Stop tracking changes after initial render
+      // Small timeout ensures the icon has loaded/rendered
+      const timeout = setTimeout(() => {
+        setTracksViewChanges(false);
+      }, 500); // 500ms should be enough for visibility
+      return () => clearTimeout(timeout);
+    }
+  }, [tracksViewChanges]);
+
+  // Re-enable tracking if content changes (e.g. focus state)
+  React.useEffect(() => {
+    setTracksViewChanges(true);
+  }, [focused, item.itemType]);
+
   return (
     <Marker
-      coordinate={{
-        latitude: item.latitude,
-        longitude: item.longitude,
-      }}
+      coordinate={coordinate} // Utilisation de la prop passée explicitement
       title={item.itemType === 'church' ? item.name : item.title}
       description={item.itemType === 'church' ? item.address : item.city}
       onPress={() => onPress(item)}
+      tracksViewChanges={tracksViewChanges}
     >
       {item.itemType === 'church' ? (
         <ChurchMarkerIcon focused={focused} />

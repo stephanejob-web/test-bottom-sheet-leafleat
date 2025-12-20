@@ -1,23 +1,21 @@
-import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
-import { StyleSheet, View, Platform, Alert, Linking, StatusBar, ActivityIndicator } from 'react-native';
-import { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
-import ClusteredMapView from 'react-native-map-clustering';
-import * as Location from 'expo-location';
-import * as Calendar from 'expo-calendar';
 import BottomSheet, { BottomSheetFlatList } from '@gorhom/bottom-sheet';
-import { Card, Text, Searchbar, Button, Surface, IconButton, Avatar, Divider, Dialog, Portal, Chip } from 'react-native-paper';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import * as Calendar from 'expo-calendar';
+import * as Location from 'expo-location';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, Linking, Platform, StatusBar, StyleSheet, View } from 'react-native';
+import ClusteredMapView from 'react-native-map-clustering';
+import { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import { Avatar, Button, Card, Dialog, Divider, IconButton, Portal, Searchbar, Surface, Text } from 'react-native-paper';
+import { eventTypeConfig } from '../../constants/eventTypes';
+import { useDebounce } from '../../hooks/use-debounce';
 import mockApiResponse from '../../mockApiData.json';
 import mockEventsData from '../../mockEventsData.json';
 import { Church, ChurchWithDistance, Event, EventWithDistance } from '../../types';
-import { calculateDistance, calculateDistancesForItems, filterItemsByBoundingBox } from '../../utils/geo';
-import { cityCoordinates } from '../../constants/cities';
-import { eventTypeConfig } from '../../constants/eventTypes';
-import { useDebounce } from '../../hooks/use-debounce';
-import MapMarkerItem from '../components/MapMarkerItem';
+import { calculateDistancesForItems, filterItemsByBoundingBox } from '../../utils/geo';
 import ChurchDetail from '../components/ChurchDetail';
 import EventDetail from '../components/EventDetail';
 import ListItemCard from '../components/ListItemCard';
+import MapMarkerItem from '../components/MapMarkerItem';
 
 // Chargement des données depuis le mock API
 const allChurches: Church[] = mockApiResponse.data.churches as Church[];
@@ -59,6 +57,11 @@ export default function MapScreen() {
   const [isCalculatingDistances, setIsCalculatingDistances] = useState(false);
   const [distanceCache, setDistanceCache] = useState<Map<string, number>>(new Map());
 
+  // États pour les filtres avancés
+  const [filterType, setFilterType] = useState<'all' | 'church' | 'event'>('all');
+  const [filterParking, setFilterParking] = useState(false);
+
+  // ... (existing states) ...
   const mapRef = useRef<any>(null); // ClusteredMapView type
   const bottomSheetRef = useRef<BottomSheet>(null);
 
@@ -70,78 +73,56 @@ export default function MapScreen() {
   // Débouncer la région visible pour optimiser les performances pendant le pan/zoom
   const debouncedVisibleRegion = useDebounce(visibleRegion, 400);
 
-  // Gérer le loading pendant les changements de région
-  useEffect(() => {
-    if (visibleRegion) {
-      setIsLoadingViewport(true);
+  // ... (keep existing effects) ...
+
+  // Map markers - Filtrage optimisé avec les nouveaux filtres
+  const mapMarkers = useMemo((): ListItem[] => {
+    let churchesFiltered: ListItem[] = [];
+    let eventsFiltered: ListItem[] = [];
+
+    // 1. Filtrer les Églises
+    if (filterType === 'all' || filterType === 'church') {
+      churchesFiltered = allChurches
+        .filter((church) => {
+          // Filtre Recherche Texte
+          const matchesSearch = searchQuery === '' ||
+            church.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            church.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            church.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+
+          // Filtre Parking
+          const matchesParking = !filterParking || church.parking === true;
+
+          return matchesSearch && matchesParking;
+        })
+        .map(church => ({ ...church, distance: 0, itemType: 'church' as const }));
     }
-  }, [visibleRegion]);
 
-  // Désactiver le loading une fois le debounce terminé
-  useEffect(() => {
-    if (debouncedVisibleRegion) {
-      setIsLoadingViewport(false);
-    }
-  }, [debouncedVisibleRegion]);
+    // 2. Filtrer les Événements
+    if (filterType === 'all' || filterType === 'event') {
+      // Note: Les événements sont toujours affichés si on ne filtre pas par parking (ou si logique parking événement ajoutée)
+      // Pour l'instant on assume que "Parking" ne filtre que les églises ou les événements liés à une église avec parking (à implémenter si donnée dispo)
+      // Ici on simplifie : si filtre parking actif, on cache les événements (sauf si on ajoutait la donnée parking aux events)
+      // Pour UX : On pourrait dire que le filtre parking ne s'applique qu'aux églises.
 
-  // Détecter la recherche de ville et centrer la carte
-  useEffect(() => {
-    if (debouncedSearchQuery.trim() === '') {
-      setSearchCenter(null);
-      return;
-    }
+      const shouldShowEvents = !filterParking; // Exemple: on cache les events si on cherche un parking spécifique (sauf si event a parking)
 
-    const searchLower = debouncedSearchQuery.toLowerCase().trim();
-    const cityKey = Object.keys(cityCoordinates).find(city =>
-      searchLower.includes(city) || city.includes(searchLower)
-    );
-
-    if (cityKey) {
-      const coords = cityCoordinates[cityKey];
-      setSearchCenter(coords);
-
-      if (mapRef.current) {
-        mapRef.current.animateToRegion({
-          latitude: coords.latitude,
-          longitude: coords.longitude,
-          latitudeDelta: 0.15,
-          longitudeDelta: 0.15,
-        }, 1000);
+      if (shouldShowEvents) {
+        eventsFiltered = allEvents
+          .filter((event) => {
+            const matchesSearch = searchQuery === '' ||
+              event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              event.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              event.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              event.churchName.toLowerCase().includes(searchQuery.toLowerCase());
+            return matchesSearch;
+          })
+          .map(event => ({ ...event, distance: 0, itemType: 'event' as const }));
       }
     }
-  }, [debouncedSearchQuery]);
-
-  // Détermine si on utilise la position actuelle de l'utilisateur
-  const isUsingCurrentLocation = useMemo(() => {
-    return searchCenter === null && location !== null;
-  }, [searchCenter, location]);
-
-  // Map markers - SANS calcul de distance (uniquement filtrage par recherche)
-  const mapMarkers = useMemo((): ListItem[] => {
-    // Filtrer uniquement par searchQuery
-    const churchesFiltered = allChurches
-      .filter((church) => {
-        const matchesSearch = searchQuery === '' ||
-          church.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          church.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          church.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-        return matchesSearch;
-      })
-      .map(church => ({ ...church, distance: 0, itemType: 'church' as const }));
-
-    const eventsFiltered = allEvents
-      .filter((event) => {
-        const matchesSearch = searchQuery === '' ||
-          event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          event.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          event.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          event.churchName.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesSearch;
-      })
-      .map(event => ({ ...event, distance: 0, itemType: 'event' as const }));
 
     return [...churchesFiltered, ...eventsFiltered];
-  }, [searchQuery]);
+  }, [searchQuery, filterType, filterParking]);
 
   // Items dans viewport actuel - Filtrage géométrique SANS distance
   const itemsInViewportMemo = useMemo((): ListItem[] => {
@@ -155,14 +136,67 @@ export default function MapScreen() {
     setItemsInViewport(itemsInViewportMemo);
   }, [itemsInViewportMemo]);
 
-  // Reset validation lors du changement de recherche
+  // Reset validation lors du changement de recherche et gestion du centrage
   useEffect(() => {
-    if (debouncedSearchQuery) {
+    if (!debouncedSearchQuery) return; // Ne rien faire si recherche vide
+
+    const hasMatchingItems = mapMarkers.length > 0;
+
+    const performSearch = async () => {
+      // 1. Si on a des items correspondants, on centre sur eux (bounding box)
+      if (hasMatchingItems && mapRef.current) {
+        // Calculer la bounding box des résultats
+        let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+        mapMarkers.forEach(m => {
+          minLat = Math.min(minLat, m.latitude);
+          maxLat = Math.max(maxLat, m.latitude);
+          minLng = Math.min(minLng, m.longitude);
+          maxLng = Math.max(maxLng, m.longitude);
+        });
+
+        // Ajouter une marge
+        const latDelta = (maxLat - minLat) * 1.5;
+        const lngDelta = (maxLng - minLng) * 1.5;
+
+        mapRef.current.animateToRegion({
+          latitude: (minLat + maxLat) / 2,
+          longitude: (minLng + maxLng) / 2,
+          latitudeDelta: Math.max(latDelta, 0.05), // Min delta pour éviter zoom extrême
+          longitudeDelta: Math.max(lngDelta, 0.05),
+        }, 1000);
+      }
+      // 2. Si AUCUN item trouvé, on essaie de géocoder le texte (ex: "Paris", "Lyon")
+      else if (!hasMatchingItems && debouncedSearchQuery.length > 2) {
+        try {
+          const geocodedLocation = await Location.geocodeAsync(debouncedSearchQuery);
+          if (geocodedLocation && geocodedLocation.length > 0) {
+            const { latitude, longitude } = geocodedLocation[0];
+            mapRef.current?.animateToRegion({
+              latitude,
+              longitude,
+              latitudeDelta: 0.1, // Zoom niveau ville
+              longitudeDelta: 0.1,
+            }, 1000);
+          }
+        } catch (error) {
+          console.log("Erreur de géocodage:", error);
+        }
+      }
+
+      // Reset UI states
       setValidatedRegion(null);
-      setDisplayedItems([]);
+      setDisplayedItems([]); // On laisse le filtrage viewport repeupler
       setCurrentPage(0);
-    }
-  }, [debouncedSearchQuery]);
+    };
+
+    performSearch();
+
+  }, [debouncedSearchQuery, mapMarkers]);
+
+  // Détermine si on utilise la position actuelle de l'utilisateur
+  const isUsingCurrentLocation = useMemo(() => {
+    return searchCenter === null && location !== null;
+  }, [searchCenter, location]);
 
   // Clear cache si trop gros
   useEffect(() => {
@@ -536,50 +570,36 @@ export default function MapScreen() {
           longitudeDelta: 0.0421,
         }}
         showsUserLocation={true}
-        showsMyLocationButton={true}
+        showsMyLocationButton={false}
+        showsCompass={false}
+        toolbarEnabled={false}
         onRegionChangeComplete={handleRegionChangeComplete}
-        // Configuration du clustering AGGRESSIF pour éviter l'affichage de tous les markers
+        // Configuration comme la DEMO (https://github.com/venits/react-native-map-clustering)
         renderCluster={renderCluster}
-        radius={120} // TRÈS augmenté pour créer de gros clusters
-        maxZoom={20} // Clustering jusqu'au zoom maximum
+        radius={60} // Réduit pour voir les markers plus tôt (était 110)
+        maxZoom={20}
         minZoom={1}
-        minPoints={2} // Minimum 2 points pour créer un cluster
+        minPoints={2} // Réduit au minimum pour voir les markers dès que possible
         extent={512}
-        nodeSize={64} // Réduit pour regrouper plus agressivement
-        // Clustering TOUJOURS actif (même très zoomé)
-        clustering={true}
-        // Prevent individual markers until very zoomed in
+        nodeSize={64}
         clusteringEnabled={true}
         preserveClusterPressBehavior={true}
-        // Animation rapide
-        animationEnabled={true}
+        animationEnabled={true} // ACTIVE pour l'effet "Wow" de la démo
         layoutAnimationConf={{
-          duration: 100,
+          duration: 300 // Durée fluide standard
         }}
-        // Spirale pour clusters denses
-        spiralEnabled={true}
-        // Options supercluster pour contrôle fin
-        superClusterRef={undefined}
-        edgePadding={{ top: 50, right: 50, bottom: 50, left: 50 }}
-        // Options de zoom pour clustering progressif
-        tracksViewChanges={false} // Optimisation rendering
+        spiralEnabled={true} // ACTIVE pour l'éclatement des clusters denses
       >
-        {location && (
-          <Marker
-            coordinate={{
-              latitude: location.coords.latitude,
-              longitude: location.coords.longitude,
-            }}
-            title="Ma position"
-          >
-            <UserLocationMarker />
-          </Marker>
-        )}
 
-        {/* OPTIMISATION: Afficher uniquement les markers dans le viewport */}
-        {itemsInViewport.map((item, index) => (
+
+
+        {/* OPTIMISATION MAJEURE: On passe TOUS les markers filtrés par recherche
+            au lieu des markers dans le viewport. Le clustering natif gérera l'affichage.
+            Cela empêche le clignotement/re-render à chaque mouvement de carte. */}
+        {mapMarkers.map((item, index) => (
           <MapMarkerItem
             key={`${item.itemType}-${item.id}`}
+            coordinate={{ latitude: item.latitude, longitude: item.longitude }}
             item={item}
             index={index}
             focused={focusedItemIndex === index}
@@ -588,31 +608,37 @@ export default function MapScreen() {
         ))}
       </ClusteredMapView>
 
-      {/* Barre de recherche toujours visible */}
-      <Surface style={styles.searchSection} elevation={5}>
-        <Searchbar
-          placeholder="Rechercher une ville..."
-          onChangeText={setSearchQuery}
-          value={searchQuery}
-          style={styles.searchBar}
-          icon="magnify"
-          iconColor="#6366F1"
-          clearIcon={searchQuery ? "close-circle" : undefined}
-          onClearIconPress={() => setSearchQuery('')}
-          inputStyle={styles.searchInput}
-          elevation={0}
-        />
-      </Surface>
+
+
+      {/* Barre de recherche sans filtres */}
+      <View style={styles.searchContainerHeader}>
+        <Surface style={styles.searchSection} elevation={5}>
+          <Searchbar
+            placeholder="Rechercher..."
+            onChangeText={setSearchQuery}
+            value={searchQuery}
+            style={styles.searchBar}
+            icon="magnify"
+            iconColor="#6366F1"
+            clearIcon={searchQuery ? "close-circle" : undefined}
+            onClearIconPress={() => setSearchQuery('')}
+            inputStyle={styles.searchInput}
+            elevation={0}
+          />
+        </Surface>
+      </View>
 
       {/* Indicateur de chargement discret */}
-      {isCalculatingDistances && (
-        <Surface style={styles.loadingIndicatorCompact} elevation={2}>
-          <ActivityIndicator size="small" color="#6366F1" />
-          <Text variant="bodySmall" style={styles.loadingTextCompact}>
-            Actualisation...
-          </Text>
-        </Surface>
-      )}
+      {
+        isCalculatingDistances && (
+          <Surface style={styles.loadingIndicatorCompact} elevation={2}>
+            <ActivityIndicator size="small" color="#6366F1" />
+            <Text variant="bodySmall" style={styles.loadingTextCompact}>
+              Actualisation...
+            </Text>
+          </Surface>
+        )
+      }
 
       {/* Bouton de recentrage sur la position */}
       <Surface style={styles.recenterButton} elevation={4}>
@@ -626,23 +652,25 @@ export default function MapScreen() {
       </Surface>
 
       {/* Indicateur de chargement moderne */}
-      {isLoadingViewport && (
-        <View style={styles.loadingContainer}>
-          <View style={styles.loadingIndicator}>
-            <View style={styles.loadingSpinner}>
-              <ActivityIndicator size="small" color="#6366F1" />
-            </View>
-            <View style={styles.loadingTextContainer}>
-              <Text style={styles.loadingText}>Actualisation</Text>
-              <View style={styles.loadingDots}>
-                <View style={[styles.dot, styles.dot1]} />
-                <View style={[styles.dot, styles.dot2]} />
-                <View style={[styles.dot, styles.dot3]} />
+      {
+        isLoadingViewport && (
+          <View style={styles.loadingContainer}>
+            <View style={styles.loadingIndicator}>
+              <View style={styles.loadingSpinner}>
+                <ActivityIndicator size="small" color="#6366F1" />
+              </View>
+              <View style={styles.loadingTextContainer}>
+                <Text style={styles.loadingText}>Actualisation</Text>
+                <View style={styles.loadingDots}>
+                  <View style={[styles.dot, styles.dot1]} />
+                  <View style={[styles.dot, styles.dot2]} />
+                  <View style={[styles.dot, styles.dot3]} />
+                </View>
               </View>
             </View>
           </View>
-        </View>
-      )}
+        )
+      }
 
       {/* Bottom Sheet */}
       <BottomSheet
@@ -813,8 +841,8 @@ export default function MapScreen() {
           }
           ListFooterComponent={
             displayedItems.length > 0 &&
-            displayedItems.length < itemsInViewport.length &&
-            !isCalculatingDistances ? (
+              displayedItems.length < itemsInViewport.length &&
+              !isCalculatingDistances ? (
               <Button
                 mode="outlined"
                 onPress={handleLoadMore}
@@ -881,7 +909,7 @@ export default function MapScreen() {
           </Dialog.Actions>
         </Dialog>
       </Portal>
-    </View>
+    </View >
   );
 }
 
@@ -893,23 +921,55 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  searchSection: {
+  searchContainerHeader: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 60 : (StatusBar.currentHeight || 0) + 10,
+    top: Platform.OS === 'ios' ? 60 : (StatusBar.currentHeight || 0) + 20,
     left: 16,
     right: 16,
     zIndex: 10,
-    borderRadius: 20,
+    gap: 12,
+  },
+  searchSection: {
+    borderRadius: 25, // Plus rond pour le style "Pill"
     backgroundColor: 'white',
-    padding: 12,
+    height: 50,
   },
   searchBar: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 16,
-    elevation: 0,
+    backgroundColor: 'white',
+    borderRadius: 25,
+    height: 50,
+    elevation: 0, // Désactiver l'ombre interne car on a celle de la Surface
   },
   searchInput: {
-    fontSize: 15,
+    minHeight: 0, // Fix pour centrer le texte sur Android
+  },
+  filtersContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  filterChip: {
+    backgroundColor: 'white',
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  filterChipSelected: {
+    backgroundColor: '#6366F1',
+    borderColor: '#6366F1',
+  },
+  filterChipText: {
+    fontSize: 12,
+    color: '#64748B',
+    fontWeight: '600',
+  },
+  filterChipTextSelected: {
+    color: 'white',
   },
   bottomSheetBackground: {
     backgroundColor: 'rgba(255, 255, 255, 0.6)',

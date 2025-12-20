@@ -1,6 +1,7 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Card, Text, Avatar, IconButton, Button } from 'react-native-paper';
+import { StyleSheet, View } from 'react-native';
+import { Avatar, Button, Card, Text } from 'react-native-paper';
 import { ChurchWithDistance, EventWithDistance } from '../../types';
 
 // Type pour les items de la liste
@@ -49,15 +50,13 @@ const ListItemCard: React.FC<ListItemCardProps> = ({
           />
 
           <View style={styles.cardCompactInfo}>
-            <Text
-              variant="titleMedium"
-              style={styles.cardCompactTitle}
-              numberOfLines={1}
-            >
-              {item.itemType === 'church' ? item.name : item.title}
-            </Text>
-
-            <View style={styles.cardCompactMeta}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <Text
+                style={styles.cardCompactTitle}
+                numberOfLines={1}
+              >
+                {item.itemType === 'church' ? item.name : item.title}
+              </Text>
               <View style={styles.distanceBadge}>
                 <Text style={styles.distanceBadgeText}>
                   {item.distance.toFixed(1)} km
@@ -66,31 +65,50 @@ const ListItemCard: React.FC<ListItemCardProps> = ({
             </View>
 
             <Text
-              variant="bodySmall"
               style={styles.cardCompactAddress}
               numberOfLines={2}
             >
               {item.itemType === 'church' ? item.address : `${item.city} • ${formatDate(item.date)}`}
             </Text>
+
+            {/* Badges pour les églises */}
+            {item.itemType === 'church' && (
+              <View style={styles.badgesContainer}>
+                {item.parking && (
+                  <View style={styles.badge}>
+                    <MaterialCommunityIcons name="parking" size={12} color="#64748B" />
+                    <Text style={styles.badgeText}>Parking</Text>
+                  </View>
+                )}
+                {item.accessible && (
+                  <View style={styles.badge}>
+                    <MaterialCommunityIcons name="wheelchair-accessibility" size={12} color="#64748B" />
+                    <Text style={styles.badgeText}>Accès PMR</Text>
+                  </View>
+                )}
+              </View>
+            )}
           </View>
         </View>
 
-        <View style={styles.cardCompactActions}>
-          <IconButton
-            icon="information-outline"
-            size={20}
-            iconColor="#6366F1"
-            containerColor="#EEF2FF"
+        <View style={styles.cardCompactActionRow}>
+          <Button
+            mode="text"
+            textColor="#64748B"
+            compact
             onPress={() => onPress(item)}
-            style={styles.cardCompactActionButton}
-          />
+            labelStyle={{ fontSize: 13 }}
+          >
+            Détails
+          </Button>
           <Button
             mode="contained"
             icon="directions"
             compact
             onPress={() => onDirections(item)}
-            style={styles.cardCompactDirectionsButton}
-            labelStyle={styles.cardCompactDirectionsLabel}
+            buttonColor="#6366F1"
+            contentStyle={{ height: 36 }}
+            labelStyle={{ fontSize: 13, fontWeight: '600' }}
           >
             Itinéraire
           </Button>
@@ -137,50 +155,61 @@ const styles = StyleSheet.create({
   },
   cardCompactInfo: {
     flex: 1,
-    gap: 6,
+    gap: 4,
   },
   cardCompactTitle: {
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '700',
     color: '#1E293B',
+    marginBottom: 2,
   },
   cardCompactMeta: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    flexWrap: 'wrap',
   },
   cardCompactAddress: {
     color: '#64748B',
+    fontSize: 13,
     lineHeight: 18,
   },
-  cardCompactActions: {
+  cardCompactActionRow: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
-    paddingTop: 8,
+    marginTop: 12,
+    paddingTop: 12,
     borderTopWidth: 1,
     borderTopColor: '#F1F5F9',
   },
-  cardCompactActionButton: {
-    margin: 0,
+  badgesContainer: {
+    flexDirection: 'row',
+    gap: 6,
   },
-  cardCompactDirectionsButton: {
-    backgroundColor: '#6366F1',
+  badge: {
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
-  cardCompactDirectionsLabel: {
-    fontSize: 13,
+  badgeText: {
+    fontSize: 10,
+    color: '#64748B',
+    fontWeight: '500',
   },
   distanceBadge: {
-    backgroundColor: '#64748B',
+    backgroundColor: 'rgba(99, 102, 241, 0.1)',
     paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingVertical: 2,
     borderRadius: 6,
-    alignSelf: 'flex-start',
   },
   distanceBadgeText: {
-    color: 'white',
+    color: '#6366F1',
     fontSize: 11,
     fontWeight: '600',
-    letterSpacing: 0.3,
   },
 });

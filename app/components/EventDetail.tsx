@@ -1,7 +1,8 @@
-import React from 'react';
-import { View, StyleSheet, Linking, Alert } from 'react-native';
-import { Card, Text, Avatar, Button } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Calendar from 'expo-calendar';
+import React from 'react';
+import { Alert, Linking, StyleSheet, View } from 'react-native';
+import { Button, Divider, List, Text } from 'react-native-paper';
 import { EventWithDistance } from '../../types';
 
 interface EventDetailProps {
@@ -45,7 +46,7 @@ const EventDetail: React.FC<EventDetailProps> = ({ item, onDirections, formatDat
         startDate: startDate,
         endDate: endDate,
         location: `${item.address}, ${item.city}`,
-        notes: `${item.description}\\n\\nOrganisé par: ${item.churchName}\\nContact: ${item.email}`,
+        notes: `${item.description}\n\nOrganisé par: ${item.churchName}\nContact: ${item.email}`,
         alarms: [{ relativeOffset: -60 }],
       });
 
@@ -58,157 +59,100 @@ const EventDetail: React.FC<EventDetailProps> = ({ item, onDirections, formatDat
 
   return (
     <View style={styles.detailsContainer}>
+      {/* En-tête avec Titre et Date */}
+      <View style={styles.headerContainer}>
+        <View style={styles.dateBadge}>
+          <MaterialCommunityIcons name="calendar-month" size={16} color="#6366F1" />
+          <Text style={styles.dateBadgeText}>{formatDate(item.date)}</Text>
+        </View>
+        <Text variant="headlineSmall" style={styles.headerTitle}>
+          {item.title}
+        </Text>
+        <View style={styles.timeBadge}>
+          <MaterialCommunityIcons name="clock-outline" size={16} color="#64748B" />
+          <Text style={styles.timeBadgeText}>{item.startTime} - {item.endTime}</Text>
+        </View>
+      </View>
+
+      <Divider style={styles.divider} />
+
       {/* Quick Actions */}
       <View style={styles.quickActionsContainer}>
         <Button
           mode="contained"
-          icon="phone"
-          style={[styles.quickActionButton, { backgroundColor: '#3B82F6' }]}
-          labelStyle={styles.quickActionLabel}
-          onPress={() => Linking.openURL(`tel:${item.phone}`)}
+          icon="calendar-plus"
+          style={[styles.quickActionButton, styles.calendarButton]}
+          contentStyle={{ height: 44 }}
+          onPress={addToCalendar}
         >
-          Appeler
+          Ajouter
         </Button>
-        {item.whatsapp && (
-          <Button
-            mode="contained"
-            icon="whatsapp"
-            style={[styles.quickActionButton, { backgroundColor: '#25D366' }]}
-            labelStyle={styles.quickActionLabel}
-            onPress={() => Linking.openURL(item.whatsapp)}
-          >
-            WhatsApp
-          </Button>
-        )}
         <Button
           mode="contained"
           icon="directions"
-          style={[styles.quickActionButton, { backgroundColor: '#6366F1' }]}
-          labelStyle={styles.quickActionLabel}
+          buttonColor="#6366F1"
+          style={styles.quickActionButton}
+          contentStyle={{ height: 44 }}
           onPress={() => onDirections(item)}
         >
-          Itinéraire
+          Y aller
         </Button>
       </View>
 
-      {/* Date et heure */}
-      <Card mode="outlined" style={styles.detailCard}>
-        <Card.Content>
-          <View style={styles.detailCardHeader}>
-            <Avatar.Icon icon="calendar" size={32} style={styles.detailCardIcon} />
-            <Text variant="titleMedium" style={styles.detailCardTitle}>
-              Date et heure
-            </Text>
-          </View>
-          <Text variant="bodyMedium" style={styles.detailCardText}>
-            {formatDate(item.date)} • {item.startTime} - {item.endTime}
-          </Text>
-        </Card.Content>
-      </Card>
+      <Divider style={styles.divider} />
 
       {/* Description */}
-      <Card mode="outlined" style={styles.detailCard}>
-        <Card.Content>
-          <View style={styles.detailCardHeader}>
-            <Avatar.Icon icon="information" size={32} style={styles.detailCardIcon} />
-            <Text variant="titleMedium" style={styles.detailCardTitle}>
-              Description
-            </Text>
-          </View>
-          <Text variant="bodyMedium" style={styles.detailCardText}>
-            {item.description}
-          </Text>
-        </Card.Content>
-      </Card>
+      <View style={styles.sectionContainer}>
+        <Text variant="titleMedium" style={styles.sectionTitle}>À propos</Text>
+        <Text variant="bodyMedium" style={styles.aboutText}>
+          {item.description}
+        </Text>
+      </View>
 
-      {/* Église organisatrice */}
-      <Card mode="outlined" style={styles.detailCard}>
-        <Card.Content>
-          <View style={styles.detailCardHeader}>
-            <Avatar.Icon icon="church" size={32} style={styles.detailCardIcon} />
-            <Text variant="titleMedium" style={styles.detailCardTitle}>
-              Église organisatrice
-            </Text>
-          </View>
-          <Text variant="bodyMedium" style={styles.detailCardText}>
-            {item.churchName}
-          </Text>
-        </Card.Content>
-      </Card>
+      {/* Informations Lieu & Organisateur */}
+      <View style={styles.sectionContainer}>
+        <Text variant="titleMedium" style={styles.sectionTitle}>Détails</Text>
 
-      {/* Lieu */}
-      <Card mode="outlined" style={styles.detailCard}>
-        <Card.Content>
-          <View style={styles.detailCardHeader}>
-            <Avatar.Icon icon="map-marker" size={32} style={styles.detailCardIcon} />
-            <Text variant="titleMedium" style={styles.detailCardTitle}>
-              Lieu
-            </Text>
-          </View>
-          <Text variant="bodyMedium" style={styles.detailCardText}>
-            {item.address}
-          </Text>
-          <Text variant="bodySmall" style={[styles.detailCardText, { marginTop: 4 }]}>
-            {item.city}, {item.country}
-          </Text>
-        </Card.Content>
-      </Card>
+        <List.Item
+          title={item.organizer || "Organisateur"}
+          description="Organisateur"
+          left={props => <List.Icon {...props} icon="church" color="#6366F1" />}
+          style={styles.listItem}
+        />
+        <List.Item
+          title={`${item.address}, ${item.city}`}
+          description="Lieu"
+          titleNumberOfLines={2}
+          left={props => <List.Icon {...props} icon="map-marker" color="#6366F1" />}
+          style={styles.listItem}
+        />
 
-      {/* Organisateur */}
-      <Card mode="outlined" style={styles.detailCard}>
-        <Card.Content>
-          <View style={styles.detailCardHeader}>
-            <Avatar.Icon icon="account" size={32} style={styles.detailCardIcon} />
-            <Text variant="titleMedium" style={styles.detailCardTitle}>
-              Organisateur
-            </Text>
-          </View>
-          <Text variant="bodyMedium" style={styles.detailCardText}>
-            {item.organizer}
-          </Text>
-        </Card.Content>
-      </Card>
+        <List.Item
+          title={item.organizer || "Contact"}
+          description="Responsable"
+          left={props => <List.Icon {...props} icon="account" color="#6366F1" />}
+          style={styles.listItem}
+        />
 
-      {/* Contact */}
-      <Card mode="outlined" style={styles.detailCard}>
-        <Card.Content>
-          <View style={styles.detailCardHeader}>
-            <Avatar.Icon icon="email" size={32} style={styles.detailCardIcon} />
-            <Text variant="titleMedium" style={styles.detailCardTitle}>
-              Contact
-            </Text>
-          </View>
-          <View style={styles.contactInfoContainer}>
-            <View style={styles.contactInfoRow}>
-              <Text variant="bodyMedium" style={styles.contactInfoLabel}>
-                Email :
-              </Text>
-              <Text variant="bodyMedium" style={styles.contactInfoValue}>
-                {item.email}
-              </Text>
-            </View>
-            <View style={styles.contactInfoRow}>
-              <Text variant="bodyMedium" style={styles.contactInfoLabel}>
-                Téléphone :
-              </Text>
-              <Text variant="bodyMedium" style={styles.contactInfoValue}>
-                {item.phone}
-              </Text>
-            </View>
-          </View>
-        </Card.Content>
-      </Card>
+        {/* Contact Links */}
+        <List.Item
+          title={item.phone}
+          description="Téléphone"
+          left={props => <List.Icon {...props} icon="phone" color="#6366F1" />}
+          onPress={() => Linking.openURL(`tel:${item.phone}`)}
+          style={styles.listItem}
+        />
+        {item.whatsapp && (
+          <List.Item
+            title="WhatsApp"
+            description="Contacter sur WhatsApp"
+            left={props => <List.Icon {...props} icon="whatsapp" color="#25D366" />}
+            onPress={() => Linking.openURL(item.whatsapp!)}
+            style={styles.listItem}
+          />
+        )}
+      </View>
 
-      {/* Bouton Ajouter au calendrier */}
-      <Button
-        mode="contained"
-        icon="calendar-plus"
-        onPress={addToCalendar}
-        style={styles.addToCalendarButton}
-        labelStyle={styles.addToCalendarLabel}
-      >
-        Ajouter au calendrier
-      </Button>
     </View>
   );
 };
@@ -217,70 +161,78 @@ export default EventDetail;
 
 const styles = StyleSheet.create({
   detailsContainer: {
-    paddingBottom: 20,
+    paddingBottom: 40,
+  },
+  headerContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 16,
+    alignItems: 'flex-start',
+  },
+  dateBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#EEF2FF',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  dateBadgeText: {
+    color: '#6366F1',
+    fontWeight: '700',
+    fontSize: 13,
+  },
+  timeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4
+  },
+  timeBadgeText: {
+    color: '#64748B',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  headerTitle: {
+    fontWeight: '700',
+    color: '#1E293B',
+    marginBottom: 4,
+    lineHeight: 32,
+  },
+  divider: {
+    marginBottom: 16,
+    backgroundColor: '#F1F5F9',
   },
   quickActionsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 16,
-    gap: 8,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
+    gap: 12,
+    marginBottom: 8,
   },
   quickActionButton: {
     flex: 1,
     borderRadius: 12,
   },
-  quickActionLabel: {
-    fontSize: 12,
-    fontWeight: '600',
+  calendarButton: {
+    backgroundColor: '#10B981',
   },
-  detailCard: {
-    marginHorizontal: 16,
-    marginBottom: 12,
-    borderRadius: 16,
-    borderColor: '#E2E8F0',
+  sectionContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 24,
   },
-  detailCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-    gap: 12,
-  },
-  detailCardIcon: {
-    backgroundColor: '#EEF2FF',
-  },
-  detailCardTitle: {
+  sectionTitle: {
+    fontWeight: '700',
     color: '#1E293B',
-    fontWeight: '600',
+    marginBottom: 12,
+    fontSize: 18,
   },
-  detailCardText: {
+  aboutText: {
     color: '#475569',
-    lineHeight: 22,
+    lineHeight: 24,
   },
-  contactInfoContainer: {
-    gap: 8,
-  },
-  contactInfoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  contactInfoLabel: {
-    color: '#64748B',
-    fontWeight: '500',
-  },
-  contactInfoValue: {
-    color: '#1E293B',
-    fontWeight: '600',
-  },
-  addToCalendarButton: {
-    marginHorizontal: 16,
-    marginTop: 8,
-    borderRadius: 12,
-    backgroundColor: '#6366F1',
-  },
-  addToCalendarLabel: {
-    fontSize: 14,
-    fontWeight: '600',
+  listItem: {
+    paddingHorizontal: 0,
+    paddingVertical: 4,
   },
 });

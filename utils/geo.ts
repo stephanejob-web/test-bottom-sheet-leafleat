@@ -20,9 +20,9 @@ export function calculateDistance(
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(lat1 * (Math.PI / 180)) *
-      Math.cos(lat2 * (Math.PI / 180)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+    Math.cos(lat2 * (Math.PI / 180)) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -63,6 +63,46 @@ export function filterItemsByBoundingBox<T extends { latitude: number; longitude
       item.longitude >= boundingBox.minLng &&
       item.longitude <= boundingBox.maxLng
   );
+}
+
+/**
+ * Filtre les items par rayon autour d'un point central
+ *
+ * @param items Tableau d'items
+ * @param centerLat Latitude du centre
+ * @param centerLng Longitude du centre
+ * @param radiusKm Rayon en kilomètres
+ * @returns Items dans le rayon
+ */
+export function filterItemsByRadius<T extends { latitude: number; longitude: number }>(
+  items: T[],
+  centerLat: number,
+  centerLng: number,
+  radiusKm: number
+): T[] {
+  // Pré-filtrage rapide par bounding box (carré autour du cercle) pour éviter calculs coûteux
+  // 1 degré lat ~= 111km. 1 degré log ~= 111km * cos(lat).
+  // Approx bourrine pour bounding box : 1 deg ~= 100km pour être large
+  const degDelta = radiusKm / 100;
+
+  const minLat = centerLat - degDelta;
+  const maxLat = centerLat + degDelta;
+  const minLng = centerLng - degDelta * 1.5; // Marge sécurité longitude
+  const maxLng = centerLng + degDelta * 1.5;
+
+  const candidates = items.filter(
+    (item) =>
+      item.latitude >= minLat &&
+      item.latitude <= maxLat &&
+      item.longitude >= minLng &&
+      item.longitude <= maxLng
+  );
+
+  // Filtrage précis par distance
+  return candidates.filter(item => {
+    const dist = calculateDistance(centerLat, centerLng, item.latitude, item.longitude);
+    return dist <= radiusKm;
+  });
 }
 
 /**
