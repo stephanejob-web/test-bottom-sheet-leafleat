@@ -12,10 +12,12 @@ import mockApiResponse from '../../mockApiData.json';
 import mockEventsData from '../../mockEventsData.json';
 import { Church, ChurchWithDistance, Event, EventWithDistance } from '../../types';
 import * as GeoUtils from '../../utils/geo';
-import ChurchDetail from '../components/ChurchDetail';
-import EventDetail from '../components/EventDetail';
 import ListItemCard from '../components/ListItemCard';
 import MapMarkerItem from '../components/MapMarkerItem';
+
+// Lazy loading des composants de détail pour optimiser le bundle initial
+const ChurchDetail = React.lazy(() => import('../components/ChurchDetail'));
+const EventDetail = React.lazy(() => import('../components/EventDetail'));
 
 // Chargement des données depuis le mock API
 const allChurches: Church[] = mockApiResponse.data.churches as Church[];
@@ -854,26 +856,35 @@ export default function MapScreen() {
               onDirections={handleDirections}
               onAnimate={(item, index) => {
                 setFocusedItemIndex(index);
-                animateToItem(item);
+                // Animation carte supprimée pour optimisation (inutile quand bottom sheet ouvert)
               }}
               formatDate={formatDate}
             />
           )}
           ListHeaderComponent={
             selectedItem ? (
-              // Vue détaillée église ou événement
-              selectedItem.itemType === 'church' ? (
-                <ChurchDetail
-                  item={selectedItem}
-                  onDirections={handleDirections}
-                />
-              ) : (
-                <EventDetail
-                  item={selectedItem}
-                  onDirections={handleDirections}
-                  formatDate={formatDate}
-                />
-              )
+              // Vue détaillée église ou événement (Lazy Loaded)
+              <React.Suspense
+                fallback={
+                  <View style={{ padding: 40, alignItems: 'center' }}>
+                    <ActivityIndicator size="large" color="#6366F1" />
+                    <Text style={{ marginTop: 12, color: '#6366F1' }}>Chargement des détails...</Text>
+                  </View>
+                }
+              >
+                {selectedItem.itemType === 'church' ? (
+                  <ChurchDetail
+                    item={selectedItem}
+                    onDirections={handleDirections}
+                  />
+                ) : (
+                  <EventDetail
+                    item={selectedItem}
+                    onDirections={handleDirections}
+                    formatDate={formatDate}
+                  />
+                )}
+              </React.Suspense>
             ) : (
               // États vides et loading
               <>
