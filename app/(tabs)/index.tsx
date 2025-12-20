@@ -41,7 +41,6 @@ export default function MapScreen() {
   const [itemForDirections, setItemForDirections] = useState<ListItem | null>(null);
   const [searchCenter, setSearchCenter] = useState<{ latitude: number; longitude: number } | null>(null);
   const [visibleRegion, setVisibleRegion] = useState<{ latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number } | null>(null);
-  const [isLoadingViewport, setIsLoadingViewport] = useState(false);
 
   // Nouveaux états pour l'architecture optimisée
   const [validatedRegion, setValidatedRegion] = useState<{
@@ -754,30 +753,8 @@ export default function MapScreen() {
           size={24}
           iconColor="#6366F1"
           onPress={recenterOnUser}
-          style={styles.recenterIconButton}
         />
       </Surface>
-
-      {/* Indicateur de chargement moderne */}
-      {
-        isLoadingViewport && (
-          <View style={styles.loadingContainer}>
-            <View style={styles.loadingIndicator}>
-              <View style={styles.loadingSpinner}>
-                <ActivityIndicator size="small" color="#6366F1" />
-              </View>
-              <View style={styles.loadingTextContainer}>
-                <Text style={styles.loadingText}>Actualisation</Text>
-                <View style={styles.loadingDots}>
-                  <View style={[styles.dot, styles.dot1]} />
-                  <View style={[styles.dot, styles.dot2]} />
-                  <View style={[styles.dot, styles.dot3]} />
-                </View>
-              </View>
-            </View>
-          </View>
-        )
-      }
 
       {/* Bottom Sheet */}
       <BottomSheet
@@ -1139,70 +1116,6 @@ const styles = StyleSheet.create({
     height: 56,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  recenterIconButton: {
-    margin: 0,
-  },
-  loadingContainer: {
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? 130 : (StatusBar.currentHeight || 0) + 80,
-    alignSelf: 'center',
-    zIndex: 1000,
-  },
-  loadingIndicator: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: 24,
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(99, 102, 241, 0.2)',
-    shadowColor: '#6366F1',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 8,
-    minWidth: 160,
-  },
-  loadingSpinner: {
-    width: 24,
-    height: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingTextContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  loadingText: {
-    color: '#6366F1',
-    fontWeight: '700',
-    fontSize: 15,
-    letterSpacing: 0.3,
-  },
-  loadingDots: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    marginLeft: 2,
-  },
-  dot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#6366F1',
-  },
-  dot1: {
-    opacity: 0.4,
-  },
-  dot2: {
-    opacity: 0.6,
-  },
-  dot3: {
-    opacity: 0.8,
   },
   detailsContainerModern: {
     gap: 12,
