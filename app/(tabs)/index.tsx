@@ -8,9 +8,7 @@ import { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Avatar, Button, Card, Dialog, Divider, IconButton, Portal, Searchbar, Surface, Text } from 'react-native-paper';
 import { eventTypeConfig } from '../../constants/eventTypes';
 import { useDebounce } from '../../hooks/use-debounce';
-import mockApiResponse from '../../mockApiData.json';
-import mockEventsData from '../../mockEventsData.json';
-import { Church, ChurchWithDistance, Event, EventWithDistance } from '../../types';
+import { ChurchWithDistance, EventWithDistance } from '../../types';
 import * as GeoUtils from '../../utils/geo';
 import ListItemCard from '../components/ListItemCard';
 import MapMarkerItem from '../components/MapMarkerItem';
@@ -19,9 +17,6 @@ import MapMarkerItem from '../components/MapMarkerItem';
 const ChurchDetail = React.lazy(() => import('../components/ChurchDetail'));
 const EventDetail = React.lazy(() => import('../components/EventDetail'));
 
-// Chargement des données depuis le mock API
-const allChurches: Church[] = mockApiResponse.data.churches as Church[];
-const allEvents: Event[] = mockEventsData.data.events as Event[];
 
 // Type pour les éléments de la liste (églises ou événements)
 type ListItem = (ChurchWithDistance & { itemType: 'church' }) | (EventWithDistance & { itemType: 'event' });
@@ -35,6 +30,55 @@ const UserLocationMarker = () => (
 );
 
 export default function MapScreen() {
+  // Charger les données depuis l'API
+  const { churches: apiChurches, loading: churchesLoading, error: churchesError, refresh: refreshChurches } = useChurches({ limit: 3000 });
+  const { events: apiEvents, loading: eventsLoading, error: eventsError, refresh: refreshEvents } = useEvents({ limit: 1000, upcoming: true });
+
+  // Convertir les données API en format attendu par l'application
+  const allChurches: Church[] = useMemo(() => {
+    return apiChurches.map(church => ({
+      id: String(church.id),
+      name: church.name,
+      latitude: church.latitude,
+      longitude: church.longitude,
+      address: '',
+      pastor: '',
+      email: '',
+      phone: '',
+      services: [],
+      description: '',
+      tags: [],
+      capacity: undefined,
+      accessible: undefined,
+      parking: false,
+      website: '',
+    } as Church));
+  }, [apiChurches]);
+
+  const allEvents: Event[] = useMemo(() => {
+    return apiEvents.map(event => ({
+      id: String(event.id),
+      title: event.title,
+      type: event.type,
+      description: '',
+      churchId: String(event.church_id),
+      churchName: event.church_name || '',
+      address: '',
+      latitude: event.latitude,
+      longitude: event.longitude,
+      city: '',
+      country: 'France',
+      date: event.date,
+      startTime: '10:00',
+      endTime: '12:00',
+      organizer: '',
+      email: '',
+      phone: '',
+      whatsapp: '',
+    } as Event));
+  }, [apiEvents]);
+
+
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState<ListItem | null>(null);
@@ -609,6 +653,35 @@ export default function MapScreen() {
       </Marker>
     );
   }, []);
+
+  // Afficher un écran de chargement pendant le chargement initial des données
+  if (churchesLoading && apiChurches.length === 0) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#6366F1" />
+        <Text style={{ marginTop: 16, fontSize: 16, color: '#666' }}>
+          Chargement des églises...
+        </Text>
+      </View>
+    );
+  }
+
+  // Afficher un message d'erreur si le chargement échoue
+  if (churchesError && apiChurches.length === 0) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', padding: 20 }]}>
+        <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#EF4444', marginBottom: 12 }}>
+          Erreur de connexion
+        </Text>
+        <Text style={{ fontSize: 14, color: '#666', textAlign: 'center', marginBottom: 20 }}>
+          Impossible de charger les données. Vérifiez que le serveur API est démarré sur http://192.168.0.62:3000
+        </Text>
+        <Button mode="contained" onPress={refreshChurches} buttonColor="#6366F1">
+          Réessayer
+        </Button>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
