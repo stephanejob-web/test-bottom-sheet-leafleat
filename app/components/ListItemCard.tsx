@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Avatar, Button, Card, Text } from 'react-native-paper';
+import { Button, Card, Text } from 'react-native-paper';
 import { ChurchWithDistance, EventWithDistance } from '../../types';
 
 // Type pour les items de la liste
@@ -26,54 +26,45 @@ const ListItemCard: React.FC<ListItemCardProps> = ({
   onAnimate,
   formatDate,
 }) => {
+  const isChurch = item.itemType === 'church';
+
   return (
     <Card
       style={[
-        styles.churchCardCompact,
-        focused && styles.churchCardCompactFocused,
+        styles.cardContainer,
+        focused && styles.cardFocused,
       ]}
       onPress={() => onAnimate(item, index)}
       mode="elevated"
-      elevation={focused ? 4 : 1}
+      elevation={focused ? 4 : 2}
     >
-      <View style={styles.cardCompactContent}>
-        <View style={styles.cardCompactMain}>
-          <Avatar.Icon
-            icon={item.itemType === 'church' ? 'cross' : 'calendar-star'}
-            size={48}
-            style={[
-              styles.cardCompactAvatar,
-              item.itemType === 'church' && { backgroundColor: '#EF4444' },
-              item.itemType === 'event' && { backgroundColor: '#10B981' },
-              focused && styles.cardCompactAvatarFocused,
-            ]}
-          />
+      <View style={styles.cardContent}>
+        {/* Header: Icon + Info + Distance */}
+        <View style={styles.mainRow}>
+          {/* Icon Box */}
+          <View style={[
+            styles.iconBox,
+            isChurch ? styles.iconBoxChurch : styles.iconBoxEvent
+          ]}>
+            <MaterialCommunityIcons
+              name={isChurch ? "church" : "calendar-star"}
+              size={24}
+              color={isChurch ? "#6366F1" : "#10B981"}
+            />
+          </View>
 
-          <View style={styles.cardCompactInfo}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <Text
-                style={styles.cardCompactTitle}
-                numberOfLines={1}
-              >
-                {item.itemType === 'church' ? item.name : item.title}
-              </Text>
-              <View style={styles.distanceBadge}>
-                <Text style={styles.distanceBadgeText}>
-                  {item.distance.toFixed(1)} km
-                </Text>
-              </View>
-            </View>
-
-            <Text
-              style={styles.cardCompactAddress}
-              numberOfLines={2}
-            >
-              {item.itemType === 'church' ? item.address : `${item.city} • ${formatDate(item.date)}`}
+          {/* Text Info */}
+          <View style={styles.infoCol}>
+            <Text style={styles.title} numberOfLines={1}>
+              {isChurch ? item.name : item.title}
+            </Text>
+            <Text style={styles.address} numberOfLines={1}>
+              {isChurch ? item.address : `${item.city} • ${formatDate(item.date)}`}
             </Text>
 
-            {/* Badges pour les églises */}
-            {item.itemType === 'church' && (
-              <View style={styles.badgesContainer}>
+            {/* Badges Row */}
+            {isChurch && (
+              <View style={styles.badgesRow}>
                 {item.parking && (
                   <View style={styles.badge}>
                     <MaterialCommunityIcons name="parking" size={12} color="#64748B" />
@@ -83,34 +74,41 @@ const ListItemCard: React.FC<ListItemCardProps> = ({
                 {item.accessible && (
                   <View style={styles.badge}>
                     <MaterialCommunityIcons name="wheelchair-accessibility" size={12} color="#64748B" />
-                    <Text style={styles.badgeText}>Accès PMR</Text>
+                    <Text style={styles.badgeText}>PMR</Text>
                   </View>
                 )}
               </View>
             )}
           </View>
+
+          {/* Prominent Distance Block */}
+          <View style={styles.distanceBlock}>
+            <Text style={styles.distanceValue}>{item.distance.toFixed(1)}</Text>
+            <Text style={styles.distanceUnit}>km</Text>
+          </View>
         </View>
 
-        <View style={styles.cardCompactActionRow}>
+        {/* Action Row */}
+        <View style={styles.actionRow}>
           <Button
             mode="text"
             textColor="#64748B"
             compact
             onPress={() => onPress(item)}
-            labelStyle={{ fontSize: 13 }}
+            labelStyle={styles.actionLabel}
           >
-            Détails
+            Voir les détails
           </Button>
           <Button
             mode="contained"
-            icon="directions"
+            icon="navigation-variant"
             compact
             onPress={() => onDirections(item)}
             buttonColor="#6366F1"
-            contentStyle={{ height: 36 }}
-            labelStyle={{ fontSize: 13, fontWeight: '600' }}
+            style={styles.directionButton}
+            labelStyle={styles.directionLabel}
           >
-            Itinéraire
+            Y aller
           </Button>
         </View>
       </View>
@@ -120,7 +118,6 @@ const ListItemCard: React.FC<ListItemCardProps> = ({
 
 // Memoization avec comparaison personnalisée pour éviter les re-renders inutiles
 export default React.memo(ListItemCard, (prevProps, nextProps) => {
-  // Ne re-render que si l'item ID, le focus ou la distance change
   return (
     prevProps.item.id === nextProps.item.id &&
     prevProps.focused === nextProps.focused &&
@@ -129,71 +126,66 @@ export default React.memo(ListItemCard, (prevProps, nextProps) => {
 });
 
 const styles = StyleSheet.create({
-  churchCardCompact: {
-    marginBottom: 12,
-    borderRadius: 12,
+  cardContainer: {
+    marginBottom: 16,
+    borderRadius: 16,
     backgroundColor: 'white',
+    marginHorizontal: 4, // Pour éviter que l'ombre soit coupée
   },
-  churchCardCompactFocused: {
+  cardFocused: {
     borderWidth: 2,
     borderColor: '#6366F1',
     backgroundColor: '#F8FAFC',
   },
-  cardCompactContent: {
-    padding: 12,
+  cardContent: {
+    padding: 16,
   },
-  cardCompactMain: {
+  mainRow: {
     flexDirection: 'row',
+    alignItems: 'flex-start',
     gap: 12,
-    marginBottom: 12,
   },
-  cardCompactAvatar: {
-    backgroundColor: '#F1F5F9',
+  iconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  cardCompactAvatarFocused: {
-    backgroundColor: '#6366F1',
+  iconBoxChurch: {
+    backgroundColor: '#EEF2FF', // Light Indigo
   },
-  cardCompactInfo: {
+  iconBoxEvent: {
+    backgroundColor: '#ECFDF5', // Light Emerald
+  },
+  infoCol: {
     flex: 1,
+    justifyContent: 'center',
     gap: 4,
   },
-  cardCompactTitle: {
+  title: {
     fontSize: 16,
     fontWeight: '700',
     color: '#1E293B',
-    marginBottom: 2,
+    lineHeight: 22,
   },
-  cardCompactMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    flexWrap: 'wrap',
-  },
-  cardCompactAddress: {
-    color: '#64748B',
+  address: {
     fontSize: 13,
+    color: '#64748B',
     lineHeight: 18,
   },
-  cardCompactActionRow: {
+  badgesRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
-  },
-  badgesContainer: {
-    flexDirection: 'row',
-    gap: 6,
+    gap: 8,
+    marginTop: 4,
   },
   badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#F1F5F9',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
-    flexDirection: 'row',
-    alignItems: 'center',
     gap: 4,
   },
   badgeText: {
@@ -201,15 +193,43 @@ const styles = StyleSheet.create({
     color: '#64748B',
     fontWeight: '500',
   },
-  distanceBadge: {
-    backgroundColor: 'rgba(99, 102, 241, 0.1)',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
+  distanceBlock: {
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    padding: 8,
+    borderRadius: 12,
+    minWidth: 50,
   },
-  distanceBadgeText: {
+  distanceValue: {
+    fontSize: 18,
+    fontWeight: '800',
     color: '#6366F1',
+    lineHeight: 22,
+  },
+  distanceUnit: {
     fontSize: 11,
+    color: '#64748B',
+    fontWeight: '600',
+  },
+  actionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 16,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+  },
+  actionLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  directionButton: {
+    borderRadius: 8,
+    elevation: 0,
+  },
+  directionLabel: {
+    fontSize: 13,
     fontWeight: '600',
   },
 });
