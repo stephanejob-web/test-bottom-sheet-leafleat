@@ -8,20 +8,19 @@ import { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Avatar, Button, Card, Dialog, Divider, IconButton, Portal, Searchbar, Surface, Text } from 'react-native-paper';
 import { eventTypeConfig } from '../../constants/eventTypes';
 import { useDebounce } from '../../hooks/use-debounce';
-import mockApiResponse from '../../mockApiData.json';
-import mockEventsData from '../../mockEventsData.json';
 import { Church, ChurchWithDistance, Event, EventWithDistance } from '../../types';
 import * as GeoUtils from '../../utils/geo';
 import ListItemCard from '../components/ListItemCard';
 import MapMarkerItem from '../components/MapMarkerItem';
 
+// Import des données mockées
+import mockApiResponse from '../../mockApiData.json';
+import mockEventsData from '../../mockEventsData.json';
+
 // Lazy loading des composants de détail pour optimiser le bundle initial
 const ChurchDetail = React.lazy(() => import('../components/ChurchDetail'));
 const EventDetail = React.lazy(() => import('../components/EventDetail'));
 
-// Chargement des données depuis le mock API
-const allChurches: Church[] = mockApiResponse.data.churches as Church[];
-const allEvents: Event[] = mockEventsData.data.events as Event[];
 
 // Type pour les éléments de la liste (églises ou événements)
 type ListItem = (ChurchWithDistance & { itemType: 'church' }) | (EventWithDistance & { itemType: 'event' });
@@ -35,6 +34,12 @@ const UserLocationMarker = () => (
 );
 
 export default function MapScreen() {
+  // Utiliser les données mockées directement
+  const allChurches: Church[] = mockApiResponse.data.churches as Church[];
+  const allEvents: Event[] = mockEventsData.data.events as Event[];
+
+
+
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState<ListItem | null>(null);
@@ -609,6 +614,8 @@ export default function MapScreen() {
       </Marker>
     );
   }, []);
+
+  // Les données mockées sont chargées directement, pas besoin d'états de chargement
 
   return (
     <View style={styles.container}>
