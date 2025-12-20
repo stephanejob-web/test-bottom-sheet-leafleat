@@ -238,18 +238,22 @@ export default function MapScreen() {
         debouncedVisibleRegion.longitudeDelta * 85
       ) / 2;
 
-      // Cap le rayon entre 5km et 100km
-      const cappedRadius = Math.max(5, Math.min(radiusKm * 1.5, 100));
+      // Use full radius without cap for overview
+      const searchRadius = Math.max(5, radiusKm * 1.5);
+      // Scale limit with radius (approx 20 items per km radius), capped at 5000, min 100
+      const searchLimit = Math.min(5000, Math.max(100, Math.floor(searchRadius * 20)));
 
       console.log('📍 Viewport-based loading:', {
         center: { lat: debouncedVisibleRegion.latitude.toFixed(4), lng: debouncedVisibleRegion.longitude.toFixed(4) },
-        radiusKm: cappedRadius.toFixed(1)
+        radiusKm: searchRadius.toFixed(1),
+        limit: searchLimit
       });
 
       searchNearbyChurches(
         debouncedVisibleRegion.latitude,
         debouncedVisibleRegion.longitude,
-        cappedRadius
+        searchRadius,
+        searchLimit
       );
     }
   }, [debouncedVisibleRegion, searchNearbyChurches, initialLoadDone]);

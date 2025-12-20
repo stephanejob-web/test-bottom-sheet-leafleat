@@ -115,7 +115,7 @@ export interface UseNearbyChurchesResult {
     churches: ChurchListItem[];
     loading: boolean;
     error: string | null;
-    search: (lat: number, lng: number, radius?: number) => Promise<void>;
+    search: (lat: number, lng: number, radius?: number, limit?: number) => Promise<void>;
 }
 
 export function useNearbyChurches(): UseNearbyChurchesResult {
@@ -123,11 +123,11 @@ export function useNearbyChurches(): UseNearbyChurchesResult {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const search = useCallback(async (lat: number, lng: number, radius: number = 10) => {
+    const search = useCallback(async (lat: number, lng: number, radius: number = 10, limit: number = 50) => {
         try {
             setLoading(true);
             setError(null);
-            const data = await churchesService.getNearbyChurches(lat, lng, radius);
+            const data = await churchesService.getNearbyChurches(lat, lng, radius, limit);
             setChurches(data);
         } catch (err) {
             if (err instanceof ApiError) {
