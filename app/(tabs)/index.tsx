@@ -11,7 +11,7 @@ import { useDebounce } from '../../hooks/use-debounce';
 import mockApiResponse from '../../mockApiData.json';
 import mockEventsData from '../../mockEventsData.json';
 import { Church, ChurchWithDistance, Event, EventWithDistance } from '../../types';
-import { calculateDistancesForItems, filterItemsByBoundingBox } from '../../utils/geo';
+import * as GeoUtils from '../../utils/geo';
 import ChurchDetail from '../components/ChurchDetail';
 import EventDetail from '../components/EventDetail';
 import ListItemCard from '../components/ListItemCard';
@@ -53,9 +53,14 @@ export default function MapScreen() {
   const [itemsInViewport, setItemsInViewport] = useState<ListItem[]>([]);
   const [displayedItems, setDisplayedItems] = useState<ListItem[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
-  const ITEMS_PER_PAGE = 20;
   const [isCalculatingDistances, setIsCalculatingDistances] = useState(false);
   const [distanceCache, setDistanceCache] = useState<Map<string, number>>(new Map());
+
+  // État pour contrôler l'affichage de la liste
+  // La liste ne s'affiche que si l'utilisateur a cliqué sur un cluster ou effectue une recherche
+  const [isListActive, setIsListActive] = useState(false);
+  // Items forcés (ex: issus d'un clic cluster pour une précision 100%)
+  const [manualItems, setManualItems] = useState<ListItem[] | null>(null);
 
   // États pour les filtres avancés
   const [filterType, setFilterType] = useState<'all' | 'church' | 'event'>('all');
@@ -63,6 +68,7 @@ export default function MapScreen() {
 
   // ... (existing states) ...
   const mapRef = useRef<any>(null); // ClusteredMapView type
+  const isClusterZooming = useRef(false);
   const bottomSheetRef = useRef<BottomSheet>(null);
 
   const snapPoints = useMemo(() => ['25%', '50%', '95%'], []);
@@ -72,6 +78,11 @@ export default function MapScreen() {
 
   // Débouncer la région visible pour optimiser les performances pendant le pan/zoom
   const debouncedVisibleRegion = useDebounce(visibleRegion, 400);
+
+  // Détection du niveau de zoom (Est-ce qu'on voit la France entière ?)
+  const isZoomedOut = debouncedVisibleRegion ? debouncedVisibleRegion.latitudeDelta > 1.5 : false;
+  // Pagination fixe à 20 pour éviter de surcharger l'application
+  const dynamicItemsPerPage = 20;
 
   // ... (keep existing effects) ...
 
@@ -124,12 +135,35 @@ export default function MapScreen() {
     return [...churchesFiltered, ...eventsFiltered];
   }, [searchQuery, filterType, filterParking]);
 
-  // Items dans viewport actuel - Filtrage géométrique SANS distance
+  // Items dans le RAYON VISUEL (Cercle au centre)
+  // Optimisation: On ne prend que ce qui est dans le cercle affiché
   const itemsInViewportMemo = useMemo((): ListItem[] => {
-    if (!debouncedVisibleRegion) return [];
+    // 0. Priorité absolue : Items manuels (clic cluster)
+    if (manualItems) return manualItems;
 
-    return filterItemsByBoundingBox(mapMarkers, debouncedVisibleRegion);
-  }, [mapMarkers, debouncedVisibleRegion]);
+    // Si la liste n'est pas activée (pas de clic cluster ni recherche), on ne retourne rien
+    if (!debouncedVisibleRegion || !isListActive) return [];
+
+    // 1. Si Dézoomé (Vue France) -> On retourne TOUT (sans filtre rayon)
+    if (isZoomedOut) {
+      return mapMarkers;
+    }
+
+    // 2. Si Zoomé (Exploration Locale) -> On affiche TOUT ce qui est visible sur la carte (Bounding Box)
+    // Cela garantit que "Ce que je vois = Ce que j'ai dans la liste"
+    const { latitude, longitude, latitudeDelta, longitudeDelta } = debouncedVisibleRegion;
+
+    // Calcul des bornes de l'écran
+    const minLat = latitude - latitudeDelta / 2;
+    const maxLat = latitude + latitudeDelta / 2;
+    const minLng = longitude - longitudeDelta / 2;
+    const maxLng = longitude + longitudeDelta / 2;
+
+    return mapMarkers.filter(item =>
+      item.latitude >= minLat && item.latitude <= maxLat &&
+      item.longitude >= minLng && item.longitude <= maxLng
+    );
+  }, [mapMarkers, debouncedVisibleRegion, isListActive, manualItems, isZoomedOut]);
 
   // Synchroniser itemsInViewport
   useEffect(() => {
@@ -138,11 +172,18 @@ export default function MapScreen() {
 
   // Reset validation lors du changement de recherche et gestion du centrage
   useEffect(() => {
+    if (searchQuery !== '') {
+      setValidatedRegion(null);
+    }
+  }, [searchQuery]);
+  // Gestion de la recherche et du centrage
+  useEffect(() => {
     if (!debouncedSearchQuery) return; // Ne rien faire si recherche vide
 
     const hasMatchingItems = mapMarkers.length > 0;
 
     const performSearch = async () => {
+      setIsListActive(true); // Activer la liste lors d'une recherche
       // 1. Si on a des items correspondants, on centre sur eux (bounding box)
       if (hasMatchingItems && mapRef.current) {
         // Calculer la bounding box des résultats
@@ -234,6 +275,17 @@ export default function MapScreen() {
       if (!regionChanged) return; // Pas de changement significatif
     }
 
+    // GESTION INTELLIGENTE: Si on a des items manuels (cluster), on vérifie si on doit les garder
+    if (manualItems) {
+      if (isClusterZooming.current) {
+        // C'est le zoom automatique du cluster -> On garde la liste précise
+        isClusterZooming.current = false;
+      } else {
+        // L'utilisateur a bougé la carte manuellement ensuite -> On repasse en mode "Exploration" (cercle)
+        setManualItems(null);
+      }
+    }
+
     setIsCalculatingDistances(true);
     setValidatedRegion(debouncedVisibleRegion);
     setCurrentPage(0);
@@ -244,11 +296,11 @@ export default function MapScreen() {
       longitude: location.coords.longitude
     } : debouncedVisibleRegion);
 
-    // Calculer distance UNIQUEMENT pour les 20 premiers items
-    const itemsToCalculate = itemsInViewport.slice(0, ITEMS_PER_PAGE);
+    // Calculer distance UNIQUEMENT pour les X premiers items
+    const itemsToCalculate = itemsInViewport.slice(0, dynamicItemsPerPage);
     const cacheKeyPrefix = `${center.latitude.toFixed(3)}-${center.longitude.toFixed(3)}`;
 
-    const itemsWithDistance = calculateDistancesForItems(
+    const itemsWithDistance = GeoUtils.calculateDistancesForItems(
       itemsToCalculate,
       center.latitude,
       center.longitude,
@@ -263,15 +315,15 @@ export default function MapScreen() {
     if (bottomSheetRef.current) {
       bottomSheetRef.current.snapToIndex(1);
     }
-  }, [debouncedVisibleRegion, itemsInViewport, searchCenter, location, distanceCache, validatedRegion]);
+  }, [debouncedVisibleRegion, itemsInViewport, searchCenter, location, distanceCache, validatedRegion, dynamicItemsPerPage]);
 
   // Handler pour pagination ("Charger plus")
   const handleLoadMore = useCallback(() => {
     if (!validatedRegion || isCalculatingDistances) return;
 
     const nextPage = currentPage + 1;
-    const startIdx = nextPage * ITEMS_PER_PAGE;
-    const endIdx = startIdx + ITEMS_PER_PAGE;
+    const startIdx = nextPage * dynamicItemsPerPage;
+    const endIdx = startIdx + dynamicItemsPerPage;
     const nextBatch = itemsInViewport.slice(startIdx, endIdx);
 
     if (nextBatch.length === 0) return;
@@ -285,7 +337,7 @@ export default function MapScreen() {
 
     const cacheKeyPrefix = `${center.latitude.toFixed(3)}-${center.longitude.toFixed(3)}`;
 
-    const batchWithDistance = calculateDistancesForItems(
+    const batchWithDistance = GeoUtils.calculateDistancesForItems(
       nextBatch,
       center.latitude,
       center.longitude,
@@ -348,6 +400,7 @@ export default function MapScreen() {
   // Gérer le changement de région visible sur la carte
   const handleRegionChangeComplete = useCallback((region: { latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number }) => {
     setVisibleRegion(region);
+    setIsListActive(true); // Activer la liste dès que la carte bouge (zoom ou pan)
   }, []);
 
   // Fonction pour recentrer sur la position de l'utilisateur
@@ -574,6 +627,60 @@ export default function MapScreen() {
         showsCompass={false}
         toolbarEnabled={false}
         onRegionChangeComplete={handleRegionChangeComplete}
+
+        // Activation de la liste et Zoom manuel au clic sur un cluster
+        onClusterPress={(cluster) => {
+          setIsListActive(true);
+
+          // AMÉLIORATION: Calculer les items EXACTS dans le cluster pour correspondance parfaite
+          if (cluster.coordinate && cluster.properties?.point_count) {
+            const clusterLat = cluster.coordinate.latitude;
+            const clusterLng = cluster.coordinate.longitude;
+
+            // Calculer un rayon adaptatif basé sur le nombre de points dans le cluster
+            // Plus il y a de points, plus le rayon doit être grand pour les capturer tous
+            const pointCount = cluster.properties.point_count;
+            let radiusKm = 0.5; // Rayon par défaut: 500m
+
+            if (pointCount > 200) {
+              radiusKm = 5; // 5km pour très gros clusters
+            } else if (pointCount > 100) {
+              radiusKm = 3; // 3km pour gros clusters
+            } else if (pointCount > 50) {
+              radiusKm = 2; // 2km pour clusters moyens
+            } else if (pointCount > 20) {
+              radiusKm = 1; // 1km pour petits clusters
+            } else if (pointCount > 10) {
+              radiusKm = 0.8; // 800m pour très petits clusters
+            }
+
+            // Filtrer TOUS les markers dans ce rayon (pas juste itemsInViewport)
+            const clusterItems = GeoUtils.filterItemsByRadius(
+              mapMarkers, // Utiliser TOUS les markers pour être sûr
+              clusterLat,
+              clusterLng,
+              radiusKm
+            );
+
+            // Forcer ces items dans la liste (correspondance parfaite avec le cluster)
+            setManualItems(clusterItems);
+            isClusterZooming.current = true;
+          }
+
+          // On force le zoom car définir onClusterPress écrase le comportement par défaut
+          if (mapRef.current && cluster.coordinate) {
+            // Zoom x4 pour éclater le cluster
+            const currentLatDelta = visibleRegion?.latitudeDelta ?? 0.09;
+            const currentLngDelta = visibleRegion?.longitudeDelta ?? 0.09;
+
+            mapRef.current.animateToRegion({
+              latitude: cluster.coordinate.latitude,
+              longitude: cluster.coordinate.longitude,
+              latitudeDelta: currentLatDelta / 4,
+              longitudeDelta: currentLngDelta / 4,
+            }, 500);
+          }
+        }}
         // Configuration comme la DEMO (https://github.com/venits/react-native-map-clustering)
         renderCluster={renderCluster}
         radius={60} // Réduit pour voir les markers plus tôt (était 110)
@@ -761,7 +868,7 @@ export default function MapScreen() {
         <BottomSheetFlatList
           data={selectedItem ? [] : displayedItems}
           keyExtractor={(item) => `${item.itemType}-${item.id}`}
-          renderItem={({ item, index }) => (
+          renderItem={({ item, index }: { item: ListItem; index: number }) => (
             <ListItemCard
               item={item}
               index={index}
