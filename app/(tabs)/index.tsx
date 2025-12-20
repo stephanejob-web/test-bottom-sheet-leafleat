@@ -77,13 +77,13 @@ export default function MapScreen() {
   // Débouncer la recherche pour éviter les re-renders excessifs
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
-  // Débouncer la région visible pour optimiser les performances pendant le pan/zoom
-  const debouncedVisibleRegion = useDebounce(visibleRegion, 400);
+  // Débouncer la région visible - 600ms pour vieux appareils (iPhone 7, etc.)
+  const debouncedVisibleRegion = useDebounce(visibleRegion, 600);
 
   // Détection du niveau de zoom (Est-ce qu'on voit la France entière ?)
   const isZoomedOut = debouncedVisibleRegion ? debouncedVisibleRegion.latitudeDelta > 1.5 : false;
-  // Pagination fixe à 20 pour éviter de surcharger l'application
-  const dynamicItemsPerPage = 20;
+  // Pagination réduite à 15 pour anciens appareils
+  const dynamicItemsPerPage = 15;
 
   // ... (keep existing effects) ...
 
@@ -692,11 +692,9 @@ export default function MapScreen() {
         nodeSize={64}
         clusteringEnabled={true}
         preserveClusterPressBehavior={true}
-        animationEnabled={true} // ACTIVE pour l'effet "Wow" de la démo
-        layoutAnimationConf={{
-          duration: 300 // Durée fluide standard
-        }}
-        spiralEnabled={true} // ACTIVE pour l'éclatement des clusters denses
+        // OPTIMISATION iPhone 7: Désactivation des animations coûteuses
+        animationEnabled={false}
+        spiralEnabled={false}
       >
 
 

@@ -81,50 +81,44 @@ export default React.memo(MapMarkerItem, (prevProps, nextProps) => {
 const styles = StyleSheet.create({
   markerContainer: {
     backgroundColor: '#EF4444',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36, // Réduit de 40
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 3,
+    borderWidth: 2, // Réduit de 3
     borderColor: 'white',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    // Shadows simplifiées pour iPhone 7
+    elevation: 3,
   },
   markerContainerFocused: {
     backgroundColor: '#DC2626',
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    transform: [{ scale: 1.1 }],
-    borderWidth: 4,
-    elevation: 8,
+    width: 40, // Réduit de 48
+    height: 40,
+    borderRadius: 20,
+    // Suppression de transform: scale qui est coûteux
+    borderWidth: 3,
+    elevation: 4,
   },
   eventMarkerContainer: {
     backgroundColor: '#10B981',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36, // Réduit de 40
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 3,
+    borderWidth: 2, // Réduit de 3
     borderColor: 'white',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    // Shadows simplifiées pour iPhone 7
+    elevation: 3,
   },
   eventMarkerContainerFocused: {
     backgroundColor: '#059669',
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    transform: [{ scale: 1.1 }],
-    borderWidth: 4,
-    elevation: 8,
+    width: 40, // Réduit de 48
+    height: 40,
+    borderRadius: 20,
+    // Suppression de transform: scale qui est coûteux
+    borderWidth: 3,
+    elevation: 4,
   },
 });
