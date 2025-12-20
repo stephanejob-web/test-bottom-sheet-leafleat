@@ -7,7 +7,7 @@ import ClusteredMapView from 'react-native-map-clustering';
 import { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Avatar, Button, Card, Dialog, Divider, IconButton, Portal, Searchbar, Surface, Text } from 'react-native-paper';
 import { eventTypeConfig } from '../../constants/eventTypes';
-import { useChurches } from '../../hooks/use-churches';
+import { useNearbyChurches } from '../../hooks/use-churches';
 import { useDebounce } from '../../hooks/use-debounce';
 import { useEvents } from '../../hooks/use-events';
 import { Church, ChurchWithDistance, Event, EventWithDistance } from '../../types';
@@ -32,24 +32,52 @@ const UserLocationMarker = () => (
 );
 
 export default function MapScreen() {
-  // Récupérer les données depuis l'API
+  // ========================================
+  // VIEWPORT-BASED LOADING
+  // ========================================
+
+  // Hook pour charger les églises par zone (nearby search)
   const {
     churches: apiChurches,
     loading: churchesLoading,
     error: churchesError,
-    refresh: refreshChurches
-  } = useChurches({ limit: 500 }); // Limite réduite pour un chargement plus rapide
+    search: searchNearbyChurches
+  } = useNearbyChurches();
 
+  // Hook pour charger les événements
   const {
     events: apiEvents,
     loading: eventsLoading,
     error: eventsError,
     refresh: refreshEvents
-  } = useEvents({ limit: 1000, upcoming: true });
+  } = useEvents({ limit: 100, upcoming: true });
 
-  // Mapper les données API au format attendu par l'application
+  // Cache local pour les églises déjà chargées (évite les re-téléchargements)
+  const [loadedChurchesCache, setLoadedChurchesCache] = useState<Map<number, { id: number; name: string; latitude: number; longitude: number }>>(new Map());
+
+  // Flag pour le chargement initial
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
+
+  // Merger les nouvelles églises dans le cache
+  useEffect(() => {
+    if (apiChurches.length > 0) {
+      setLoadedChurchesCache(prev => {
+        const newMap = new Map(prev);
+        apiChurches.forEach(c => newMap.set(c.id, {
+          id: c.id,
+          name: c.name,
+          latitude: c.latitude,
+          longitude: c.longitude
+        }));
+        console.log(`📦 Cache updated: ${newMap.size} total churches`);
+        return newMap;
+      });
+    }
+  }, [apiChurches]);
+
+  // Mapper les données du cache au format attendu par l'application
   const allChurches: Church[] = useMemo(() =>
-    apiChurches.map(c => ({
+    Array.from(loadedChurchesCache.values()).map(c => ({
       id: String(c.id),
       name: c.name,
       latitude: c.latitude,
@@ -61,7 +89,7 @@ export default function MapScreen() {
       services: [],
       description: '',
     })),
-    [apiChurches]);
+    [loadedChurchesCache]);
 
   const allEvents: Event[] = useMemo(() =>
     apiEvents.map(e => ({
@@ -92,13 +120,14 @@ export default function MapScreen() {
       churchesLoading,
       churchesError,
       apiChurchesCount: apiChurches.length,
+      cacheSize: loadedChurchesCache.size,
       allChurchesCount: allChurches.length,
       eventsLoading,
       eventsError,
       apiEventsCount: apiEvents.length,
       allEventsCount: allEvents.length,
     });
-  }, [churchesLoading, churchesError, apiChurches, allChurches, eventsLoading, eventsError, apiEvents, allEvents]);
+  }, [churchesLoading, churchesError, apiChurches, loadedChurchesCache, allChurches, eventsLoading, eventsError, apiEvents, allEvents]);
 
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -142,8 +171,67 @@ export default function MapScreen() {
   // Débouncer la recherche pour éviter les re-renders excessifs
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
+  // States pour la gestion de la map et de la géolocalisation
+  const [isMapReady, setIsMapReady] = useState(false);
+  const [initialCenteringDone, setInitialCenteringDone] = useState(false);
+
   // Débouncer la région visible - 600ms pour vieux appareils (iPhone 7, etc.)
   const debouncedVisibleRegion = useDebounce(visibleRegion, 600);
+
+  // ========================================
+  // VIEWPORT-BASED LOADING TRIGGER
+  // ========================================
+  // Charger les églises quand la région visible change
+  useEffect(() => {
+    if (debouncedVisibleRegion && initialLoadDone) {
+      // Calculer le rayon basé sur le delta (taille de la zone visible)
+      // 1° de latitude ≈ 111km, 1° de longitude ≈ 85km (à latitude 45°)
+      const radiusKm = Math.max(
+        debouncedVisibleRegion.latitudeDelta * 111,
+        debouncedVisibleRegion.longitudeDelta * 85
+      ) / 2;
+
+      // Cap le rayon entre 5km et 100km
+      const cappedRadius = Math.max(5, Math.min(radiusKm * 1.5, 100));
+
+      console.log('📍 Viewport-based loading:', {
+        center: { lat: debouncedVisibleRegion.latitude.toFixed(4), lng: debouncedVisibleRegion.longitude.toFixed(4) },
+        radiusKm: cappedRadius.toFixed(1)
+      });
+
+      searchNearbyChurches(
+        debouncedVisibleRegion.latitude,
+        debouncedVisibleRegion.longitude,
+        cappedRadius
+      );
+    }
+  }, [debouncedVisibleRegion, searchNearbyChurches, initialLoadDone]);
+
+  // Chargement initial basé sur la position utilisateur (ou Paris si géoloc refusée)
+  useEffect(() => {
+    if (!initialLoadDone && location) {
+      // Géolocalisation réussie - charger autour de l'utilisateur
+      console.log('🚀 Initial load: User location', {
+        lat: location.coords.latitude.toFixed(4),
+        lng: location.coords.longitude.toFixed(4)
+      });
+      searchNearbyChurches(location.coords.latitude, location.coords.longitude, 30);
+      setInitialLoadDone(true);
+    }
+  }, [initialLoadDone, location, searchNearbyChurches]);
+
+  // Fallback: Si pas de géoloc après 5 secondes, charger Paris
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (!initialLoadDone && !location) {
+        console.log('⏱️ Geolocation timeout - loading Paris area');
+        searchNearbyChurches(48.8566, 2.3522, 50);
+        setInitialLoadDone(true);
+      }
+    }, 5000);
+
+    return () => clearTimeout(timeoutId);
+  }, [initialLoadDone, location, searchNearbyChurches]);
 
   // Détection du niveau de zoom (Est-ce qu'on voit la France entière ?)
   const isZoomedOut = debouncedVisibleRegion ? debouncedVisibleRegion.latitudeDelta > 1.5 : false;
@@ -199,7 +287,7 @@ export default function MapScreen() {
     }
 
     return [...churchesFiltered, ...eventsFiltered];
-  }, [searchQuery, filterType, filterParking]);
+  }, [allChurches, allEvents, searchQuery, filterType, filterParking]);
 
   // Items dans le RAYON VISUEL (Cercle au centre)
   // Optimisation: On ne prend que ce qui est dans le cercle affiché
@@ -519,17 +607,7 @@ export default function MapScreen() {
           accuracy: Location.Accuracy.Balanced,
         });
         setLocation(currentLocation);
-
-        if (mapRef.current) {
-          timeoutId = setTimeout(() => {
-            mapRef.current?.animateToRegion({
-              latitude: currentLocation.coords.latitude,
-              longitude: currentLocation.coords.longitude,
-              latitudeDelta: 0.5,
-              longitudeDelta: 0.5,
-            }, 1500);
-          }, 1000);
-        }
+        // L'animation se fera via le useEffect dédié qui surveille isMapReady et location
       } catch {
         Alert.alert(
           'Erreur de géolocalisation',
@@ -544,6 +622,25 @@ export default function MapScreen() {
       }
     };
   }, []);
+
+  // Effet pour centrer la carte une fois que la géoloc est trouvée ET que la carte est prête
+  useEffect(() => {
+    if (isMapReady && location && !initialCenteringDone && mapRef.current) {
+      console.log('📍 Initial Map Center -> User Location', {
+        lat: location.coords.latitude,
+        lng: location.coords.longitude
+      });
+
+      mapRef.current.animateToRegion({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        latitudeDelta: 0.15,
+        longitudeDelta: 0.15,
+      }, 1000);
+
+      setInitialCenteringDone(true);
+    }
+  }, [isMapReady, location, initialCenteringDone]);
 
   // Helper pour formatter la date
   const formatDate = (dateString: string) => {
@@ -676,7 +773,7 @@ export default function MapScreen() {
   }, []);
 
   // Afficher un écran de chargement pendant le chargement initial des données
-  if ((churchesLoading || eventsLoading) && apiChurches.length === 0) {
+  if ((churchesLoading || eventsLoading) && loadedChurchesCache.size === 0) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color="#6366F1" />
@@ -688,7 +785,7 @@ export default function MapScreen() {
   }
 
   // Afficher un message d'erreur si le chargement échoue
-  if ((churchesError || eventsError) && apiChurches.length === 0) {
+  if ((churchesError || eventsError) && loadedChurchesCache.size === 0) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', padding: 20 }]}>
         <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#EF4444', marginBottom: 12 }}>
@@ -699,7 +796,7 @@ export default function MapScreen() {
         </Text>
         <Button
           mode="contained"
-          onPress={() => { refreshChurches(); refreshEvents(); }}
+          onPress={() => { searchNearbyChurches(48.8566, 2.3522, 50); refreshEvents(); }}
           buttonColor="#6366F1"
         >
           Réessayer
@@ -715,6 +812,10 @@ export default function MapScreen() {
         ref={mapRef}
         style={styles.map}
         provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
+        onMapReady={() => {
+          console.log('🗺️ Map is ready');
+          setIsMapReady(true);
+        }}
         initialRegion={{
           latitude: 48.8566,
           longitude: 2.3522,
