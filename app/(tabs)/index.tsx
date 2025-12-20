@@ -171,15 +171,15 @@ export default function MapScreen() {
     }
   }, [searchCenter, location, distanceCache]);
 
-  // Compteurs séparés pour églises et événements (basés sur displayedItems)
+  // Compteurs séparés pour églises et événements (basés sur itemsInViewport = TOTAL)
   const churchCount = useMemo(() =>
-    displayedItems.filter(item => item.itemType === 'church').length,
-    [displayedItems]
+    itemsInViewport.filter(item => item.itemType === 'church').length,
+    [itemsInViewport]
   );
 
   const eventCount = useMemo(() =>
-    displayedItems.filter(item => item.itemType === 'event').length,
-    [displayedItems]
+    itemsInViewport.filter(item => item.itemType === 'event').length,
+    [itemsInViewport]
   );
 
   // Actualisation automatique quand la région change
