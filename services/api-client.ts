@@ -21,10 +21,11 @@ const getApiBaseUrl = (): string => {
         return apiUrl;
     }
 
-    // Fallback to localhost (will need to be changed for physical devices)
-    // For Expo: use your machine's IP address instead of localhost
-    console.log('⚠️ Using fallback localhost URL');
-    return 'http://localhost:3000';
+    // HARDCODED: Use the machine's IP address for physical devices
+    // This is the IP configured in app.json extra.apiUrl
+    const fallbackUrl = 'http://192.168.0.62:3000';
+    console.log('⚠️ Using hardcoded fallback URL:', fallbackUrl);
+    return fallbackUrl;
 };
 
 export const API_BASE_URL = getApiBaseUrl();

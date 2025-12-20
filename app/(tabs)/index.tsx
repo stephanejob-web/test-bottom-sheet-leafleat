@@ -7,15 +7,13 @@ import ClusteredMapView from 'react-native-map-clustering';
 import { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Avatar, Button, Card, Dialog, Divider, IconButton, Portal, Searchbar, Surface, Text } from 'react-native-paper';
 import { eventTypeConfig } from '../../constants/eventTypes';
+import { useChurches } from '../../hooks/use-churches';
 import { useDebounce } from '../../hooks/use-debounce';
+import { useEvents } from '../../hooks/use-events';
 import { Church, ChurchWithDistance, Event, EventWithDistance } from '../../types';
 import * as GeoUtils from '../../utils/geo';
 import ListItemCard from '../components/ListItemCard';
 import MapMarkerItem from '../components/MapMarkerItem';
-
-// Import des données mockées
-import mockApiResponse from '../../mockApiData.json';
-import mockEventsData from '../../mockEventsData.json';
 
 // Lazy loading des composants de détail pour optimiser le bundle initial
 const ChurchDetail = React.lazy(() => import('../components/ChurchDetail'));
@@ -34,11 +32,73 @@ const UserLocationMarker = () => (
 );
 
 export default function MapScreen() {
-  // Utiliser les données mockées directement
-  const allChurches: Church[] = mockApiResponse.data.churches as Church[];
-  const allEvents: Event[] = mockEventsData.data.events as Event[];
+  // Récupérer les données depuis l'API
+  const {
+    churches: apiChurches,
+    loading: churchesLoading,
+    error: churchesError,
+    refresh: refreshChurches
+  } = useChurches({ limit: 500 }); // Limite réduite pour un chargement plus rapide
 
+  const {
+    events: apiEvents,
+    loading: eventsLoading,
+    error: eventsError,
+    refresh: refreshEvents
+  } = useEvents({ limit: 1000, upcoming: true });
 
+  // Mapper les données API au format attendu par l'application
+  const allChurches: Church[] = useMemo(() =>
+    apiChurches.map(c => ({
+      id: String(c.id),
+      name: c.name,
+      latitude: c.latitude,
+      longitude: c.longitude,
+      address: '',
+      pastor: '',
+      email: '',
+      phone: '',
+      services: [],
+      description: '',
+    })),
+    [apiChurches]);
+
+  const allEvents: Event[] = useMemo(() =>
+    apiEvents.map(e => ({
+      id: String(e.id),
+      title: e.title,
+      type: e.type,
+      latitude: e.latitude,
+      longitude: e.longitude,
+      churchId: String(e.church_id),
+      churchName: e.church_name || '',
+      date: e.date,
+      description: '',
+      address: '',
+      city: '',
+      country: '',
+      startTime: '',
+      endTime: '',
+      organizer: '',
+      email: '',
+      phone: '',
+      whatsapp: '',
+    })),
+    [apiEvents]);
+
+  // DEBUG: Log API data status
+  useEffect(() => {
+    console.log('🔍 DEBUG - API Data Status:', {
+      churchesLoading,
+      churchesError,
+      apiChurchesCount: apiChurches.length,
+      allChurchesCount: allChurches.length,
+      eventsLoading,
+      eventsError,
+      apiEventsCount: apiEvents.length,
+      allEventsCount: allEvents.length,
+    });
+  }, [churchesLoading, churchesError, apiChurches, allChurches, eventsLoading, eventsError, apiEvents, allEvents]);
 
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -615,7 +675,38 @@ export default function MapScreen() {
     );
   }, []);
 
-  // Les données mockées sont chargées directement, pas besoin d'états de chargement
+  // Afficher un écran de chargement pendant le chargement initial des données
+  if ((churchesLoading || eventsLoading) && apiChurches.length === 0) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#6366F1" />
+        <Text style={{ marginTop: 16, fontSize: 16, color: '#666' }}>
+          Chargement des données...
+        </Text>
+      </View>
+    );
+  }
+
+  // Afficher un message d'erreur si le chargement échoue
+  if ((churchesError || eventsError) && apiChurches.length === 0) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', padding: 20 }]}>
+        <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#EF4444', marginBottom: 12 }}>
+          Erreur de connexion
+        </Text>
+        <Text style={{ fontSize: 14, color: '#666', textAlign: 'center', marginBottom: 20 }}>
+          {churchesError || eventsError}
+        </Text>
+        <Button
+          mode="contained"
+          onPress={() => { refreshChurches(); refreshEvents(); }}
+          buttonColor="#6366F1"
+        >
+          Réessayer
+        </Button>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
