@@ -4,7 +4,7 @@ import { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import ClusteredMapView from 'react-native-map-clustering';
 import * as Location from 'expo-location';
 import * as Calendar from 'expo-calendar';
-import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import BottomSheet, { BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import { Card, Text, Searchbar, Button, Surface, IconButton, Avatar, Divider, Dialog, Portal, Chip } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import mockApiResponse from '../../mockApiData.json';
@@ -14,6 +14,10 @@ import { calculateDistance, calculateDistancesForItems, filterItemsByBoundingBox
 import { cityCoordinates } from '../../constants/cities';
 import { eventTypeConfig } from '../../constants/eventTypes';
 import { useDebounce } from '../../hooks/use-debounce';
+import MapMarkerItem from '../components/MapMarkerItem';
+import ChurchDetail from '../components/ChurchDetail';
+import EventDetail from '../components/EventDetail';
+import ListItemCard from '../components/ListItemCard';
 
 // Chargement des données depuis le mock API
 const allChurches: Church[] = mockApiResponse.data.churches as Church[];
@@ -22,33 +26,11 @@ const allEvents: Event[] = mockEventsData.data.events as Event[];
 // Type pour les éléments de la liste (églises ou événements)
 type ListItem = (ChurchWithDistance & { itemType: 'church' }) | (EventWithDistance & { itemType: 'event' });
 
-// Composant pour l'icône de marker personnalisée avec croix
-const ChurchMarkerIcon = ({ focused }: { focused: boolean }) => (
-  <View style={[styles.markerContainer, focused && styles.markerContainerFocused]}>
-    <MaterialCommunityIcons
-      name="cross"
-      size={24}
-      color="white"
-    />
-  </View>
-);
-
 // Composant pour le marker de la position de l'utilisateur - Style Google Maps
 const UserLocationMarker = () => (
   <View style={styles.userMarkerContainer}>
     <View style={styles.userMarkerAccuracyCircle} />
     <View style={styles.userMarkerDot} />
-  </View>
-);
-
-// Composant pour l'icône de marker des événements (flag vert)
-const EventMarkerIcon = ({ focused }: { focused: boolean }) => (
-  <View style={[styles.eventMarkerContainer, focused && styles.eventMarkerContainerFocused]}>
-    <MaterialCommunityIcons
-      name="calendar-star"
-      size={24}
-      color="white"
-    />
   </View>
 );
 
@@ -76,7 +58,6 @@ export default function MapScreen() {
   const ITEMS_PER_PAGE = 20;
   const [isCalculatingDistances, setIsCalculatingDistances] = useState(false);
   const [distanceCache, setDistanceCache] = useState<Map<string, number>>(new Map());
-  const [showSearchButton, setShowSearchButton] = useState(false);
 
   const mapRef = useRef<any>(null); // ClusteredMapView type
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -169,22 +150,10 @@ export default function MapScreen() {
     return filterItemsByBoundingBox(mapMarkers, debouncedVisibleRegion);
   }, [mapMarkers, debouncedVisibleRegion]);
 
-  // Synchroniser itemsInViewport et gérer affichage du bouton
+  // Synchroniser itemsInViewport
   useEffect(() => {
     setItemsInViewport(itemsInViewportMemo);
-
-    // Afficher bouton si viewport a changé
-    if (validatedRegion && debouncedVisibleRegion) {
-      const regionChanged =
-        Math.abs(validatedRegion.latitude - debouncedVisibleRegion.latitude) > 0.001 ||
-        Math.abs(validatedRegion.longitude - debouncedVisibleRegion.longitude) > 0.001 ||
-        Math.abs(validatedRegion.latitudeDelta - debouncedVisibleRegion.latitudeDelta) > 0.001;
-      setShowSearchButton(regionChanged && itemsInViewportMemo.length > 0);
-    } else if (debouncedVisibleRegion && !validatedRegion) {
-      // Premier chargement ou pas encore de région validée - afficher bouton si items présents
-      setShowSearchButton(itemsInViewportMemo.length > 0);
-    }
-  }, [itemsInViewportMemo, validatedRegion, debouncedVisibleRegion]);
+  }, [itemsInViewportMemo]);
 
   // Reset validation lors du changement de recherche
   useEffect(() => {
@@ -192,7 +161,6 @@ export default function MapScreen() {
       setValidatedRegion(null);
       setDisplayedItems([]);
       setCurrentPage(0);
-      setShowSearchButton(false);
     }
   }, [debouncedSearchQuery]);
 
@@ -214,12 +182,25 @@ export default function MapScreen() {
     [displayedItems]
   );
 
-  // Handler pour le bouton "Rechercher dans cette zone"
-  const handleSearchInArea = useCallback(async () => {
-    if (!debouncedVisibleRegion) return;
+  // Actualisation automatique quand la région change
+  useEffect(() => {
+    if (!debouncedVisibleRegion || itemsInViewport.length === 0) {
+      setDisplayedItems([]);
+      setValidatedRegion(null);
+      return;
+    }
+
+    // Vérifier si la région a vraiment changé de manière significative
+    if (validatedRegion) {
+      const regionChanged =
+        Math.abs(validatedRegion.latitude - debouncedVisibleRegion.latitude) > 0.001 ||
+        Math.abs(validatedRegion.longitude - debouncedVisibleRegion.longitude) > 0.001 ||
+        Math.abs(validatedRegion.latitudeDelta - debouncedVisibleRegion.latitudeDelta) > 0.001;
+
+      if (!regionChanged) return; // Pas de changement significatif
+    }
 
     setIsCalculatingDistances(true);
-    setShowSearchButton(false);
     setValidatedRegion(debouncedVisibleRegion);
     setCurrentPage(0);
 
@@ -231,7 +212,7 @@ export default function MapScreen() {
 
     // Calculer distance UNIQUEMENT pour les 20 premiers items
     const itemsToCalculate = itemsInViewport.slice(0, ITEMS_PER_PAGE);
-    const cacheKeyPrefix = `${center.latitude.toFixed(4)}-${center.longitude.toFixed(4)}`;
+    const cacheKeyPrefix = `${center.latitude.toFixed(3)}-${center.longitude.toFixed(3)}`;
 
     const itemsWithDistance = calculateDistancesForItems(
       itemsToCalculate,
@@ -244,9 +225,11 @@ export default function MapScreen() {
     setDisplayedItems(itemsWithDistance);
     setIsCalculatingDistances(false);
 
-    // Expand bottom sheet pour montrer les résultats
-    bottomSheetRef.current?.snapToIndex(1);
-  }, [debouncedVisibleRegion, itemsInViewport, searchCenter, location, distanceCache]);
+    // Expand bottom sheet pour montrer les résultats (uniquement si pas déjà ouvert)
+    if (bottomSheetRef.current) {
+      bottomSheetRef.current.snapToIndex(1);
+    }
+  }, [debouncedVisibleRegion, itemsInViewport, searchCenter, location, distanceCache, validatedRegion]);
 
   // Handler pour pagination ("Charger plus")
   const handleLoadMore = useCallback(() => {
@@ -266,7 +249,7 @@ export default function MapScreen() {
       longitude: location.coords.longitude
     } : validatedRegion);
 
-    const cacheKeyPrefix = `${center.latitude.toFixed(4)}-${center.longitude.toFixed(4)}`;
+    const cacheKeyPrefix = `${center.latitude.toFixed(3)}-${center.longitude.toFixed(3)}`;
 
     const batchWithDistance = calculateDistancesForItems(
       nextBatch,
@@ -526,22 +509,13 @@ export default function MapScreen() {
         )}
 
         {mapMarkers.map((item, index) => (
-          <Marker
+          <MapMarkerItem
             key={`${item.itemType}-${item.id}`}
-            coordinate={{
-              latitude: item.latitude,
-              longitude: item.longitude,
-            }}
-            title={item.itemType === 'church' ? item.name : item.title}
-            description={item.itemType === 'church' ? item.address : item.city}
-            onPress={() => handleItemPress(item)}
-          >
-            {item.itemType === 'church' ? (
-              <ChurchMarkerIcon focused={focusedItemIndex === index} />
-            ) : (
-              <EventMarkerIcon focused={focusedItemIndex === index} />
-            )}
-          </Marker>
+            item={item}
+            index={index}
+            focused={focusedItemIndex === index}
+            onPress={handleItemPress}
+          />
         ))}
       </ClusteredMapView>
 
@@ -561,27 +535,13 @@ export default function MapScreen() {
         />
       </Surface>
 
-      {/* Bouton "Rechercher dans cette zone" - Apparaît quand la map bouge */}
-      {showSearchButton && (
-        <Surface style={styles.searchInAreaButton} elevation={4}>
-          <Button
-            mode="contained"
-            icon="magnify"
-            onPress={handleSearchInArea}
-            loading={isCalculatingDistances}
-            disabled={isCalculatingDistances}
-            style={styles.searchButton}
-            labelStyle={styles.searchButtonLabel}
-          >
-            {isCalculatingDistances ? 'Chargement...' : 'Rechercher dans cette zone'}
-          </Button>
-          {itemsInViewport.length > 0 && !isCalculatingDistances && (
-            <View style={styles.searchButtonBadge}>
-              <Text style={styles.searchButtonBadgeText}>
-                {itemsInViewport.length}
-              </Text>
-            </View>
-          )}
+      {/* Indicateur de chargement discret */}
+      {isCalculatingDistances && (
+        <Surface style={styles.loadingIndicatorCompact} elevation={2}>
+          <ActivityIndicator size="small" color="#6366F1" />
+          <Text variant="bodySmall" style={styles.loadingTextCompact}>
+            Actualisation...
+          </Text>
         </Surface>
       )}
 
@@ -701,388 +661,109 @@ export default function MapScreen() {
         )}
 
         {/* Contenu */}
-        <BottomSheetScrollView style={styles.bottomSheetContent}>
-          {selectedItem ? (
-            selectedItem.itemType === 'church' ? (
-              // Vue détaillée église
-              <View style={styles.detailsContainerModern}>
-                <View style={styles.quickActionsContainer}>
-                  <Button
-                    mode="contained"
-                    icon="phone"
-                    style={styles.quickActionButton}
-                    labelStyle={styles.quickActionLabel}
-                    onPress={() => Linking.openURL(`tel:${selectedItem.phone}`)}
-                  >
-                    Appeler
-                  </Button>
-                  <Button
-                    mode="contained"
-                    icon="email"
-                    style={styles.quickActionButton}
-                    labelStyle={styles.quickActionLabel}
-                    onPress={() => Linking.openURL(`mailto:${selectedItem.email}`)}
-                  >
-                    Email
-                  </Button>
-                  <Button
-                    mode="contained"
-                    icon="directions"
-                    style={[styles.quickActionButton, styles.quickActionButtonPrimary]}
-                    labelStyle={styles.quickActionLabel}
-                    onPress={() => handleDirections(selectedItem)}
-                  >
-                    Itinéraire
-                  </Button>
-                </View>
-
-                <Card mode="outlined" style={styles.detailCard}>
-                  <Card.Content>
-                    <View style={styles.detailCardHeader}>
-                      <Avatar.Icon icon="information" size={32} style={styles.detailCardIcon} />
-                      <Text variant="titleMedium" style={styles.detailCardTitle}>À propos</Text>
-                    </View>
-                    <Text variant="bodyMedium" style={styles.detailCardText}>
-                      {selectedItem.description}
-                    </Text>
-                  </Card.Content>
-                </Card>
-
-                <Card mode="outlined" style={styles.detailCard}>
-                  <Card.Content>
-                    <View style={styles.detailCardHeader}>
-                      <Avatar.Icon icon="map-marker" size={32} style={styles.detailCardIcon} />
-                      <Text variant="titleMedium" style={styles.detailCardTitle}>Adresse</Text>
-                    </View>
-                    <Text variant="bodyMedium" style={styles.detailCardText}>
-                      {selectedItem.address}
-                    </Text>
-                  </Card.Content>
-                </Card>
-
-                <Card mode="outlined" style={styles.detailCard}>
-                  <Card.Content>
-                    <View style={styles.detailCardHeader}>
-                      <Avatar.Icon icon="account-tie" size={32} style={styles.detailCardIcon} />
-                      <View style={styles.detailCardHeaderText}>
-                        <Text variant="labelSmall" style={styles.detailCardLabel}>Pasteur</Text>
-                        <Text variant="titleMedium" style={styles.detailCardTitle}>{selectedItem.pastor}</Text>
-                      </View>
-                    </View>
-                  </Card.Content>
-                </Card>
-
-                <Card mode="outlined" style={styles.detailCard}>
-                  <Card.Content>
-                    <View style={styles.detailCardHeader}>
-                      <Avatar.Icon icon="phone" size={32} style={styles.detailCardIcon} />
-                      <Text variant="titleMedium" style={styles.detailCardTitle}>Contact</Text>
-                    </View>
-                    <View style={styles.contactInfoContainer}>
-                      <View style={styles.contactInfoRow}>
-                        <Text variant="bodyMedium" style={styles.contactInfoLabel}>Téléphone :</Text>
-                        <Text variant="bodyMedium" style={styles.contactInfoValue}>{selectedItem.phone}</Text>
-                      </View>
-                      <View style={styles.contactInfoRow}>
-                        <Text variant="bodyMedium" style={styles.contactInfoLabel}>Email :</Text>
-                        <Text variant="bodyMedium" style={styles.contactInfoValue}>{selectedItem.email}</Text>
-                      </View>
-                    </View>
-                  </Card.Content>
-                </Card>
-
-                <Card mode="outlined" style={styles.detailCard}>
-                  <Card.Content>
-                    <View style={styles.detailCardHeader}>
-                      <Avatar.Icon icon="calendar-clock" size={32} style={styles.detailCardIcon} />
-                      <Text variant="titleMedium" style={styles.detailCardTitle}>Horaires des cultes</Text>
-                    </View>
-                    <View style={styles.servicesContainer}>
-                      {selectedItem.services.map((service, index) => (
-                        <Chip
-                          key={index}
-                          icon="clock-outline"
-                          mode="flat"
-                          style={styles.serviceChipModern}
-                          textStyle={styles.serviceChipText}
-                        >
-                          {service}
-                        </Chip>
-                      ))}
-                    </View>
-                  </Card.Content>
-                </Card>
-              </View>
-            ) : (
-              // Vue détaillée événement
-              <View style={styles.detailsContainerModern}>
-                <View style={styles.quickActionsContainer}>
-                  <Button
-                    mode="contained"
-                    icon="phone"
-                    style={[styles.quickActionButton, { backgroundColor: '#3B82F6' }]}
-                    labelStyle={styles.quickActionLabel}
-                    onPress={() => Linking.openURL(`tel:${selectedItem.phone}`)}
-                  >
-                    Appeler
-                  </Button>
-                  <Button
-                    mode="contained"
-                    icon="whatsapp"
-                    style={[styles.quickActionButton, { backgroundColor: '#25D366' }]}
-                    labelStyle={styles.quickActionLabel}
-                    onPress={() => Linking.openURL(selectedItem.whatsapp)}
-                  >
-                    WhatsApp
-                  </Button>
-                  <Button
-                    mode="contained"
-                    icon="directions"
-                    style={[styles.quickActionButton, { backgroundColor: '#6366F1' }]}
-                    labelStyle={styles.quickActionLabel}
-                    onPress={() => handleDirections(selectedItem)}
-                  >
-                    Itinéraire
-                  </Button>
-                </View>
-
-                <Card mode="outlined" style={styles.detailCard}>
-                  <Card.Content>
-                    <View style={styles.detailCardHeader}>
-                      <Avatar.Icon icon="calendar" size={32} style={styles.detailCardIcon} />
-                      <Text variant="titleMedium" style={styles.detailCardTitle}>Date et heure</Text>
-                    </View>
-                    <Text variant="bodyMedium" style={styles.detailCardText}>
-                      {formatDate(selectedItem.date)} • {selectedItem.startTime} - {selectedItem.endTime}
-                    </Text>
-                  </Card.Content>
-                </Card>
-
-                <Card mode="outlined" style={styles.detailCard}>
-                  <Card.Content>
-                    <View style={styles.detailCardHeader}>
-                      <Avatar.Icon icon="information" size={32} style={styles.detailCardIcon} />
-                      <Text variant="titleMedium" style={styles.detailCardTitle}>Description</Text>
-                    </View>
-                    <Text variant="bodyMedium" style={styles.detailCardText}>
-                      {selectedItem.description}
-                    </Text>
-                  </Card.Content>
-                </Card>
-
-                <Card mode="outlined" style={styles.detailCard}>
-                  <Card.Content>
-                    <View style={styles.detailCardHeader}>
-                      <Avatar.Icon icon="church" size={32} style={styles.detailCardIcon} />
-                      <Text variant="titleMedium" style={styles.detailCardTitle}>Église organisatrice</Text>
-                    </View>
-                    <Text variant="bodyMedium" style={styles.detailCardText}>
-                      {selectedItem.churchName}
-                    </Text>
-                  </Card.Content>
-                </Card>
-
-                <Card mode="outlined" style={styles.detailCard}>
-                  <Card.Content>
-                    <View style={styles.detailCardHeader}>
-                      <Avatar.Icon icon="map-marker" size={32} style={styles.detailCardIcon} />
-                      <Text variant="titleMedium" style={styles.detailCardTitle}>Lieu</Text>
-                    </View>
-                    <Text variant="bodyMedium" style={styles.detailCardText}>
-                      {selectedItem.address}
-                    </Text>
-                    <Text variant="bodySmall" style={[styles.detailCardText, { marginTop: 4 }]}>
-                      {selectedItem.city}, {selectedItem.country}
-                    </Text>
-                  </Card.Content>
-                </Card>
-
-                <Card mode="outlined" style={styles.detailCard}>
-                  <Card.Content>
-                    <View style={styles.detailCardHeader}>
-                      <Avatar.Icon icon="account" size={32} style={styles.detailCardIcon} />
-                      <Text variant="titleMedium" style={styles.detailCardTitle}>Organisateur</Text>
-                    </View>
-                    <Text variant="bodyMedium" style={styles.detailCardText}>
-                      {selectedItem.organizer}
-                    </Text>
-                  </Card.Content>
-                </Card>
-
-                <Card mode="outlined" style={styles.detailCard}>
-                  <Card.Content>
-                    <View style={styles.detailCardHeader}>
-                      <Avatar.Icon icon="email" size={32} style={styles.detailCardIcon} />
-                      <Text variant="titleMedium" style={styles.detailCardTitle}>Contact</Text>
-                    </View>
-                    <View style={styles.contactInfoContainer}>
-                      <View style={styles.contactInfoRow}>
-                        <Text variant="bodyMedium" style={styles.contactInfoLabel}>Email :</Text>
-                        <Text variant="bodyMedium" style={styles.contactInfoValue}>{selectedItem.email}</Text>
-                      </View>
-                      <View style={styles.contactInfoRow}>
-                        <Text variant="bodyMedium" style={styles.contactInfoLabel}>Téléphone :</Text>
-                        <Text variant="bodyMedium" style={styles.contactInfoValue}>{selectedItem.phone}</Text>
-                      </View>
-                    </View>
-                  </Card.Content>
-                </Card>
-
-                <Button
-                  mode="contained"
-                  icon="calendar-plus"
-                  onPress={() => addToCalendar(selectedItem)}
-                  style={styles.addToCalendarButton}
-                  labelStyle={styles.addToCalendarLabel}
-                >
-                  Ajouter au calendrier
-                </Button>
-              </View>
-            )
-          ) : (
-            // Liste verticale style Google Maps
-            <View style={styles.churchListVertical}>
-              {/* État vide initial - Aucune région validée */}
-              {!validatedRegion && displayedItems.length === 0 && (
-                <View style={styles.emptyStateContainer}>
-                  <Avatar.Icon
-                    icon="map-search"
-                    size={80}
-                    style={styles.emptyStateIcon}
-                  />
-                  <Text variant="headlineSmall" style={styles.emptyStateTitle}>
-                    Rechercher dans cette zone
-                  </Text>
-                  <Text variant="bodyMedium" style={styles.emptyStateText}>
-                    Déplacez la carte vers la zone souhaitée puis cliquez sur "Rechercher dans cette zone"
-                  </Text>
-                </View>
-              )}
-
-              {/* Aucun résultat dans la région validée */}
-              {validatedRegion && displayedItems.length === 0 && !isCalculatingDistances && (
-                <View style={styles.emptyStateContainer}>
-                  <Avatar.Icon
-                    icon="map-marker-off"
-                    size={80}
-                    style={styles.emptyStateIcon}
-                  />
-                  <Text variant="headlineSmall" style={styles.emptyStateTitle}>
-                    Aucun résultat
-                  </Text>
-                  <Text variant="bodyMedium" style={styles.emptyStateText}>
-                    Aucune église ou événement trouvé dans cette zone. Essayez d'élargir la zone de recherche.
-                  </Text>
-                </View>
-              )}
-
-              {/* Loading - Calcul des distances */}
-              {isCalculatingDistances && (
-                <View style={styles.calculatingContainer}>
-                  <ActivityIndicator size="large" color="#6366F1" />
-                  <Text variant="bodyLarge" style={styles.calculatingText}>
-                    Calcul des distances...
-                  </Text>
-                </View>
-              )}
-
-              {/* Liste des items AVEC distance calculée */}
-              {displayedItems.map((item, index) => (
-                <Card
-                  key={`${item.itemType}-${item.id}`}
-                  style={[
-                    styles.churchCardCompact,
-                    focusedItemIndex === index && styles.churchCardCompactFocused,
-                  ]}
-                  onPress={() => {
-                    setFocusedItemIndex(index);
-                    animateToItem(item);
-                  }}
-                  mode="elevated"
-                  elevation={focusedItemIndex === index ? 4 : 1}
-                >
-                  <View style={styles.cardCompactContent}>
-                    <View style={styles.cardCompactMain}>
-                      <Avatar.Icon
-                        icon={item.itemType === 'church' ? "cross" : "calendar-star"}
-                        size={48}
-                        style={[
-                          styles.cardCompactAvatar,
-                          item.itemType === 'church' && { backgroundColor: '#EF4444' },
-                          item.itemType === 'event' && { backgroundColor: '#10B981' },
-                          focusedItemIndex === index && styles.cardCompactAvatarFocused,
-                        ]}
-                      />
-
-                      <View style={styles.cardCompactInfo}>
-                        <Text
-                          variant="titleMedium"
-                          style={styles.cardCompactTitle}
-                          numberOfLines={1}
-                        >
-                          {item.itemType === 'church' ? item.name : item.title}
-                        </Text>
-
-                        {/* Distance toujours affichée pour displayedItems */}
-                        <View style={styles.cardCompactMeta}>
-                          <View style={styles.distanceBadge}>
-                            <Text style={styles.distanceBadgeText}>
-                              {item.distance.toFixed(1)} km
-                            </Text>
-                          </View>
-                        </View>
-
-                        <Text
-                          variant="bodySmall"
-                          style={styles.cardCompactAddress}
-                          numberOfLines={2}
-                        >
-                          {item.itemType === 'church' ? item.address : `${item.city} • ${formatDate(item.date)}`}
-                        </Text>
-                      </View>
-                    </View>
-
-                    <View style={styles.cardCompactActions}>
-                      <IconButton
-                        icon="information-outline"
-                        size={20}
-                        iconColor="#6366F1"
-                        containerColor="#EEF2FF"
-                        onPress={() => handleItemPress(item)}
-                        style={styles.cardCompactActionButton}
-                      />
-                      <Button
-                        mode="contained"
-                        icon="directions"
-                        compact
-                        onPress={() => handleDirections(item)}
-                        style={styles.cardCompactDirectionsButton}
-                        labelStyle={styles.cardCompactDirectionsLabel}
-                      >
-                        Itinéraire
-                      </Button>
-                    </View>
-                  </View>
-                </Card>
-              ))}
-
-              {/* Bouton "Charger plus" pour pagination */}
-              {displayedItems.length > 0 &&
-               displayedItems.length < itemsInViewport.length &&
-               !isCalculatingDistances && (
-                <Button
-                  mode="outlined"
-                  onPress={handleLoadMore}
-                  style={styles.loadMoreButton}
-                  labelStyle={styles.loadMoreLabel}
-                  icon="chevron-down"
-                >
-                  Charger plus ({itemsInViewport.length - displayedItems.length} restants)
-                </Button>
-              )}
-            </View>
+        <BottomSheetFlatList
+          data={selectedItem ? [] : displayedItems}
+          keyExtractor={(item) => `${item.itemType}-${item.id}`}
+          renderItem={({ item, index }) => (
+            <ListItemCard
+              item={item}
+              index={index}
+              focused={focusedItemIndex === index}
+              onPress={handleItemPress}
+              onDirections={handleDirections}
+              onAnimate={(item, index) => {
+                setFocusedItemIndex(index);
+                animateToItem(item);
+              }}
+              formatDate={formatDate}
+            />
           )}
-        </BottomSheetScrollView>
+          ListHeaderComponent={
+            selectedItem ? (
+              // Vue détaillée église ou événement
+              selectedItem.itemType === 'church' ? (
+                <ChurchDetail
+                  item={selectedItem}
+                  onDirections={handleDirections}
+                />
+              ) : (
+                <EventDetail
+                  item={selectedItem}
+                  onDirections={handleDirections}
+                  formatDate={formatDate}
+                />
+              )
+            ) : (
+              // États vides et loading
+              <>
+                {/* État vide initial - Aucune région validée */}
+                {!validatedRegion && displayedItems.length === 0 && (
+                  <View style={styles.emptyStateContainer}>
+                    <Avatar.Icon
+                      icon="map-search"
+                      size={80}
+                      style={styles.emptyStateIcon}
+                    />
+                    <Text variant="headlineSmall" style={styles.emptyStateTitle}>
+                      Explorez la carte
+                    </Text>
+                    <Text variant="bodyMedium" style={styles.emptyStateText}>
+                      Déplacez la carte pour découvrir les églises et événements autour de vous. La liste s'actualisera automatiquement.
+                    </Text>
+                  </View>
+                )}
+
+                {/* Aucun résultat dans la région validée */}
+                {validatedRegion && displayedItems.length === 0 && !isCalculatingDistances && (
+                  <View style={styles.emptyStateContainer}>
+                    <Avatar.Icon
+                      icon="map-marker-off"
+                      size={80}
+                      style={styles.emptyStateIcon}
+                    />
+                    <Text variant="headlineSmall" style={styles.emptyStateTitle}>
+                      Aucun résultat
+                    </Text>
+                    <Text variant="bodyMedium" style={styles.emptyStateText}>
+                      Aucune église ou événement trouvé dans cette zone. Essayez d'élargir la zone de recherche.
+                    </Text>
+                  </View>
+                )}
+
+                {/* Loading - Calcul des distances */}
+                {isCalculatingDistances && (
+                  <View style={styles.calculatingContainer}>
+                    <ActivityIndicator size="large" color="#6366F1" />
+                    <Text variant="bodyLarge" style={styles.calculatingText}>
+                      Calcul des distances...
+                    </Text>
+                  </View>
+                )}
+              </>
+            )
+          }
+          ListFooterComponent={
+            displayedItems.length > 0 &&
+            displayedItems.length < itemsInViewport.length &&
+            !isCalculatingDistances ? (
+              <Button
+                mode="outlined"
+                onPress={handleLoadMore}
+                style={styles.loadMoreButton}
+                labelStyle={styles.loadMoreLabel}
+                icon="chevron-down"
+              >
+                Charger plus ({itemsInViewport.length - displayedItems.length} restants)
+              </Button>
+            ) : null
+          }
+          contentContainerStyle={styles.bottomSheetContent}
+          showsVerticalScrollIndicator={false}
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          windowSize={5}
+          removeClippedSubviews={true}
+        />
       </BottomSheet>
 
       {/* Dialog navigation */}
@@ -1210,82 +891,6 @@ const styles = StyleSheet.create({
   bottomSheetContent: {
     paddingTop: 8,
     paddingBottom: 40,
-  },
-  churchListVertical: {
-    gap: 12,
-    paddingHorizontal: 16,
-  },
-  churchCardCompact: {
-    marginBottom: 12,
-    borderRadius: 12,
-    backgroundColor: 'white',
-  },
-  churchCardCompactFocused: {
-    borderWidth: 2,
-    borderColor: '#6366F1',
-    backgroundColor: '#F8FAFC',
-  },
-  cardCompactContent: {
-    padding: 12,
-  },
-  cardCompactMain: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 12,
-  },
-  cardCompactAvatar: {
-    backgroundColor: '#F1F5F9',
-  },
-  cardCompactAvatarFocused: {
-    backgroundColor: '#6366F1',
-  },
-  cardCompactInfo: {
-    flex: 1,
-    gap: 6,
-  },
-  cardCompactTitle: {
-    fontWeight: '600',
-    color: '#1E293B',
-  },
-  cardCompactMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  cardCompactAddress: {
-    color: '#64748B',
-    lineHeight: 18,
-  },
-  cardCompactActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    gap: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
-  },
-  cardCompactActionButton: {
-    margin: 0,
-  },
-  cardCompactDirectionsButton: {
-    backgroundColor: '#6366F1',
-  },
-  cardCompactDirectionsLabel: {
-    fontSize: 13,
-  },
-  distanceBadge: {
-    backgroundColor: '#64748B',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    alignSelf: 'flex-start',
-  },
-  distanceBadgeText: {
-    color: 'white',
-    fontSize: 11,
-    fontWeight: '600',
-    letterSpacing: 0.3,
   },
   recenterButton: {
     position: 'absolute',
@@ -1415,104 +1020,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-  quickActionsContainer: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 8,
-  },
-  quickActionButton: {
-    flex: 1,
-    borderRadius: 12,
-  },
-  quickActionButtonPrimary: {
-    backgroundColor: '#6366F1',
-  },
-  quickActionLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: 'white',
-  },
-  detailCard: {
-    marginBottom: 12,
-    borderRadius: 12,
-    borderColor: '#E2E8F0',
-  },
-  detailCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 12,
-  },
-  detailCardHeaderText: {
-    flex: 1,
-  },
-  detailCardIcon: {
-    backgroundColor: '#EEF2FF',
-  },
-  detailCardTitle: {
-    fontWeight: '600',
-    color: '#1E293B',
-  },
-  detailCardLabel: {
-    color: '#64748B',
-    marginBottom: 4,
-  },
-  detailCardText: {
-    color: '#475569',
-    lineHeight: 22,
-  },
-  contactInfoContainer: {
-    gap: 12,
-    marginTop: 8,
-  },
-  contactInfoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  contactInfoLabel: {
-    color: '#64748B',
-    fontWeight: '500',
-  },
-  contactInfoValue: {
-    color: '#1E293B',
-    fontWeight: '600',
-  },
-  servicesContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 8,
-  },
-  serviceChipModern: {
-    backgroundColor: '#EEF2FF',
-  },
-  serviceChipText: {
-    color: '#6366F1',
-    fontWeight: '500',
-  },
-  markerContainer: {
-    backgroundColor: '#EF4444',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 3,
-    borderColor: 'white',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
-    elevation: 5,
-  },
-  markerContainerFocused: {
-    backgroundColor: '#6366F1',
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    transform: [{ scale: 1.1 }],
-  },
   userMarkerContainer: {
     width: 50,
     height: 50,
@@ -1540,28 +1047,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 3,
     elevation: 6,
-  },
-  eventMarkerContainer: {
-    backgroundColor: '#10B981',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 3,
-    borderColor: 'white',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
-    elevation: 5,
-  },
-  eventMarkerContainerFocused: {
-    backgroundColor: '#059669',
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    transform: [{ scale: 1.1 }],
   },
   navigationDialog: {
     maxWidth: 400,
@@ -1623,16 +1108,6 @@ const styles = StyleSheet.create({
   },
   appName: {
     fontWeight: '500',
-  },
-  addToCalendarButton: {
-    marginTop: 4,
-    marginBottom: 20,
-    backgroundColor: '#10B981',
-    borderRadius: 12,
-  },
-  addToCalendarLabel: {
-    fontSize: 14,
-    fontWeight: '600',
   },
   radiusSliderContainer: {
     marginTop: 16,
@@ -1727,44 +1202,31 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     fontSize: 11,
   },
-  // Styles pour le bouton "Rechercher dans cette zone"
-  searchInAreaButton: {
+  // Indicateur de chargement discret
+  loadingIndicatorCompact: {
     position: 'absolute',
     top: Platform.OS === 'ios' ? 120 : (StatusBar.currentHeight || 0) + 70,
-    left: 16,
-    right: 16,
-    zIndex: 10,
-    borderRadius: 16,
-    backgroundColor: 'white',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  searchButton: {
-    backgroundColor: '#6366F1',
-    borderRadius: 12,
-  },
-  searchButtonLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    letterSpacing: 0.3,
-  },
-  searchButtonBadge: {
-    position: 'absolute',
-    top: -8,
-    right: -8,
-    backgroundColor: '#EF4444',
-    borderRadius: 12,
-    minWidth: 24,
-    height: 24,
-    justifyContent: 'center',
+    alignSelf: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'white',
+    gap: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(99, 102, 241, 0.2)',
+    shadowColor: '#6366F1',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+    zIndex: 10,
   },
-  searchButtonBadgeText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: '700',
+  loadingTextCompact: {
+    color: '#6366F1',
+    fontWeight: '600',
+    fontSize: 13,
   },
   // Styles pour les états vides
   emptyStateContainer: {
