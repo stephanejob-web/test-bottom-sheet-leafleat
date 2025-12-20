@@ -463,6 +463,65 @@ export default function MapScreen() {
     }
   }, []);
 
+  // Custom cluster renderer avec niveaux de regroupement visuels
+  const renderCluster = useCallback((cluster: any) => {
+    const { id, geometry, onPress, properties } = cluster;
+    const points = properties.point_count;
+
+    // Déterminer la taille et couleur selon le nombre de points
+    let size = 50;
+    let backgroundColor = '#6366F1'; // Bleu par défaut (1-10)
+    let fontSize = 14;
+
+    if (points > 500) {
+      size = 80;
+      backgroundColor = '#DC2626'; // Rouge foncé (500+)
+      fontSize = 20;
+    } else if (points > 100) {
+      size = 70;
+      backgroundColor = '#EF4444'; // Rouge (100-500)
+      fontSize = 18;
+    } else if (points > 50) {
+      size = 60;
+      backgroundColor = '#EC4899'; // Rose (50-100)
+      fontSize = 16;
+    } else if (points > 20) {
+      size = 55;
+      backgroundColor = '#8B5CF6'; // Violet (20-50)
+      fontSize = 15;
+    } else if (points > 10) {
+      size = 52;
+      backgroundColor = '#6366F1'; // Bleu (10-20)
+      fontSize = 14;
+    }
+
+    return (
+      <Marker
+        key={`cluster-${id}`}
+        coordinate={{
+          latitude: geometry.coordinates[1],
+          longitude: geometry.coordinates[0],
+        }}
+        onPress={onPress}
+        tracksViewChanges={false}
+      >
+        <View style={[styles.clusterContainer, { width: size + 10, height: size + 10 }]}>
+          <View style={[
+            styles.clusterInner,
+            {
+              width: size,
+              height: size,
+              borderRadius: size / 2,
+              backgroundColor
+            }
+          ]}>
+            <Text style={[styles.clusterText, { fontSize }]}>{points}</Text>
+          </View>
+        </View>
+      </Marker>
+    );
+  }, []);
+
   return (
     <View style={styles.container}>
       {/* Map avec Clustering */}
@@ -479,22 +538,31 @@ export default function MapScreen() {
         showsUserLocation={true}
         showsMyLocationButton={true}
         onRegionChangeComplete={handleRegionChangeComplete}
-        // Configuration du clustering
-        clusterColor="#6366F1"
-        clusterTextColor="#FFFFFF"
-        clusterFontFamily="System"
-        radius={50}
-        maxZoom={20}
-        minZoom={0}
+        // Configuration du clustering AGGRESSIF pour éviter l'affichage de tous les markers
+        renderCluster={renderCluster}
+        radius={120} // TRÈS augmenté pour créer de gros clusters
+        maxZoom={20} // Clustering jusqu'au zoom maximum
+        minZoom={1}
+        minPoints={2} // Minimum 2 points pour créer un cluster
         extent={512}
-        nodeSize={64}
-        // Clustering toujours actif
+        nodeSize={64} // Réduit pour regrouper plus agressivement
+        // Clustering TOUJOURS actif (même très zoomé)
         clustering={true}
-        // Animation fluide
+        // Prevent individual markers until very zoomed in
+        clusteringEnabled={true}
+        preserveClusterPressBehavior={true}
+        // Animation rapide
         animationEnabled={true}
         layoutAnimationConf={{
-          duration: 200,
+          duration: 100,
         }}
+        // Spirale pour clusters denses
+        spiralEnabled={true}
+        // Options supercluster pour contrôle fin
+        superClusterRef={undefined}
+        edgePadding={{ top: 50, right: 50, bottom: 50, left: 50 }}
+        // Options de zoom pour clustering progressif
+        tracksViewChanges={false} // Optimisation rendering
       >
         {location && (
           <Marker
@@ -508,7 +576,8 @@ export default function MapScreen() {
           </Marker>
         )}
 
-        {mapMarkers.map((item, index) => (
+        {/* OPTIMISATION: Afficher uniquement les markers dans le viewport */}
+        {itemsInViewport.map((item, index) => (
           <MapMarkerItem
             key={`${item.itemType}-${item.id}`}
             item={item}
@@ -1269,5 +1338,28 @@ const styles = StyleSheet.create({
   loadMoreLabel: {
     color: '#6366F1',
     fontWeight: '600',
+  },
+  // Styles pour les clusters personnalisés avec tailles dynamiques
+  clusterContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  clusterInner: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 4,
+    borderColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.4,
+    shadowRadius: 5,
+    elevation: 8,
+  },
+  clusterText: {
+    color: 'white',
+    fontWeight: '900',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
 });
