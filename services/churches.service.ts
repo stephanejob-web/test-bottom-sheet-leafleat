@@ -46,14 +46,17 @@ export class ChurchesService {
         radius?: number;
     }): Promise<ChurchListItem[]> {
         const cacheKey = `churches:list:${JSON.stringify(params || {})}`;
+        console.log('🔑 Cache key:', cacheKey);
 
         return cacheService.getOrFetch(
             cacheKey,
             async () => {
+                console.log('📡 Calling API: /api/churches with params:', params);
                 const response = await apiClient.get<ApiResponse<ChurchListItem[]>>(
                     '/api/churches',
                     params
                 );
+                console.log('📦 API Response:', response);
                 return response.data || [];
             },
             CACHE_TTL

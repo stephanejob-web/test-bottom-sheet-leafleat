@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ApiError } from '../services/api-client';
 import { SearchResult, searchService } from '../services/search.service';
 import { useDebounce } from './use-debounce';
@@ -50,9 +50,9 @@ export function useSearch(debounceMs: number = 300): UseSearchResult {
     }, []);
 
     // Effect to trigger search when debounced query changes
-    useState(() => {
+    useEffect(() => {
         performSearch(debouncedQuery);
-    });
+    }, [debouncedQuery, performSearch]);
 
     const search = useCallback((newQuery: string) => {
         setQuery(newQuery);
@@ -122,9 +122,9 @@ export function useSearchChurches(debounceMs: number = 300): UseSearchChurchesRe
         }
     }, []);
 
-    useState(() => {
+    useEffect(() => {
         performSearch(debouncedQuery);
-    });
+    }, [debouncedQuery, performSearch]);
 
     const search = useCallback((newQuery: string) => {
         setQuery(newQuery);
@@ -194,9 +194,9 @@ export function useSearchEvents(debounceMs: number = 300): UseSearchEventsResult
         }
     }, []);
 
-    useState(() => {
+    useEffect(() => {
         performSearch(debouncedQuery);
-    });
+    }, [debouncedQuery, performSearch]);
 
     const search = useCallback((newQuery: string) => {
         setQuery(newQuery);

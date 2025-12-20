@@ -11,17 +11,26 @@ const getApiBaseUrl = (): string => {
     const expoConfig = Constants.expoConfig;
     const apiUrl = expoConfig?.extra?.apiUrl;
 
+    console.log('🔧 API Configuration:', {
+        expoConfig: expoConfig?.extra,
+        apiUrl,
+    });
+
     if (apiUrl) {
+        console.log('✅ Using API URL from config:', apiUrl);
         return apiUrl;
     }
 
     // Fallback to localhost (will need to be changed for physical devices)
     // For Expo: use your machine's IP address instead of localhost
+    console.log('⚠️ Using fallback localhost URL');
     return 'http://localhost:3000';
 };
 
 export const API_BASE_URL = getApiBaseUrl();
 export const API_TIMEOUT = 10000; // 10 seconds
+
+console.log('🌐 API Client initialized with base URL:', API_BASE_URL);
 
 interface RequestOptions extends RequestInit {
     timeout?: number;

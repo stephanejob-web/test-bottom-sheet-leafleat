@@ -26,17 +26,19 @@ export function useChurches(params?: {
 
     const fetchChurches = useCallback(async () => {
         try {
+            console.log('🏛️ Fetching churches with params:', params);
             setLoading(true);
             setError(null);
             const data = await churchesService.getChurches(params);
+            console.log('✅ Churches loaded:', data.length, 'churches');
             setChurches(data);
         } catch (err) {
+            console.error('❌ Error fetching churches:', err);
             if (err instanceof ApiError) {
                 setError(err.message);
             } else {
                 setError('Failed to load churches');
             }
-            console.error('Error fetching churches:', err);
         } finally {
             setLoading(false);
         }
