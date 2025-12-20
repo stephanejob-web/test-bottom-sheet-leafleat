@@ -62,44 +62,44 @@ const EventDetail: React.FC<EventDetailProps> = ({ item, onDirections, formatDat
       {/* En-tête avec Titre et Date */}
       <View style={styles.headerContainer}>
         <View style={styles.dateBadge}>
-          <MaterialCommunityIcons name="calendar-month" size={16} color="#6366F1" />
+          <MaterialCommunityIcons name="calendar-month" size={16} color="#10B981" />
           <Text style={styles.dateBadgeText}>{formatDate(item.date)}</Text>
         </View>
         <Text variant="headlineSmall" style={styles.headerTitle}>
           {item.title}
         </Text>
         <View style={styles.timeBadge}>
-          <MaterialCommunityIcons name="clock-outline" size={16} color="#64748B" />
+          <MaterialCommunityIcons name="clock-time-four-outline" size={16} color="#64748B" />
           <Text style={styles.timeBadgeText}>{item.startTime} - {item.endTime}</Text>
         </View>
       </View>
 
-      <Divider style={styles.divider} />
-
       {/* Quick Actions */}
-      <View style={styles.quickActionsContainer}>
+      <View style={styles.quickActionsRow}>
         <Button
           mode="contained"
           icon="calendar-plus"
-          style={[styles.quickActionButton, styles.calendarButton]}
-          contentStyle={{ height: 44 }}
+          style={[styles.actionButton, styles.primaryAction]}
+          contentStyle={styles.actionButtonContent}
+          labelStyle={styles.actionButtonLabel}
           onPress={addToCalendar}
+          buttonColor="#10B981"
         >
           Ajouter
         </Button>
         <Button
-          mode="contained"
+          mode="contained-tonal"
           icon="directions"
-          buttonColor="#6366F1"
-          style={styles.quickActionButton}
-          contentStyle={{ height: 44 }}
+          style={styles.actionButton}
+          contentStyle={styles.actionButtonContent}
+          labelStyle={styles.actionButtonLabel}
           onPress={() => onDirections(item)}
         >
           Y aller
         </Button>
       </View>
 
-      <Divider style={styles.divider} />
+      <Divider style={styles.sectionDivider} />
 
       {/* Description */}
       <View style={styles.sectionContainer}>
@@ -113,46 +113,78 @@ const EventDetail: React.FC<EventDetailProps> = ({ item, onDirections, formatDat
       <View style={styles.sectionContainer}>
         <Text variant="titleMedium" style={styles.sectionTitle}>Détails</Text>
 
-        <List.Item
-          title={item.organizer || "Organisateur"}
-          description="Organisateur"
-          left={props => <List.Icon {...props} icon="church" color="#6366F1" />}
-          style={styles.listItem}
-        />
-        <List.Item
-          title={`${item.address}, ${item.city}`}
-          description="Lieu"
-          titleNumberOfLines={2}
-          left={props => <List.Icon {...props} icon="map-marker" color="#6366F1" />}
-          style={styles.listItem}
-        />
-
-        <List.Item
-          title={item.organizer || "Contact"}
-          description="Responsable"
-          left={props => <List.Icon {...props} icon="account" color="#6366F1" />}
-          style={styles.listItem}
-        />
-
-        {/* Contact Links */}
-        <List.Item
-          title={item.phone}
-          description="Téléphone"
-          left={props => <List.Icon {...props} icon="phone" color="#6366F1" />}
-          onPress={() => Linking.openURL(`tel:${item.phone}`)}
-          style={styles.listItem}
-        />
-        {item.whatsapp && (
+        <View style={styles.infoCard}>
           <List.Item
-            title="WhatsApp"
-            description="Contacter sur WhatsApp"
-            left={props => <List.Icon {...props} icon="whatsapp" color="#25D366" />}
-            onPress={() => Linking.openURL(item.whatsapp!)}
-            style={styles.listItem}
+            title={item.churchName || "Église organisatrice"}
+            description="Organisateur"
+            left={props => (
+              <View style={styles.iconCircle}>
+                <MaterialCommunityIcons name="church" size={20} color="#6366F1" />
+              </View>
+            )}
+            style={styles.infoItem}
           />
-        )}
-      </View>
+          <Divider style={styles.cardDivider} />
+          <List.Item
+            title={`${item.address}, ${item.city}`}
+            description="Lieu"
+            titleNumberOfLines={2}
+            left={props => (
+              <View style={styles.iconCircle}>
+                <MaterialCommunityIcons name="map-marker" size={20} color="#6366F1" />
+              </View>
+            )}
+            style={styles.infoItem}
+          />
+          <Divider style={styles.cardDivider} />
 
+          {item.organizer && (
+            <>
+              <List.Item
+                title={item.organizer}
+                description="Responsable"
+                left={props => (
+                  <View style={styles.iconCircle}>
+                    <MaterialCommunityIcons name="account" size={20} color="#6366F1" />
+                  </View>
+                )}
+                style={styles.infoItem}
+              />
+              <Divider style={styles.cardDivider} />
+            </>
+          )}
+
+          {/* Contact Links */}
+          <List.Item
+            title={item.phone}
+            description="Téléphone"
+            left={props => (
+              <View style={styles.iconCircle}>
+                <MaterialCommunityIcons name="phone" size={20} color="#6366F1" />
+              </View>
+            )}
+            onPress={() => Linking.openURL(`tel:${item.phone}`)}
+            style={styles.infoItem}
+          />
+
+          {item.whatsapp && (
+            <>
+              <Divider style={styles.cardDivider} />
+              <List.Item
+                title="WhatsApp"
+                description="Contacter sur WhatsApp"
+                left={props => (
+                  <View style={[styles.iconCircle, { backgroundColor: '#DCFCE7' }]}>
+                    <MaterialCommunityIcons name="whatsapp" size={20} color="#10B981" />
+                  </View>
+                )}
+                onPress={() => Linking.openURL(item.whatsapp!)}
+                style={styles.infoItem}
+              />
+            </>
+          )}
+        </View>
+      </View>
     </View>
   );
 };
@@ -162,24 +194,26 @@ export default EventDetail;
 const styles = StyleSheet.create({
   detailsContainer: {
     paddingBottom: 40,
+    backgroundColor: 'white',
   },
   headerContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 16,
+    paddingHorizontal: 24,
+    paddingTop: 8,
+    marginBottom: 24,
     alignItems: 'flex-start',
   },
   dateBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#EEF2FF',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    backgroundColor: '#ECFDF5', // Emerald 50
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 8,
-    marginBottom: 8,
+    marginBottom: 12,
   },
   dateBadgeText: {
-    color: '#6366F1',
+    color: '#059669', // Emerald 600
     fontWeight: '700',
     fontSize: 13,
   },
@@ -187,49 +221,86 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginTop: 4
+    marginTop: 8
   },
   timeBadgeText: {
     color: '#64748B',
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '500',
   },
   headerTitle: {
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#1E293B',
     marginBottom: 4,
     lineHeight: 32,
   },
-  divider: {
-    marginBottom: 16,
-    backgroundColor: '#F1F5F9',
-  },
-  quickActionsContainer: {
+  quickActionsRow: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     gap: 12,
-    marginBottom: 8,
+    marginBottom: 24,
   },
-  quickActionButton: {
+  actionButton: {
     flex: 1,
     borderRadius: 12,
+    borderColor: '#E2E8F0',
   },
-  calendarButton: {
-    backgroundColor: '#10B981',
+  primaryAction: {
+    flex: 1.5,
+    elevation: 4,
+    shadowColor: '#10B981',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  actionButtonContent: {
+    height: 48,
+  },
+  actionButtonLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  sectionDivider: {
+    height: 8,
+    backgroundColor: '#F8FAFC',
+    marginBottom: 24,
   },
   sectionContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 24,
+    paddingHorizontal: 24,
+    marginBottom: 32,
   },
   sectionTitle: {
     fontWeight: '700',
-    color: '#1E293B',
-    marginBottom: 12,
+    color: '#334155',
+    marginBottom: 16,
     fontSize: 18,
   },
   aboutText: {
     color: '#475569',
-    lineHeight: 24,
+    lineHeight: 26,
+    fontSize: 15,
+  },
+  infoCard: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    overflow: 'hidden',
+  },
+  infoItem: {
+    paddingVertical: 4,
+  },
+  iconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F8FAFC',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  cardDivider: {
+    backgroundColor: '#F1F5F9',
   },
   listItem: {
     paddingHorizontal: 0,

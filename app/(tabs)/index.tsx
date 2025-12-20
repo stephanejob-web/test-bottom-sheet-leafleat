@@ -16,7 +16,7 @@ import ListItemCard from '../components/ListItemCard';
 import MapMarkerItem from '../components/MapMarkerItem';
 
 // Lazy loading des composants de détail pour optimiser le bundle initial
-const ChurchDetail = React.lazy(() => import('../components/ChurchDetail'));
+const ChurchDetail = React.lazy(() => import('../components/ChurchDetail')); // Reloaded
 const EventDetail = React.lazy(() => import('../components/EventDetail'));
 
 
@@ -1174,7 +1174,8 @@ export default function MapScreen() {
             )
           }
           ListFooterComponent={
-            displayedItems.length > 0 &&
+            !selectedItem &&
+              displayedItems.length > 0 &&
               displayedItems.length < itemsInViewport.length &&
               !isCalculatingDistances ? (
               <Button
