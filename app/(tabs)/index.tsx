@@ -2,7 +2,7 @@ import BottomSheet, { BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import * as Calendar from 'expo-calendar';
 import * as Location from 'expo-location';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Linking, Platform, StatusBar, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Alert, Animated, Easing, Linking, Platform, StatusBar, StyleSheet, View } from 'react-native';
 import ClusteredMapView from 'react-native-map-clustering';
 import { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Avatar, Button, Card, Dialog, Divider, IconButton, Portal, Searchbar, Surface, Text } from 'react-native-paper';
@@ -30,6 +30,53 @@ const UserLocationMarker = () => (
     <View style={styles.userMarkerDot} />
   </View>
 );
+
+// Composant de chargement Premium "Floating Pill"
+const FloatingLoadingPill = ({ visible }: { visible: boolean }) => {
+  const translateY = useRef(new Animated.Value(-100)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (visible) {
+      Animated.parallel([
+        Animated.timing(translateY, {
+          toValue: 0,
+          duration: 400,
+          useNativeDriver: true,
+          easing: Easing.out(Easing.back(1.5)),
+        }),
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.timing(translateY, {
+          toValue: -100,
+          duration: 300,
+          useNativeDriver: true,
+          easing: Easing.in(Easing.cubic),
+        }),
+        Animated.timing(opacity, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [visible]);
+
+  return (
+    <Animated.View style={[styles.loadingPillContainer, { opacity, transform: [{ translateY }] }]}>
+      <View style={styles.loadingPillBlur}>
+        <ActivityIndicator size="small" color="#6366F1" />
+        <Text style={styles.loadingText}>Mise à jour de la carte...</Text>
+      </View>
+    </Animated.View>
+  );
+};
 
 export default function MapScreen() {
   // ========================================
@@ -772,17 +819,7 @@ export default function MapScreen() {
     );
   }, []);
 
-  // Afficher un écran de chargement pendant le chargement initial des données
-  if ((churchesLoading || eventsLoading) && loadedChurchesCache.size === 0) {
-    return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator size="large" color="#6366F1" />
-        <Text style={{ marginTop: 16, fontSize: 16, color: '#666' }}>
-          Chargement des données...
-        </Text>
-      </View>
-    );
-  }
+  // L'écran de chargement bloquant a été remplacé par le FloatingLoadingPill non-intrusif
 
   // Afficher un message d'erreur si le chargement échoue
   if ((churchesError || eventsError) && loadedChurchesCache.size === 0) {
@@ -807,6 +844,11 @@ export default function MapScreen() {
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="dark-content" />
+
+      {/* Premium Loading Indicator */}
+      <FloatingLoadingPill visible={churchesLoading || eventsLoading} />
+
       {/* Map avec Clustering */}
       <ClusteredMapView
         ref={mapRef}
@@ -1650,4 +1692,33 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
+  // Styles pour le FloatingLoadingPill
+  loadingPillContainer: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 150 : (StatusBar.currentHeight || 0) + 100,
+    alignSelf: 'center',
+    zIndex: 1000,
+    borderRadius: 30,
+    overflow: 'hidden',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  loadingPillBlur: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+  },
+  loadingText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6366F1',
+    marginLeft: 10,
+  }
 });
