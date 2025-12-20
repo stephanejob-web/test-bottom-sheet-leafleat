@@ -10,7 +10,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import mockApiResponse from '../../mockApiData.json';
 import mockEventsData from '../../mockEventsData.json';
 import { Church, ChurchWithDistance, Event, EventWithDistance } from '../../types';
-import { calculateDistance } from '../../utils/geo';
+import { calculateDistance, calculateDistancesForItems, filterItemsByBoundingBox } from '../../utils/geo';
 import { cityCoordinates } from '../../constants/cities';
 import { eventTypeConfig } from '../../constants/eventTypes';
 import { useDebounce } from '../../hooks/use-debounce';
@@ -61,7 +61,22 @@ export default function MapScreen() {
   const [itemForDirections, setItemForDirections] = useState<ListItem | null>(null);
   const [searchCenter, setSearchCenter] = useState<{ latitude: number; longitude: number } | null>(null);
   const [visibleRegion, setVisibleRegion] = useState<{ latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number } | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingViewport, setIsLoadingViewport] = useState(false);
+
+  // Nouveaux états pour l'architecture optimisée
+  const [validatedRegion, setValidatedRegion] = useState<{
+    latitude: number;
+    longitude: number;
+    latitudeDelta: number;
+    longitudeDelta: number;
+  } | null>(null);
+  const [itemsInViewport, setItemsInViewport] = useState<ListItem[]>([]);
+  const [displayedItems, setDisplayedItems] = useState<ListItem[]>([]);
+  const [currentPage, setCurrentPage] = useState(0);
+  const ITEMS_PER_PAGE = 20;
+  const [isCalculatingDistances, setIsCalculatingDistances] = useState(false);
+  const [distanceCache, setDistanceCache] = useState<Map<string, number>>(new Map());
+  const [showSearchButton, setShowSearchButton] = useState(false);
 
   const mapRef = useRef<any>(null); // ClusteredMapView type
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -77,14 +92,14 @@ export default function MapScreen() {
   // Gérer le loading pendant les changements de région
   useEffect(() => {
     if (visibleRegion) {
-      setIsLoading(true);
+      setIsLoadingViewport(true);
     }
   }, [visibleRegion]);
 
   // Désactiver le loading une fois le debounce terminé
   useEffect(() => {
     if (debouncedVisibleRegion) {
-      setIsLoading(false);
+      setIsLoadingViewport(false);
     }
   }, [debouncedVisibleRegion]);
 
@@ -120,115 +135,155 @@ export default function MapScreen() {
     return searchCenter === null && location !== null;
   }, [searchCenter, location]);
 
-  // Filtrer et fusionner églises et événements par zone visible
-  const filteredItemsWithDistance = useMemo((): ListItem[] => {
-    const center = searchCenter || (location ? {
-      latitude: location.coords.latitude,
-      longitude: location.coords.longitude
-    } : null);
-
-    // Si pas de centre, on affiche un message ou retourne vide
-    if (!center) {
-      return [];
-    }
-
-    // Calculer la bounding box de la zone visible (si disponible)
-    let boundingBox: { minLat: number; maxLat: number; minLng: number; maxLng: number } | null = null;
-
-    if (debouncedVisibleRegion) {
-      // Ajouter une petite marge (20%) pour ne pas couper trop strict
-      const marginLat = debouncedVisibleRegion.latitudeDelta * 0.2;
-      const marginLng = debouncedVisibleRegion.longitudeDelta * 0.2;
-
-      boundingBox = {
-        minLat: debouncedVisibleRegion.latitude - (debouncedVisibleRegion.latitudeDelta / 2) - marginLat,
-        maxLat: debouncedVisibleRegion.latitude + (debouncedVisibleRegion.latitudeDelta / 2) + marginLat,
-        minLng: debouncedVisibleRegion.longitude - (debouncedVisibleRegion.longitudeDelta / 2) - marginLng,
-        maxLng: debouncedVisibleRegion.longitude + (debouncedVisibleRegion.longitudeDelta / 2) + marginLng,
-      };
-    }
-
-    // Filtrer et calculer distance pour les églises
-    const churchesWithDistance = allChurches
+  // Map markers - SANS calcul de distance (uniquement filtrage par recherche)
+  const mapMarkers = useMemo((): ListItem[] => {
+    // Filtrer uniquement par searchQuery
+    const churchesFiltered = allChurches
       .filter((church) => {
-        // Filtrer par bounding box si disponible
-        if (boundingBox) {
-          const inBounds = church.latitude >= boundingBox.minLat &&
-                          church.latitude <= boundingBox.maxLat &&
-                          church.longitude >= boundingBox.minLng &&
-                          church.longitude <= boundingBox.maxLng;
-          if (!inBounds) return false;
-        }
-
-        // Filtrer par recherche
         const matchesSearch = searchQuery === '' ||
           church.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           church.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
           church.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-
         return matchesSearch;
       })
-      .map((church) => {
-        const distance = calculateDistance(
-          center.latitude,
-          center.longitude,
-          church.latitude,
-          church.longitude
-        );
+      .map(church => ({ ...church, distance: 0, itemType: 'church' as const }));
 
-        return { ...church, distance, itemType: 'church' as const };
-      });
-
-    // Filtrer et calculer distance pour les événements
-    const eventsWithDistance = allEvents
+    const eventsFiltered = allEvents
       .filter((event) => {
-        // Filtrer par bounding box si disponible
-        if (boundingBox) {
-          const inBounds = event.latitude >= boundingBox.minLat &&
-                          event.latitude <= boundingBox.maxLat &&
-                          event.longitude >= boundingBox.minLng &&
-                          event.longitude <= boundingBox.maxLng;
-          if (!inBounds) return false;
-        }
-
-        // Filtrer par recherche
         const matchesSearch = searchQuery === '' ||
           event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
           event.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
           event.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
           event.churchName.toLowerCase().includes(searchQuery.toLowerCase());
-
         return matchesSearch;
       })
-      .map((event) => {
-        const distance = calculateDistance(
-          center.latitude,
-          center.longitude,
-          event.latitude,
-          event.longitude
-        );
+      .map(event => ({ ...event, distance: 0, itemType: 'event' as const }));
 
-        return { ...event, distance, itemType: 'event' as const };
-      });
+    return [...churchesFiltered, ...eventsFiltered];
+  }, [searchQuery]);
 
-    // Fusionner et trier par distance
-    const allItems = [...churchesWithDistance, ...eventsWithDistance];
+  // Items dans viewport actuel - Filtrage géométrique SANS distance
+  const itemsInViewportMemo = useMemo((): ListItem[] => {
+    if (!debouncedVisibleRegion) return [];
 
-    return allItems
-      .sort((a, b) => a.distance - b.distance)
-      .slice(0, 200); // Limite à 200 items pour optimiser les performances
-  }, [location, searchCenter, searchQuery, debouncedVisibleRegion]);
+    return filterItemsByBoundingBox(mapMarkers, debouncedVisibleRegion);
+  }, [mapMarkers, debouncedVisibleRegion]);
 
-  // Compteurs séparés pour églises et événements
+  // Synchroniser itemsInViewport et gérer affichage du bouton
+  useEffect(() => {
+    setItemsInViewport(itemsInViewportMemo);
+
+    // Afficher bouton si viewport a changé
+    if (validatedRegion && debouncedVisibleRegion) {
+      const regionChanged =
+        Math.abs(validatedRegion.latitude - debouncedVisibleRegion.latitude) > 0.001 ||
+        Math.abs(validatedRegion.longitude - debouncedVisibleRegion.longitude) > 0.001 ||
+        Math.abs(validatedRegion.latitudeDelta - debouncedVisibleRegion.latitudeDelta) > 0.001;
+      setShowSearchButton(regionChanged && itemsInViewportMemo.length > 0);
+    } else if (debouncedVisibleRegion && !validatedRegion) {
+      // Premier chargement ou pas encore de région validée - afficher bouton si items présents
+      setShowSearchButton(itemsInViewportMemo.length > 0);
+    }
+  }, [itemsInViewportMemo, validatedRegion, debouncedVisibleRegion]);
+
+  // Reset validation lors du changement de recherche
+  useEffect(() => {
+    if (debouncedSearchQuery) {
+      setValidatedRegion(null);
+      setDisplayedItems([]);
+      setCurrentPage(0);
+      setShowSearchButton(false);
+    }
+  }, [debouncedSearchQuery]);
+
+  // Clear cache si trop gros
+  useEffect(() => {
+    if (distanceCache.size > 500) {
+      setDistanceCache(new Map());
+    }
+  }, [searchCenter, location, distanceCache]);
+
+  // Compteurs séparés pour églises et événements (basés sur displayedItems)
   const churchCount = useMemo(() =>
-    filteredItemsWithDistance.filter(item => item.itemType === 'church').length,
-    [filteredItemsWithDistance]
+    displayedItems.filter(item => item.itemType === 'church').length,
+    [displayedItems]
   );
 
   const eventCount = useMemo(() =>
-    filteredItemsWithDistance.filter(item => item.itemType === 'event').length,
-    [filteredItemsWithDistance]
+    displayedItems.filter(item => item.itemType === 'event').length,
+    [displayedItems]
   );
+
+  // Handler pour le bouton "Rechercher dans cette zone"
+  const handleSearchInArea = useCallback(async () => {
+    if (!debouncedVisibleRegion) return;
+
+    setIsCalculatingDistances(true);
+    setShowSearchButton(false);
+    setValidatedRegion(debouncedVisibleRegion);
+    setCurrentPage(0);
+
+    // Obtenir le centre pour le calcul de distance
+    const center = searchCenter || (location ? {
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude
+    } : debouncedVisibleRegion);
+
+    // Calculer distance UNIQUEMENT pour les 20 premiers items
+    const itemsToCalculate = itemsInViewport.slice(0, ITEMS_PER_PAGE);
+    const cacheKeyPrefix = `${center.latitude.toFixed(4)}-${center.longitude.toFixed(4)}`;
+
+    const itemsWithDistance = calculateDistancesForItems(
+      itemsToCalculate,
+      center.latitude,
+      center.longitude,
+      distanceCache,
+      cacheKeyPrefix
+    );
+
+    setDisplayedItems(itemsWithDistance);
+    setIsCalculatingDistances(false);
+
+    // Expand bottom sheet pour montrer les résultats
+    bottomSheetRef.current?.snapToIndex(1);
+  }, [debouncedVisibleRegion, itemsInViewport, searchCenter, location, distanceCache]);
+
+  // Handler pour pagination ("Charger plus")
+  const handleLoadMore = useCallback(() => {
+    if (!validatedRegion || isCalculatingDistances) return;
+
+    const nextPage = currentPage + 1;
+    const startIdx = nextPage * ITEMS_PER_PAGE;
+    const endIdx = startIdx + ITEMS_PER_PAGE;
+    const nextBatch = itemsInViewport.slice(startIdx, endIdx);
+
+    if (nextBatch.length === 0) return;
+
+    setIsCalculatingDistances(true);
+
+    const center = searchCenter || (location ? {
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude
+    } : validatedRegion);
+
+    const cacheKeyPrefix = `${center.latitude.toFixed(4)}-${center.longitude.toFixed(4)}`;
+
+    const batchWithDistance = calculateDistancesForItems(
+      nextBatch,
+      center.latitude,
+      center.longitude,
+      distanceCache,
+      cacheKeyPrefix
+    );
+
+    // Fusionner et re-trier
+    const allItems = [...displayedItems, ...batchWithDistance];
+    const sortedItems = allItems.sort((a, b) => a.distance - b.distance);
+
+    setDisplayedItems(sortedItems);
+    setCurrentPage(nextPage);
+    setIsCalculatingDistances(false);
+  }, [currentPage, itemsInViewport, displayedItems, validatedRegion, searchCenter, location, distanceCache, isCalculatingDistances]);
 
   const handleItemPress = useCallback((item: ListItem) => {
     setSelectedItem(item);
@@ -470,7 +525,7 @@ export default function MapScreen() {
           </Marker>
         )}
 
-        {filteredItemsWithDistance.map((item, index) => (
+        {mapMarkers.map((item, index) => (
           <Marker
             key={`${item.itemType}-${item.id}`}
             coordinate={{
@@ -506,6 +561,30 @@ export default function MapScreen() {
         />
       </Surface>
 
+      {/* Bouton "Rechercher dans cette zone" - Apparaît quand la map bouge */}
+      {showSearchButton && (
+        <Surface style={styles.searchInAreaButton} elevation={4}>
+          <Button
+            mode="contained"
+            icon="magnify"
+            onPress={handleSearchInArea}
+            loading={isCalculatingDistances}
+            disabled={isCalculatingDistances}
+            style={styles.searchButton}
+            labelStyle={styles.searchButtonLabel}
+          >
+            {isCalculatingDistances ? 'Chargement...' : 'Rechercher dans cette zone'}
+          </Button>
+          {itemsInViewport.length > 0 && !isCalculatingDistances && (
+            <View style={styles.searchButtonBadge}>
+              <Text style={styles.searchButtonBadgeText}>
+                {itemsInViewport.length}
+              </Text>
+            </View>
+          )}
+        </Surface>
+      )}
+
       {/* Bouton de recentrage sur la position */}
       <Surface style={styles.recenterButton} elevation={4}>
         <IconButton
@@ -518,7 +597,7 @@ export default function MapScreen() {
       </Surface>
 
       {/* Indicateur de chargement moderne */}
-      {isLoading && (
+      {isLoadingViewport && (
         <View style={styles.loadingContainer}>
           <View style={styles.loadingIndicator}>
             <View style={styles.loadingSpinner}>
@@ -863,7 +942,52 @@ export default function MapScreen() {
           ) : (
             // Liste verticale style Google Maps
             <View style={styles.churchListVertical}>
-              {filteredItemsWithDistance.map((item, index) => (
+              {/* État vide initial - Aucune région validée */}
+              {!validatedRegion && displayedItems.length === 0 && (
+                <View style={styles.emptyStateContainer}>
+                  <Avatar.Icon
+                    icon="map-search"
+                    size={80}
+                    style={styles.emptyStateIcon}
+                  />
+                  <Text variant="headlineSmall" style={styles.emptyStateTitle}>
+                    Rechercher dans cette zone
+                  </Text>
+                  <Text variant="bodyMedium" style={styles.emptyStateText}>
+                    Déplacez la carte vers la zone souhaitée puis cliquez sur "Rechercher dans cette zone"
+                  </Text>
+                </View>
+              )}
+
+              {/* Aucun résultat dans la région validée */}
+              {validatedRegion && displayedItems.length === 0 && !isCalculatingDistances && (
+                <View style={styles.emptyStateContainer}>
+                  <Avatar.Icon
+                    icon="map-marker-off"
+                    size={80}
+                    style={styles.emptyStateIcon}
+                  />
+                  <Text variant="headlineSmall" style={styles.emptyStateTitle}>
+                    Aucun résultat
+                  </Text>
+                  <Text variant="bodyMedium" style={styles.emptyStateText}>
+                    Aucune église ou événement trouvé dans cette zone. Essayez d'élargir la zone de recherche.
+                  </Text>
+                </View>
+              )}
+
+              {/* Loading - Calcul des distances */}
+              {isCalculatingDistances && (
+                <View style={styles.calculatingContainer}>
+                  <ActivityIndicator size="large" color="#6366F1" />
+                  <Text variant="bodyLarge" style={styles.calculatingText}>
+                    Calcul des distances...
+                  </Text>
+                </View>
+              )}
+
+              {/* Liste des items AVEC distance calculée */}
+              {displayedItems.map((item, index) => (
                 <Card
                   key={`${item.itemType}-${item.id}`}
                   style={[
@@ -899,15 +1023,14 @@ export default function MapScreen() {
                           {item.itemType === 'church' ? item.name : item.title}
                         </Text>
 
-                        {isUsingCurrentLocation && (
-                          <View style={styles.cardCompactMeta}>
-                            <View style={styles.distanceBadge}>
-                              <Text style={styles.distanceBadgeText}>
-                                {item.distance.toFixed(1)} km
-                              </Text>
-                            </View>
+                        {/* Distance toujours affichée pour displayedItems */}
+                        <View style={styles.cardCompactMeta}>
+                          <View style={styles.distanceBadge}>
+                            <Text style={styles.distanceBadgeText}>
+                              {item.distance.toFixed(1)} km
+                            </Text>
                           </View>
-                        )}
+                        </View>
 
                         <Text
                           variant="bodySmall"
@@ -942,6 +1065,21 @@ export default function MapScreen() {
                   </View>
                 </Card>
               ))}
+
+              {/* Bouton "Charger plus" pour pagination */}
+              {displayedItems.length > 0 &&
+               displayedItems.length < itemsInViewport.length &&
+               !isCalculatingDistances && (
+                <Button
+                  mode="outlined"
+                  onPress={handleLoadMore}
+                  style={styles.loadMoreButton}
+                  labelStyle={styles.loadMoreLabel}
+                  icon="chevron-down"
+                >
+                  Charger plus ({itemsInViewport.length - displayedItems.length} restants)
+                </Button>
+              )}
             </View>
           )}
         </BottomSheetScrollView>
@@ -1588,5 +1726,86 @@ const styles = StyleSheet.create({
   radiusDialogLabelText: {
     color: '#94A3B8',
     fontSize: 11,
+  },
+  // Styles pour le bouton "Rechercher dans cette zone"
+  searchInAreaButton: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 120 : (StatusBar.currentHeight || 0) + 70,
+    left: 16,
+    right: 16,
+    zIndex: 10,
+    borderRadius: 16,
+    backgroundColor: 'white',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  searchButton: {
+    backgroundColor: '#6366F1',
+    borderRadius: 12,
+  },
+  searchButtonLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    letterSpacing: 0.3,
+  },
+  searchButtonBadge: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: '#EF4444',
+    borderRadius: 12,
+    minWidth: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  searchButtonBadgeText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  // Styles pour les états vides
+  emptyStateContainer: {
+    paddingVertical: 60,
+    paddingHorizontal: 32,
+    alignItems: 'center',
+    gap: 16,
+  },
+  emptyStateIcon: {
+    backgroundColor: '#F1F5F9',
+  },
+  emptyStateTitle: {
+    color: '#1E293B',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  emptyStateText: {
+    color: '#64748B',
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  // Styles pour le loading
+  calculatingContainer: {
+    paddingVertical: 40,
+    alignItems: 'center',
+    gap: 16,
+  },
+  calculatingText: {
+    color: '#6366F1',
+    fontWeight: '500',
+  },
+  // Styles pour le bouton "Charger plus"
+  loadMoreButton: {
+    marginTop: 16,
+    marginBottom: 20,
+    borderColor: '#6366F1',
+    borderWidth: 2,
+    borderRadius: 12,
+  },
+  loadMoreLabel: {
+    color: '#6366F1',
+    fontWeight: '600',
   },
 });

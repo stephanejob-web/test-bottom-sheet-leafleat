@@ -26,3 +26,78 @@ export function calculateDistance(
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
+
+/**
+ * Filtre les items par bounding box (viewport) SANS calcul de distance
+ * Optimisé pour les performances - filtrage géométrique pur
+ *
+ * @param items Tableau d'items avec latitude/longitude
+ * @param region Région visible (viewport de la map)
+ * @param margin Marge à ajouter (par défaut 20%)
+ * @returns Items filtrés dans la zone visible
+ */
+export function filterItemsByBoundingBox<T extends { latitude: number; longitude: number }>(
+  items: T[],
+  region: {
+    latitude: number;
+    longitude: number;
+    latitudeDelta: number;
+    longitudeDelta: number;
+  },
+  margin: number = 0.2
+): T[] {
+  const marginLat = region.latitudeDelta * margin;
+  const marginLng = region.longitudeDelta * margin;
+
+  const boundingBox = {
+    minLat: region.latitude - (region.latitudeDelta / 2) - marginLat,
+    maxLat: region.latitude + (region.latitudeDelta / 2) + marginLat,
+    minLng: region.longitude - (region.longitudeDelta / 2) - marginLng,
+    maxLng: region.longitude + (region.longitudeDelta / 2) + marginLng,
+  };
+
+  return items.filter(
+    (item) =>
+      item.latitude >= boundingBox.minLat &&
+      item.latitude <= boundingBox.maxLat &&
+      item.longitude >= boundingBox.minLng &&
+      item.longitude <= boundingBox.maxLng
+  );
+}
+
+/**
+ * Calcule les distances pour un batch d'items avec support de cache
+ * Retourne les items avec distance, triés par distance
+ *
+ * @param items Tableau d'items à calculer
+ * @param centerLat Latitude du point de référence
+ * @param centerLng Longitude du point de référence
+ * @param cache Cache Map optionnel pour éviter les recalculs
+ * @param cacheKeyPrefix Préfixe pour les clés de cache
+ * @returns Items avec distance calculée, triés par distance
+ */
+export function calculateDistancesForItems<T extends { latitude: number; longitude: number }>(
+  items: T[],
+  centerLat: number,
+  centerLng: number,
+  cache?: Map<string, number>,
+  cacheKeyPrefix?: string
+): (T & { distance: number })[] {
+  return items
+    .map((item) => {
+      const cacheKey = cacheKeyPrefix ? `${cacheKeyPrefix}-${item.latitude}-${item.longitude}` : null;
+      let distance: number;
+
+      if (cache && cacheKey && cache.has(cacheKey)) {
+        distance = cache.get(cacheKey)!;
+      } else {
+        distance = calculateDistance(centerLat, centerLng, item.latitude, item.longitude);
+        if (cache && cacheKey) {
+          cache.set(cacheKey, distance);
+        }
+      }
+
+      return { ...item, distance };
+    })
+    .sort((a, b) => a.distance - b.distance);
+}
